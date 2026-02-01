@@ -1,0 +1,7 @@
+node_modules
+.env
+/generated/prisma
+* text=auto  eol=lf
+logs/
+*.log
+uploads/
