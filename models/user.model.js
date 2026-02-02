@@ -40,12 +40,12 @@ export const findByUsername = async (username) => {
 /**
  * البحث عن مستخدم حسب الهاتف أو اسم المستخدم (Username)
  */
-export const findByPhoneOrUsername = async (phone, username) => {
+export const findByPhoneOrUsername = async (identifier) => {
   return prisma.users.findFirst({
     where: {
       OR: [
-        { phone },
-        { username },
+        { phone : identifier },
+        { username : identifier },
       ],
     },
   });

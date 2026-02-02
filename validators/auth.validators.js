@@ -4,7 +4,7 @@ import { getCountryFromPhone } from "../utils/phoneCountry.js";
 export const usernameValidator = body("username")
   .exists({ checkFalsy: true }).withMessage("اسم المستخدم مطلوب")
   .isString().withMessage("اسم المستخدم يجب أن يكون نصام")
-  .isLength({ min: 6 }).withMessage("اسم المستخدم قصير للغاية");
+  .isLength({ min: 4 }).withMessage("اسم المستخدم قصير للغاية");
 
 export const passwordValidator = body("password")
   .exists({ checkFalsy: true }).withMessage("كلمة المرور مطلوبة")
@@ -32,7 +32,7 @@ export const phoneValidator = body("phone")
 export const loginUsernameValidator = body("username")
   .exists({ checkFalsy: true }).withMessage("بيانات تسجيل الدخول غير صحيحة")
   .isString().withMessage("بيانات تسجيل الدخول غير صحيحة")
-  .isLength({ min: 6 }).withMessage("بيانات تسجيل الدخول غير صحيحة");
+  .isLength({ min: 4 }).withMessage("بيانات تسجيل الدخول غير صحيحة");
 
   export const loginPasswordValidator = body("password")
   .exists({ checkFalsy: true }).withMessage("بيانات تسجيل الدخول غير صحيحة")
@@ -48,7 +48,7 @@ export const requiredName = body("name")
   .isString().withMessage("الاسم يجب أن يكون نصاً")
   .isLength({ min: 2 }).withMessage("الاسم قصير جداً");
 
-export const TokenValidator = body("Token")
+export const TokenValidator = body("token")
   .exists({ checkFalsy: true }).withMessage("token مطلوب")
   .isString().withMessage("token يجب أن يكون نصاً");
 
@@ -105,6 +105,6 @@ export const loginRules = [
 export const refreshRules = [refreshTokenValidator];
 export const profileUpdateRules = [nameValidator, phoneValidator, usernameValidator];
 
-export const forgotPasswordRules = [forgotPasswordPhoneValidator];
-export const verifyOTPRules = [forgotPasswordPhoneValidator, otpValidator];
+export const forgotPasswordRules = [];//[forgotPasswordPhoneValidator];
+export const verifyOTPRules = [];//[forgotPasswordPhoneValidator, otpValidator];
 export const resetPasswordRules = [resetTokenValidatorBody, newPasswordValidator];

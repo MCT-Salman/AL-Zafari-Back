@@ -36,7 +36,7 @@ export const createMany = (dataArray) => prisma.notification.createMany({
  * @returns {Promise<array>} - Array of notifications
  */
 export const findAll = (where = {}, options = {}) => {
-  const { select, orderBy = { createdAt: 'desc' }, skip, take } = options;
+  const { select, orderBy = { created_at: 'desc' }, skip, take } = options;
   
   return prisma.notification.findMany({ 
     where, 
@@ -85,7 +85,7 @@ export const findById = (id, select) => prisma.notification.findUnique({
  * @returns {Promise<array>} - Array of user notifications
  */
 export const findByUserId = (userId, options = {}) => {
-  const { skip, take, orderBy = { createdAt: 'desc' } } = options;
+  const { skip, take, orderBy = { created_at: 'desc' } } = options;
   
   return prisma.notification.findMany({
     where: { userId },
@@ -187,7 +187,7 @@ export const getUnreadCount = (userId) => prisma.notification.count({
  */
 export const getRecentForUser = (userId, limit = 10) => prisma.notification.findMany({
   where: { userId },
-  orderBy: { createdAt: 'desc' },
+  orderBy: { created_at: 'desc' },
   take: limit
 });
 
@@ -202,7 +202,7 @@ export const deleteOldNotifications = (daysOld = 30) => {
   
   return prisma.notification.deleteMany({
     where: {
-      createdAt: {
+      created_at: {
         lt: cutoffDate
       }
     }

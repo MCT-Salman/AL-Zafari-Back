@@ -5,6 +5,6 @@ export const logAttempt = (data) => prisma.loginAttempt.create({ data });
 export const getAttemptsByIdentifier = (identifier, limit = 50) =>
   prisma.loginAttempt.findMany({
     where: { identifier },
-    orderBy: { createdAt: "desc" },
+    orderBy: { created_at: "desc" },
     take: limit,
   });

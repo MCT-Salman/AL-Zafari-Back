@@ -18,7 +18,7 @@ export const revokeAllSessions = (userId) =>
 export const findActiveSessionsByUser = (userId) =>
   prisma.session.findMany({
     where: { userId, revokedAt: null },
-    orderBy: { createdAt: "desc" },
+    orderBy: { created_at: "desc" },
     select: {
       id: true,
       userAgent: true,
@@ -26,7 +26,7 @@ export const findActiveSessionsByUser = (userId) =>
       realIp: true,
       location: true,
       deviceInfo: true,
-      createdAt: true,
+      created_at: true,
     },
   });
 

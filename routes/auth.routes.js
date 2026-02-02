@@ -5,8 +5,6 @@ import {
   validateToken,
   logout,
   logoutAll,
-  getSessions,
-  revokeSessionById,
   getProfile,
   updateProfile,
   requestPasswordReset,
@@ -28,7 +26,6 @@ import {
   resetPasswordRules
 } from '../validators/auth.validators.js';
 import { normalizePhoneE164 } from '../middlewares/phone.middleware.js';
-import { getstatususer } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
@@ -37,11 +34,10 @@ router.use(logRequest);
 
 // مسارات المصادقة العامة (لا تتطلب مصادقة)
 router.post('/login',  normalizePhoneE164, validate(loginRules), login);
-
 router.post('/refresh',  validate(refreshRules), refresh);
 router.post('/validate-token', validate(TokenValidator), validateToken);
 
-// Forget Password Routes (لا تتطلب مصادقة)
+// Forget Password Routes
 router.post('/forgot-password', normalizePhoneE164, validate(forgotPasswordRules), requestPasswordReset);
 router.post('/verify-otp', normalizePhoneE164, validate(verifyOTPRules), verifyOTP);
 router.post('/reset-password', validate(resetPasswordRules), resetPassword);
@@ -50,12 +46,8 @@ router.post('/reset-password', validate(resetPasswordRules), resetPassword);
 router.use(requireAuth); // تطبيق middleware المصادقة على جميع المسارات التالية
 
 // إدارة الجلسات
-router.get('/active-user', getstatususer);
 router.post('/logout', logout);
 router.post('/logout-all', logoutAll);
-router.get('/sessions', getSessions);
-router.delete('/sessions/:sessionId', revokeSessionById);
-
 
 // إدارة الملف الشخصي
 router.get('/profile', getProfile);

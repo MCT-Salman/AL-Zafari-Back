@@ -58,14 +58,30 @@ export const refreshToken = async (refreshToken) => {
 /**
  * التحقق من صحة refresh token
  */
-export const verifyToken = async (Token) => {
+
+export const verifyToken = async (token) => {
   try {
-    return verifyAccessToken(Token);
+    const decoded = verifyAccessToken(token);
+
+    if (decoded.type !== "access") return false;
+
+    const session = await prisma.session.findFirst({
+      where: {
+        id: decoded.sid,
+        userId: decoded.id,
+        revokedAt: null
+      }
+    });
+
+    if (!session) return false;
+
+    return decoded;
   } catch (error) {
-    logger.warn('Invalid access token verification', { message: (error?.message || error) });
+    logger.warn('Invalid access token', { message: error?.message });
     return false;
   }
 };
+
 
 /**
  * تسجيل خروج المستخدم
@@ -110,41 +126,6 @@ export const logoutAllDevices = async (userId) => {
   }
 };
 
-/**
- * الحصول على معلومات الجلسات النشطة
- */
-export const getActiveSessions = async (userId) => {
-  try {
-    return await SessionModel.findActiveSessionsByUser(userId);
-  } catch (error) {
-    logger.error('Get active sessions error', { message: (error?.message || error), stack: error?.stack, userId });
-    throw new Error("فشل في جلب الجلسات النشطة");
-  }
-};
-
-/**
- * إلغاء جلسة محددة
- */
-export const revokeSession = async (userId, sessionId) => {
-  try {
-    const session = await SessionModel.findById(sessionId);
-    if (!session || session.userId !== userId) {
-      logger.warn('Revoke session: session not found or unauthorized', { userId, sessionId });
-      throw new Error("الجلسة غير موجودة");
-    }
-
-    await SessionModel.revokeSessionById(sessionId);
-
-    const user = await UserModel.findById(userId);
-    if (user.currentSessionId === sessionId) {
-      await UserModel.updateById(user.id, { currentSessionId: null });
-    }
-    return { success: true, message: "تم إلغاء الجلسة بنجاح" };
-  } catch (error) {
-    logger.error('Revoke session error', { message: (error?.message || error), stack: error?.stack, userId, sessionId });
-    throw error;
-  }
-};
 
 /**
  * Request password reset - Send OTP

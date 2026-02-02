@@ -121,9 +121,12 @@ export const verifyPasswordResetToken = (token) => {
    TOKEN PAIR (LOGIN)
 ====================================================== */
 
-export const generateTokenPair = async (userId, sessionId, role) => {
-  if (!sessionId) throw new Error("Session ID is required");
-
+export const generateTokenPair = async (
+  userId,
+  sessionId,
+  role,
+  tx = prisma
+) => {
   const accessToken = generateAccessToken({
     id: userId,
     sid: sessionId,
@@ -137,11 +140,13 @@ export const generateTokenPair = async (userId, sessionId, role) => {
     type: "refresh"
   });
 
-  await RefreshTokenModel.createRefreshToken({
-    tokenHash: hashToken(refreshToken),
-    userId,
-    sessionId,
-    expiresAt: new Date(Date.now() + durationToMs(REFRESH_TOKEN_EXPIRES_IN))
+  await tx.refreshToken.create({
+    data: {
+      tokenHash: hashToken(refreshToken),
+      userId,
+      sessionId,
+      expiresAt: new Date(Date.now() + durationToMs(REFRESH_TOKEN_EXPIRES_IN))
+    }
   });
 
   return {
@@ -150,6 +155,7 @@ export const generateTokenPair = async (userId, sessionId, role) => {
     expiresIn: Math.floor(durationToMs(ACCESS_TOKEN_EXPIRES_IN) / 1000)
   };
 };
+
 
 /* ======================================================
    REFRESH ACCESS TOKEN (ROTATION)
@@ -203,7 +209,8 @@ export const refreshAccessToken = async (refreshToken) => {
     return generateTokenPair(
       stored.user.id,
       decoded.sid,
-      stored.user.role
+      stored.user.role,
+      tx
     );
   });
 };

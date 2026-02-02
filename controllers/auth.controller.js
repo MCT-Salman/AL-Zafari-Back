@@ -6,8 +6,6 @@ import {
   verifyToken,
   logoutUser,
   logoutAllDevices,
-  getActiveSessions,
-  revokeSession,
   requestPasswordReset as requestPasswordResetService,
   verifyOTP as verifyOTPService,
   resetPassword as resetPasswordService
@@ -16,15 +14,16 @@ import { UserModel, SessionModel } from "../models/index.js";
 import { BAD_REQUEST_STATUS_CODE, SUCCESS_CREATE_STATUS_CODE, UNAUTHORIZED_STATUS_CODE, FORBIDDEN_STATUS_CODE, NOT_FOUND_STATUS_CODE } from "../validators/statusCode.js";
 import { FAILURE_REQUEST, SUCCESS_LOGIN, SUCCESS_REFERESH_TOKEN, SUCCESS_REGISTER, SUCCESS_REQUEST, UPDATE_PROFILE_INFO_SUCCESSFULLY, USER_NOT_FOUND_FORGET, USER_NOT_FOUND_PROFILE } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
+import bcrypt from "bcrypt";
 
- 
+
 /**
  * تسجيل دخول المستخدم
  */
 export const login = async (req, res, next) => {
   try {
-     const { username, phone, password } = req.body;
-    const loginIdentifier = phone || username; // أي واحد موجود
+    const { username, phone, password } = req.body;
+    const loginIdentifier = phone || username;
     const result = await loginUser(loginIdentifier, password, req);
     res.json({
       success: SUCCESS_REQUEST,
@@ -71,54 +70,41 @@ export const refresh = async (req, res, next) => {
 
 export const validateToken = async (req, res, next) => {
   try {
-    const { Token } = req.body;
+    const { token } = req.body;
 
-    const result = await verifyToken(Token);
-    if (!result) {
-      logger.warn('Invalid token', { hasToken: Boolean(Token) });
+    const decoded = await verifyToken(token);
+
+    if (!decoded) {
       return res.status(UNAUTHORIZED_STATUS_CODE).json({
         success: false,
-        message: "Invalid token",
-        data: {}
-      });
-    } else {
-      return res.json({
-        success: true,
-        message: "Token is valid",
+        message: "Invalid or expired token",
         data: {}
       });
     }
-  } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
 
-    error.statusCode = error.statusCode || UNAUTHORIZED_STATUS_CODE;
-    return next(error);
-  }
-};
-export const getstatususer = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const user = await UserModel.findById(userId, {
-      id: true,
-      phone: true,
-      name: true,
-      role: true,
-      is_active: true
-    });
-    res.json({
+    return res.json({
       success: true,
-      message: "تم جلب حالة المستخدم بنجاح",
+      message: "Token is valid",
       data: {
-        is_active: user.is_active
+        userId: decoded.id,
+        sessionId: decoded.sid,
+        role: decoded.role
       }
     });
   } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
+    logger.error('Validate token error', {
+      message: error?.message,
+      stack: error?.stack
+    });
 
-    error.statusCode = error.statusCode || UNAUTHORIZED_STATUS_CODE;
-    return next(error);
+    return res.status(UNAUTHORIZED_STATUS_CODE).json({
+      success: false,
+      message: "Invalid token",
+      data: {}
+    });
   }
 };
+
 /**
  * تسجيل خروج المستخدم
  */
@@ -170,58 +156,6 @@ export const logoutAll = async (req, res, next) => {
 };
 
 /**
- * الحصول على الجلسات النشطة
- */
-export const getSessions = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-
-    const sessions = await getActiveSessions(userId);
-
-    res.json({
-      success: true,
-      data: {
-        ...serializeResponse(sessions)
-      }
-    });
-  } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
-
-    res.status(BAD_REQUEST_STATUS_CODE).json({
-      success: false,
-      message: error.message,
-      data: {}
-    });
-  }
-};
-
-/**
- * إلغاء جلسة محددة
- */
-export const revokeSessionById = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { sessionId } = req.params;
-
-    const result = await revokeSession(userId, sessionId);
-
-    res.json({
-      success: true,
-      message: result.message,
-      data: {}
-    });
-  } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
-
-    res.status(BAD_REQUEST_STATUS_CODE).json({
-      success: false,
-      message: error.message,
-      data: {}
-    });
-  }
-};
-
-/**
  * الحصول على معلومات المستخدم الحالي
  */
 export const getProfile = async (req, res, next) => {
@@ -240,8 +174,8 @@ export const getProfile = async (req, res, next) => {
       countryCode: true,
       points: true,
       is_active: true,
-      createdAt: true,
-      updatedAt: true
+      created_at: true,
+      updated_at: true
     });
 
     if (!user) {
@@ -252,12 +186,13 @@ export const getProfile = async (req, res, next) => {
         data: {}
       });
     }
+    const { password, ...userWithoutPassword } = user;
 
     res.json({
       success: SUCCESS_REQUEST,
       message: "تم جلب البيانات بنجاح",
       data: {
-        ...serializeResponse(user)
+        ...serializeResponse(userWithoutPassword)
       }
     });
   } catch (error) {
@@ -274,88 +209,99 @@ export const getProfile = async (req, res, next) => {
 /**
  * تحديث معلومات المستخدم
  */
-export const updateProfile = async (req, res, next) => {
+export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // جلب بيانات المستخدم الحالية أولاً
     const existing = await UserModel.findById(userId);
     if (!existing) {
-      if (req.file) deleteFile(`/user/${req.file.filename}`);
-      logger.warn('User not found for updateProfile', { userId });
       return res.status(NOT_FOUND_STATUS_CODE).json({
         success: FAILURE_REQUEST,
         message: "المستخدم غير موجود",
       });
     }
 
-    const { name, birthDate, sex } = req.body;
-    const updateData = {};
-
-    // فقط القيم المرسلة
-    if (name !== undefined) updateData.name = name;
-    if (birthDate !== undefined) updateData.birthDate = new Date(birthDate);
-    if (sex !== undefined) updateData.sex = sex;
-
-    // معالجة الصورة
-    if (req.file) {
-      // حذف الصورة القديمة (إن وُجدت)
-      if (existing.avatarUrl) deleteFile(existing.avatarUrl);
-      updateData.avatarUrl = `/uploads/images/user/${req.file.filename}`;
+    if (!existing.is_active) {
+      return res.status(FORBIDDEN_STATUS_CODE).json({
+        success: FAILURE_REQUEST,
+        message: "الحساب غير نشط",
+      });
     }
 
-    // تحديث المستخدم
+    const { full_name, phone, username, password } = req.body;
+    const updateData = {};
+
+    /* ========= Full Name ========= */
+    if (typeof full_name === "string" && full_name.trim()) {
+      updateData.full_name = full_name.trim();
+    }
+
+    /* ========= Phone ========= */
+    if (typeof phone === "string" && phone.trim() && phone !== existing.phone) {
+      const phoneExists = await UserModel.findByPhone(phone);
+      if (phoneExists) {
+        return res.status(BAD_REQUEST_STATUS_CODE).json({
+          success: FAILURE_REQUEST,
+          message: "رقم الهاتف مستخدم بالفعل",
+        });
+      }
+      updateData.phone = phone.trim();
+    }
+
+    /* ========= Username ========= */
+    if (typeof username === "string" && username.trim() && username !== existing.username) {
+      const usernameExists = await UserModel.findByUsername(username);
+      if (usernameExists) {
+        return res.status(BAD_REQUEST_STATUS_CODE).json({
+          success: FAILURE_REQUEST,
+          message: "اسم المستخدم مستخدم بالفعل",
+        });
+      }
+      updateData.username = username.trim();
+    }
+
+    /* ========= Password ========= */
+    if (typeof password === "string" && password.length >= 8) {
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(BAD_REQUEST_STATUS_CODE).json({
+        success: FAILURE_REQUEST,
+        message: "لا توجد بيانات صالحة للتحديث",
+      });
+    }
+
     const user = await UserModel.updateById(userId, updateData, {
       id: true,
       phone: true,
-      name: true,
-      birthDate: true,
-      avatarUrl: true,
+      full_name: true,
+      username: true,
       role: true,
-      sex: true,
       country: true,
       countryCode: true,
       is_active: true,
-      createdAt: true,
-      updatedAt: true
+      created_at: true,
+      updated_at: true,
     });
+    const { password: userPassword, ...userWithoutPassword } = user;
 
-    res.json({
+    return res.json({
       success: SUCCESS_REQUEST,
       message: UPDATE_PROFILE_INFO_SUCCESSFULLY,
-      data: serializeResponse(user),
+      data: serializeResponse(userWithoutPassword),
     });
 
   } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
-
-    // حذف الصورة الجديدة إذا فشل التحديث
-    if (req.file) deleteFile(`/user/${req.file.filename}`);
-
-    res.status(BAD_REQUEST_STATUS_CODE).json({
-      success: FAILURE_REQUEST,
+    logger.error("Update profile error", {
       message: error.message,
-      data: {}
+      stack: error.stack,
+      userId: req.user?.id,
     });
-  }
-};
 
-export const deleteaccount = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    await UserModel.updateById(userId, { is_active: false });
-    res.json({
-      success: true,
-      message: "تم حذف الحساب بنجاح",
-      data: {}
-    });
-  } catch (error) {
-    logger.error('Auth controller error', { message: error?.message, stack: error?.stack, url: req.originalUrl, method: req.method, ip: req.ip, params: req.params, query: req.query, body: req.body, userId: req.user?.id });
-
-    res.status(BAD_REQUEST_STATUS_CODE).json({
+    return res.status(BAD_REQUEST_STATUS_CODE).json({
       success: FAILURE_REQUEST,
-      message: error.message,
-      data: {}
+      message: "فشل تحديث البيانات",
     });
   }
 };

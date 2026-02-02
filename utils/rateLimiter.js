@@ -69,7 +69,7 @@ class RateLimiter {
           userAgent,
           success: false,
           failureReason: failureReason || undefined,
-          createdAt: new Date()
+          created_at: new Date()
         }
       });
     } catch (error) {
@@ -97,7 +97,7 @@ class RateLimiter {
           ip,
           userAgent,
           success: true,
-          createdAt: new Date()
+          created_at: new Date()
         }
       });
     } catch (error) {
