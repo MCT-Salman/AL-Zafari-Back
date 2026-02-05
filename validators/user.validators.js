@@ -5,6 +5,8 @@ import { getCountryFromPhone } from '../utils/phoneCountry.js';
 // Allowed user roles
 const ALLOWED_ROLES = [
   'admin',
+  'cashier',
+  'production_manager',
   'accountant',
   'sales',
   'Warehouse_Keeper',

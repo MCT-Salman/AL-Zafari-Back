@@ -16,7 +16,9 @@ datasource db {
 enum UserRole {
   admin
   accountant
+  cashier
   sales
+  production_manager
   Warehouse_Keeper
   Warehouse_Products
   Dissection_Technician
@@ -276,6 +278,7 @@ model Customer {
   address       String
   country       String?
   countryCode   String?
+  balance         Decimal  @default(0.00)
   is_active     Boolean      @default(true)
   fcmToken      String?
   notes         String?

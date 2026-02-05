@@ -5,6 +5,10 @@ import {
   createOrder as createOrderService,
   updateOrder as updateOrderService,
   deleteOrder as deleteOrderService,
+  addOrderItem as addOrderItemService,
+  updateOrderItem as updateOrderItemService,
+  deleteOrderItem as deleteOrderItemService,
+  updateOrderStatus as updateOrderStatusService,
 } from "../services/order.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -103,6 +107,93 @@ export const deleteOrder = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Delete order controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+/**
+ * إضافة عنصر جديد لطلب موجود
+ */
+export const addOrderItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const itemData = req.body;
+    const result = await addOrderItemService(parseInt(id), itemData);
+
+    res.status(201).json({
+      success: SUCCESS_REQUEST,
+      message: "تم إضافة العنصر للطلب بنجاح",
+      data: result,
+    });
+  } catch (error) {
+    logger.error("Add order item controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+/**
+ * تعديل عنصر من طلب
+ */
+export const updateOrderItem = async (req, res, next) => {
+  try {
+    const { id, itemId } = req.params;
+    const itemData = req.body;
+    const result = await updateOrderItemService(parseInt(id), parseInt(itemId), itemData);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم تحديث عنصر الطلب بنجاح",
+      data: result,
+    });
+  } catch (error) {
+    logger.error("Update order item controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+/**
+ * حذف عنصر من طلب
+ */
+export const deleteOrderItem = async (req, res, next) => {
+  try {
+    const { id, itemId } = req.params;
+    const result = await deleteOrderItemService(parseInt(id), parseInt(itemId));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم حذف عنصر الطلب بنجاح",
+      data: result,
+    });
+  } catch (error) {
+    logger.error("Delete order item controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+/**
+ * تعديل حالة طلب
+ */
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const order = await updateOrderStatusService(parseInt(id), status);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم تحديث حالة الطلب بنجاح",
+      data: order,
+    });
+  } catch (error) {
+    logger.error("Update order status controller error", {
       message: error?.message,
     });
     return next(error);
