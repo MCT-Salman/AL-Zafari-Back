@@ -3,7 +3,7 @@ import {
   OrderModel,
   OrderItemModel,
   CustomerModel,
-  UserModel,
+  ConstantValueModel,
   RulerModel,
   BatchModel,
   PriceColorModel,
@@ -74,7 +74,7 @@ export const getOrderById = async (order_id) => {
  */
 
 export const createOrder = async (data, userId) => {
-
+  // تحقق من العميل
   const customer = await CustomerModel.findById(data.customer_id);
   if (!customer) {
     const error = new Error("العميل غير موجود");
@@ -82,12 +82,14 @@ export const createOrder = async (data, userId) => {
     throw error;
   }
 
+  // تحقق من وجود عناصر في الطلب
   if (!data.items || data.items.length === 0) {
     const error = new Error("يجب إضافة عنصر واحد على الأقل للطلب");
     error.statusCode = 400;
     throw error;
   }
 
+  // تحقق من المساطر والـ batch لكل عنصر
   for (const item of data.items) {
     const ruler = await RulerModel.findById(item.ruler_id);
     if (!ruler) {
@@ -104,6 +106,7 @@ export const createOrder = async (data, userId) => {
     }
   }
 
+  // حساب السعر الكلي والـ subtotal لكل عنصر
   let total_amount = 0;
   const itemsWithSubtotal = [];
 
@@ -113,6 +116,7 @@ export const createOrder = async (data, userId) => {
     else if (item.constant_width === 44) widthType = "isByMeter44";
     else if (item.constant_width === 66) widthType = "isByMeter66";
 
+    // جلب السعر إذا لم يكن موجود
     if (!item.unit_price || Number(item.unit_price) === 0) {
       const price = await PriceColorModel.findPriceByColorAndValue(
         item.ruler_id,
@@ -130,7 +134,7 @@ export const createOrder = async (data, userId) => {
       item.unit_price = price.price_per_meter.toString();
     }
 
-    const subtotal = (parseFloat(item.unit_price) * parseFloat(item.length)).toFixed(2);
+    const subtotal = (parseFloat(item.unit_price) * parseFloat(item.length)).toFixed(2) * parseFloat(item.quantity);
     total_amount += parseFloat(subtotal);
 
     itemsWithSubtotal.push({
@@ -140,8 +144,9 @@ export const createOrder = async (data, userId) => {
     });
   }
 
-  const order = await prisma.$transaction(async (tx) => {
-    const newOrder = await tx.order.create({
+  // إنشاء الطلب داخل transaction
+  const newOrder = await prisma.$transaction(async (tx) => {
+    return await tx.order.create({
       data: {
         customer_id: data.customer_id,
         sales_user_id: userId,
@@ -155,32 +160,68 @@ export const createOrder = async (data, userId) => {
       include: {
         customer: true,
         sales: {
-          select: {
-            id: true,
-            username: true,
-            full_name: true,
-          },
+          select: { id: true, username: true, full_name: true },
         },
         items: {
           include: {
-            ruler: {
-              include: {
-                material: true,
-                color: true,
-              },
-            },
+            ruler: { include: { material: true, color: true } },
             batch: true,
           },
         },
       },
     });
-
-    return newOrder;
   });
 
-  logger.info("Order created", { order_id: order.order_id });
+  // إعادة تشكيل JSON للـ response
+  const orderResponse = {
+    order_id: newOrder.id,
+    customer_id: newOrder.customer_id,
+    sales_user_id: newOrder.sales_user_id,
+    status: newOrder.status,
+    total_amount: newOrder.total_amount,
+    created_at: newOrder.created_at,
+    notes: newOrder.notes,
+    customer: {
+      customer_id: newOrder.customer.id,
+      name: newOrder.customer.name,
+      phone: newOrder.customer.phone,
+      customer_type: newOrder.customer.customer_type,
+      city: newOrder.customer.city,
+      address: newOrder.customer.address,
+      country: newOrder.customer.country,
+      countryCode: newOrder.customer.countryCode,
+      is_active: newOrder.customer.is_active,
+      fcmToken: newOrder.customer.fcmToken,
+      notes: newOrder.customer.notes,
+      created_at: newOrder.customer.created_at,
+    },
+    sales: newOrder.sales,
+    items: await Promise.all(newOrder.items.map(async (item) => {
+      const type_item = await ConstantValueModel.findById(item.type_item);
 
-  return order;
+      return {
+        order_item_id: item.id,
+        order_id: item.order_id,
+        material_name: item.ruler?.material?.material_name || null,
+        color_code: item.ruler?.color?.color_code || null,
+        color_name: item.ruler?.color?.color_name || null,
+        batch_number: item.batch?.batch_number || null,
+        ruler_type: item.ruler?.type || "new",
+        type_item: type_item?.value || null,
+        constant_width: item.constant_width,
+        length: item.length,
+        constant_thickness: item.constant_thickness,
+        batch_id: item.batch_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: item.subtotal,
+        notes: item.notes,
+      };
+    })),
+  };
+
+  logger.info("Order created", { order_id: orderResponse.order_id });
+  return orderResponse;
 };
 
 /**

@@ -63,7 +63,7 @@ app.use(helmet({
 
 
 app.set('trust proxy', 1);
-
+/*
 const allowedOrigins = [
   'https://app.automation.com',
   'https://147.79.118.55:5173',
@@ -87,7 +87,12 @@ app.use((req, res, next) => {
     return res.sendStatus(204);
   }
   next();
-});
+});*/
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
