@@ -10,11 +10,9 @@ import logger from '../utils/logger.js';
  */
 export const getAllUsers = async (req, res, next) => {
   try {
-    const { page, limit, search, role, isActive } = req.query;
+    const { search, role, isActive } = req.query;
 
     const result = await UserService.getAllUsers({
-      page,
-      limit,
       search,
       role,
       isActive
@@ -23,7 +21,8 @@ export const getAllUsers = async (req, res, next) => {
     res.status(SUCCESS_STATUS_CODE).json({
       success: SUCCESS_REQUEST,
       message: 'تم جلب المستخدمين بنجاح',
-      data: serializeResponse(result)
+      data: result.users,
+      total: result.total
     });
   } catch (error) {
     logger.error('Get all users controller error', {

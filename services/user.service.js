@@ -7,14 +7,12 @@ import { hashPassword } from '../utils/hash.js';
 
 /**
  * Get all users with filtering and pagination (for admins)
- * @param {object} filters - { page, limit, search, role, isActive }
- * @returns {Promise<{users: User[], total: number, page: number, totalPages: number}>}
+ * @param {object} filters - { search, role, isActive }
+ * @returns {Promise<{users: User[], total: number}>}
  */
 export const getAllUsers = async (filters = {}) => {
   try {
-    const { page = 1, limit = 10, search = '', role, isActive } = filters;
-    const skip = (page - 1) * limit;
-    const take = parseInt(limit);
+    const {search = '', role, isActive } = filters;
 
     // Build where clause
     const where = {};
@@ -42,8 +40,6 @@ export const getAllUsers = async (filters = {}) => {
     const [users, total] = await Promise.all([
       prisma.users.findMany({
         where,
-        skip,
-        take,
         orderBy: { created_at: 'desc' },
         select: {
           id: true,
@@ -64,10 +60,7 @@ export const getAllUsers = async (filters = {}) => {
 
     return {
       users,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / take),
-      limit: take
+      total
     };
   } catch (error) {
     logger.error('Get all users error', { message: error?.message, stack: error?.stack });

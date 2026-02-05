@@ -23,6 +23,9 @@ import bcrypt from "bcrypt";
 export const login = async (req, res, next) => {
   try {
     const { username, phone, password } = req.body;
+    if (!phone && !username) {
+      throw new Error("بيانات تسجيل الدخول غير صحيحة");
+    }
     const loginIdentifier = phone || username;
     const result = await loginUser(loginIdentifier, password, req);
     res.json({
@@ -186,13 +189,13 @@ export const getProfile = async (req, res, next) => {
         data: {}
       });
     }
-    const { password, ...userWithoutPassword } = user;
+    const { password, ...users } = user;
 
     res.json({
       success: SUCCESS_REQUEST,
       message: "تم جلب البيانات بنجاح",
       data: {
-        ...serializeResponse(userWithoutPassword)
+        ...serializeResponse(users)
       }
     });
   } catch (error) {
@@ -284,12 +287,12 @@ export const updateProfile = async (req, res) => {
       created_at: true,
       updated_at: true,
     });
-    const { password: userPassword, ...userWithoutPassword } = user;
+    const { password: userPassword, ...users } = user;
 
     return res.json({
       success: SUCCESS_REQUEST,
       message: UPDATE_PROFILE_INFO_SUCCESSFULLY,
-      data: serializeResponse(userWithoutPassword),
+      data: serializeResponse(users),
     });
 
   } catch (error) {

@@ -92,12 +92,6 @@ export const userIdParamRules = [
  * Validation rules for getting all users with filters
  */
 export const getUsersQueryRules = [
-  query('page')
-    .optional()
-    .isInt({ min: 1 }).withMessage('رقم الصفحة يجب أن يكون رقماً صحيحاً موجباً'),
-  query('limit')
-    .optional()
-    .isInt({ min: 1, max: 100 }).withMessage('عدد العناصر يجب أن يكون بين 1 و 100'),
   query('search')
     .optional()
     .isString().withMessage('نص البحث يجب أن يكون نصاً')

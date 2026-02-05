@@ -30,11 +30,27 @@ export const phoneValidator = body("phone")
   });
 
 export const loginUsernameValidator = body("username")
-  .exists({ checkFalsy: true }).withMessage("بيانات تسجيل الدخول غير صحيحة")
+  .optional()
   .isString().withMessage("بيانات تسجيل الدخول غير صحيحة")
   .isLength({ min: 4 }).withMessage("بيانات تسجيل الدخول غير صحيحة");
 
-  export const loginPasswordValidator = body("password")
+export const loginPhoneValidator = body("phone")
+  .optional()
+  .isString().withMessage("بيانات تسجيل الدخول غير صحيحة")
+  .custom((value) => {
+    if (!value || typeof value !== 'string') throw new Error("بيانات تسجيل الدخول غير صحيحة");
+    const trimmed = value.replace(/\s+/g, '').trim();
+    if (!trimmed.startsWith('+')) {
+      throw new Error("رقم الهاتف يجب أن يبدأ برمز الدولة (+)");
+    }
+    const info = getCountryFromPhone(trimmed);
+    if (!info.success) {
+      throw new Error(info.error || "رقم الهاتف غير صالح");
+    }
+    return true;
+  });
+
+export const loginPasswordValidator = body("password")
   .exists({ checkFalsy: true }).withMessage("بيانات تسجيل الدخول غير صحيحة")
   .isString().withMessage("بيانات تسجيل الدخول غير صحيحة")
   .isLength({ min: 6 }).withMessage("بيانات تسجيل الدخول غير صحيحة");
@@ -98,13 +114,13 @@ export const newPasswordValidator = body("newPassword")
 
 // Validation Rules Arrays
 export const loginRules = [
-  loginUsernameValidator,
+  (loginPhoneValidator || loginUsernameValidator),
   loginPasswordValidator
 ];
 
 export const refreshRules = [refreshTokenValidator];
 export const profileUpdateRules = [nameValidator, phoneValidator, usernameValidator];
 
-export const forgotPasswordRules = [];//[forgotPasswordPhoneValidator];
-export const verifyOTPRules = [];//[forgotPasswordPhoneValidator, otpValidator];
+export const forgotPasswordRules = [forgotPasswordPhoneValidator];
+export const verifyOTPRules = [forgotPasswordPhoneValidator, otpValidator];
 export const resetPasswordRules = [resetTokenValidatorBody, newPasswordValidator];

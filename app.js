@@ -17,6 +17,16 @@ import csrf from 'csurf'; // معطل حال - يمكن تفعيله للـ web 
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import constantTypeRoutes from './routes/constantType.routes.js';
+import constantValueRoutes from './routes/constantValue.routes.js';
+import materialRoutes from './routes/material.routes.js';
+import colorRoutes from './routes/color.routes.js';
+import priceColorRoutes from './routes/priceColor.routes.js';
+import rulerRoutes from './routes/ruler.routes.js';
+import batchRoutes from './routes/batch.routes.js';
+import customerRoutes from './routes/customer.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import settingRoutes from './routes/setting.routes.js';
 
 config();
 
@@ -24,7 +34,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5050;
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -60,7 +70,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  'http://192.168.3.11:3000',
+  'http://192.168.3.11:3000'
 ];
 
 // Middleware CORS آمن
@@ -69,6 +79,8 @@ app.use((req, res, next) => {
   if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   }
   // Preflight requests
   if (req.method === 'OPTIONS') {
@@ -94,8 +106,19 @@ const csrfProtection = csrf({
 // تطبيق CSRF فقط على المسارات التي تحتاجه (مثل forms)
 // أو استثناء API routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/auth') || req.path.startsWith('/user')) {
-    return next(); // تخطي CSRF للـ API
+  if (req.path.startsWith('/auth') ||
+      req.path.startsWith('/user') ||
+      req.path.startsWith('/constant-type') ||
+      req.path.startsWith('/constant-value') ||
+      req.path.startsWith('/material') ||
+      req.path.startsWith('/color') ||
+      req.path.startsWith('/price-color') ||
+      req.path.startsWith('/ruler') ||
+      req.path.startsWith('/batch') ||
+      req.path.startsWith('/customer') ||
+      req.path.startsWith('/order') ||
+      req.path.startsWith('/setting')) {
+    return next();
   }
   csrfProtection(req, res, next);
 });
@@ -112,6 +135,17 @@ app.use('/api/', apiLimiter);
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
+app.use('/constant-type', constantTypeRoutes);
+app.use('/constant-value', constantValueRoutes);
+app.use('/material', materialRoutes);
+app.use('/color', colorRoutes);
+app.use('/price-color', priceColorRoutes);
+app.use('/ruler', rulerRoutes);
+app.use('/batch', batchRoutes);
+app.use('/customer', customerRoutes);
+app.use('/order', orderRoutes);
+app.use('/setting', settingRoutes);
+
 app.get('/', (_req, res) => {
   res.json({
     success: true,

@@ -15,7 +15,6 @@ export const loginUser = async (loginIdentifier, password, req) => {
   const ip = getRealIP(req);
   const canAttempt = await rateLimiter.canAttempt(loginIdentifier);
   if (!canAttempt) throw new Error(ACCOUNT_LOCKED_LOGIN);
-
   const user = await UserModel.findByPhoneOrUsername(loginIdentifier);
   if (!user) {
     await rateLimiter.recordFailedAttempt(loginIdentifier, ip, req.headers['user-agent']);
@@ -39,8 +38,8 @@ export const loginUser = async (loginIdentifier, password, req) => {
 
   const tokens = await generateTokenPair(user.id, session.id, user.role);
   await rateLimiter.recordSuccessfulAttempt(loginIdentifier, ip, req.headers['user-agent'], user.id);
-  const userWithoutPassword = { ...user, password: undefined };
-  return { userWithoutPassword, ...tokens };
+  const users = { ...user, password: undefined };
+  return { ...users, ...tokens };
 };
 
 /**
