@@ -1,5 +1,5 @@
 // services/setting.service.js
-import { SettingModel } from "../models/index.js";
+import { SettingModel , DiscountModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -137,5 +137,44 @@ export const upsertSetting = async (key, data) => {
   logger.info("Setting upserted", { key });
 
   return setting;
+};
+
+
+// discount services 
+export const getDiscounts = async (filters = {}) => {
+  const where = {};
+
+  // Search by name or description
+  if (filters.search) {
+    where.OR = [
+      { name: { contains: filters.search } },
+      { description: { contains: filters.search } },
+    ];
+  }
+
+  const [discounts, total] = await Promise.all([
+    DiscountModel.findAll({ where }),
+    DiscountModel.count(where),
+  ]);
+
+  return {
+    discounts,
+    total,
+  };
+};  
+
+export const createDiscount = async (data) => {
+  const discount = await DiscountModel.create(data);
+  return discount;
+};
+
+export const updateDiscount = async (id, data) => {
+  const discount = await DiscountModel.updateById(id, data);
+  return discount;
+};
+
+export const deleteDiscount = async (id) => {
+  await DiscountModel.deleteById(id);
+  return { message: "تم حذف الخصم بنجاح" };
 };
 

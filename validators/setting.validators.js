@@ -104,3 +104,62 @@ export const getSettingsQueryRules = [
     .withMessage("نص البحث يجب أن يكون نصاً"),
 ];
 
+/**
+ * Validation rules for discount ID parameter
+ */
+export const discountIdParamRules = [
+  param("id")
+    .exists()
+    .withMessage("معرف الخصم مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف الخصم يجب أن يكون رقماً صحيحاً موجباً"),
+];
+
+/**
+ * Validation rules for creating a discount
+ */
+export const createDiscountRules = [
+  body("type")
+    .exists({ checkFalsy: true })
+    .withMessage("نوع الخصم مطلوب")
+    .isIn(["percentage", "fixed"])
+    .withMessage("نوع الخصم يجب أن يكون percentage أو fixed"),
+  body("quantityCondition")
+    .exists({ checkFalsy: true })
+    .withMessage("شرط الكمية مطلوب")
+    .isIn(["LESS_THAN", "GREATER_THAN", "LESS_THAN_OR_EQUAL", "GREATER_THAN_OR_EQUAL", "EQUAL"])
+    .withMessage("شرط الكمية يجب أن يكون LESS_THAN أو GREATER_THAN أو LESS_THAN_OR_EQUAL أو GREATER_THAN_OR_EQUAL أو EQUAL"),
+  body("quantity")
+    .exists({ checkFalsy: true })
+    .withMessage("الكمية مطلوبة")
+    .isInt({ min: 1 })
+    .withMessage("الكمية يجب أن تكون رقماً صحيحاً موجباً"),
+  body("value")
+    .exists({ checkFalsy: true })
+    .withMessage("القيمة مطلوبة")
+    .isDecimal()
+    .withMessage("القيمة يجب أن تكون رقماً عشريام"),
+];
+
+/**
+ * Validation rules for updating a discount
+ */
+export const updateDiscountRules = [
+  body("type")
+    .optional()
+    .isIn(["percentage", "fixed"])
+    .withMessage("نوع الخصم يجب أن يكون percentage أو fixed"),
+  body("quantityCondition")
+    .optional()
+    .isIn(["LESS_THAN", "GREATER_THAN", "LESS_THAN_OR_EQUAL", "GREATER_THAN_OR_EQUAL", "EQUAL"])
+    .withMessage("شرط الكمية يجب أن يكون LESS_THAN أو GREATER_THAN أو LESS_THAN_OR_EQUAL أو GREATER_THAN_OR_EQUAL أو EQUAL"),
+  body("quantity")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("الكمية يجب أن تكون رقماً صحيحاً موجباً"),
+  body("value")
+    .optional()
+    .isDecimal()
+    .withMessage("القيمة يجب أن تكون رقماً عشريام"),
+];
+

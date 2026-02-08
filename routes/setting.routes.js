@@ -11,6 +11,10 @@ import {
   updateSettingByKey,
   deleteSetting,
   upsertSetting,
+  getDiscounts,
+  createDiscount,
+  updateDiscount,
+  deleteDiscount, 
 } from "../controllers/setting.controller.js";
 
 import {
@@ -20,6 +24,10 @@ import {
   settingIdParamRules,
   settingKeyParamRules,
   getSettingsQueryRules,
+  createDiscountRules,
+  updateDiscountRules,
+  discountIdParamRules,
+
 } from "../validators/setting.validators.js";
 
 const router = Router();
@@ -33,38 +41,19 @@ router.get("/id/:id", validate(settingIdParamRules), getSettingById);
 router.get("/key/:key", validate(settingKeyParamRules), getSettingByKey);
 
 // POST, PUT, DELETE routes - admin only
-router.post(
-  "/",
-  requireRole(["admin"]),
-  validate(createSettingRules),
-  createSetting
-);
-router.put(
-  "/id/:id",
-  requireRole(["admin"]),
-  validate([...settingIdParamRules, ...updateSettingRules]),
-  updateSetting
-);
-router.put(
-  "/key/:key",
-  requireRole(["admin"]),
-  validate([...settingKeyParamRules, ...updateSettingRules]),
-  updateSettingByKey
-);
-router.delete(
-  "/id/:id",
-  requireRole(["admin"]),
-  validate(settingIdParamRules),
-  deleteSetting
-);
+router.post("/", requireRole(["admin"]), validate(createSettingRules), createSetting);
+router.put("/id/:id", requireRole(["admin"]), validate([...settingIdParamRules, ...updateSettingRules]), updateSetting);
+router.put("/key/:key", requireRole(["admin"]), validate([...settingKeyParamRules, ...updateSettingRules]), updateSettingByKey);
+router.delete("/id/:id", requireRole(["admin"]), validate(settingIdParamRules), deleteSetting);
+
+// discont routes
+router.get("/discounts", requireRole(["admin"]), validate(getSettingsQueryRules), getDiscounts);
+router.post("/discounts", requireRole(["admin"]), validate(createDiscountRules), createDiscount);
+router.put("/discounts/:id", requireRole(["admin"]), validate([...discountIdParamRules, ...updateDiscountRules]), updateDiscount);
+router.delete("/discounts/:id", requireRole(["admin"]), validate(discountIdParamRules), deleteDiscount);
 
 // Upsert route - admin only
-router.post(
-  "/upsert/:key",
-  requireRole(["admin"]),
-  validate([...settingKeyParamRules, ...upsertSettingRules]),
-  upsertSetting
-);
+router.post("/upsert/:key", requireRole(["admin"]), validate([...settingKeyParamRules, ...upsertSettingRules]), upsertSetting);
 
 export default router;
 

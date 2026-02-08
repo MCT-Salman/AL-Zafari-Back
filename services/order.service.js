@@ -71,14 +71,14 @@ export const getAllOrders = async (filters = {}) => {
     created_at: order.created_at,
     customer: order.customer
       ? {
-          customer_id: order.customer.customer_id,
-          name: order.customer.name,
-          phone: order.customer.phone,
-          balance: order.customer.balance,
-          customer_type: order.customer.customer_type,
-          city: order.customer.city,
-          address: order.customer.address,
-        }
+        customer_id: order.customer.customer_id,
+        name: order.customer.name,
+        phone: order.customer.phone,
+        balance: order.customer.balance,
+        customer_type: order.customer.customer_type,
+        city: order.customer.city,
+        address: order.customer.address,
+      }
       : null,
     sales: order.sales ?? null,
   }));
@@ -110,7 +110,7 @@ export const getOrderById = async (order_id) => {
     created_at: order.created_at,
     notes: order.notes,
     customer: {
-      name: order.customer.name,  
+      name: order.customer.name,
       phone: order.customer.phone,
       balance: order.customer.balance,
       customer_type: order.customer.customer_type,
@@ -154,6 +154,11 @@ export const createOrder = async (data, userId) => {
   if (!customer) {
     const error = new Error("العميل غير موجود");
     error.statusCode = 404;
+    throw error;
+  }
+  if (customer.balance > 0) {
+    const error = new Error("لا يمكن إنشاء طلب لعميل قبل تسديد الذمة");
+    error.statusCode = 400;
     throw error;
   }
 
@@ -209,13 +214,34 @@ export const createOrder = async (data, userId) => {
       item.unit_price = price.price_per_meter.toString();
     }
 
-    const subtotal = (parseFloat(item.unit_price) * parseFloat(item.length)).toFixed(2) * parseFloat(item.quantity);
-    total_amount += parseFloat(subtotal);
+
+    const quantity = Number(item.quantity);
+    const length = Number(item.length);
+    const unitPrice = Number(item.unit_price);
+
+    const subtotalBeforeDiscount = unitPrice * length * quantity;
+
+    const quantityForDiscount = length * quantity;
+
+    let itemDiscount = 0;
+    const discount = await calculateDiscount(
+      quantityForDiscount,
+      subtotalBeforeDiscount
+    );
+
+    if (discount) {
+      itemDiscount = discount.discountAmount;
+    }
+
+    const finalSubtotal = subtotalBeforeDiscount - itemDiscount;
+
+    total_amount += finalSubtotal;
 
     itemsWithSubtotal.push({
       ...item,
-      unit_price: item.unit_price.toString(),
-      subtotal: subtotal.toString(),
+      unit_price: unitPrice.toString(),
+      subtotal: finalSubtotal.toFixed(2),
+      //discount_amount: itemDiscount.toFixed(2),
     });
   }
 
@@ -355,13 +381,33 @@ export const updateOrder = async (order_id, data) => {
         item.unit_price = price.price_per_meter.toString();
       }
 
-      const subtotal = (parseFloat(item.unit_price) * parseFloat(item.length) * parseFloat(item.quantity)).toFixed(2);
-      total_amount += parseFloat(subtotal);
+      const quantity = Number(item.quantity);
+      const length = Number(item.length);
+      const unitPrice = Number(item.unit_price);
+
+      const subtotalBeforeDiscount = unitPrice * length * quantity;
+
+      const quantityForDiscount = length * quantity;
+
+      let itemDiscount = 0;
+      const discount = await calculateDiscount(
+        quantityForDiscount,
+        subtotalBeforeDiscount
+      );
+
+      if (discount) {
+        itemDiscount = discount.discountAmount;
+      }
+
+      const finalSubtotal = subtotalBeforeDiscount - itemDiscount;
+
+      total_amount += finalSubtotal;
 
       itemsWithSubtotal.push({
         ...item,
-        unit_price: item.unit_price.toString(),
-        subtotal: subtotal.toString(),
+        unit_price: unitPrice.toString(),
+        subtotal: finalSubtotal.toFixed(2),
+        // discount_amount: itemDiscount.toFixed(2),
       });
     }
   }
@@ -471,7 +517,6 @@ export const deleteOrder = async (order_id) => {
  * إضافة عنصر جديد لطلب موجود
  */
 export const addOrderItem = async (order_id, itemData) => {
-  // التحقق من وجود الطلب
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -479,7 +524,6 @@ export const addOrderItem = async (order_id, itemData) => {
     throw error;
   }
 
-  // التحقق من وجود المسطرة
   const ruler = await RulerModel.findById(itemData.ruler_id);
   if (!ruler) {
     const error = new Error("المسطرة غير موجودة");
@@ -487,7 +531,6 @@ export const addOrderItem = async (order_id, itemData) => {
     throw error;
   }
 
-  // التحقق من وجود الطبخة
   const batch = await BatchModel.findById(itemData.batch_id);
   if (!batch) {
     const error = new Error("الطبخة غير موجودة");
@@ -495,14 +538,15 @@ export const addOrderItem = async (order_id, itemData) => {
     throw error;
   }
 
-  // حساب السعر إذا لم يتم تمريره
-  let unit_price = itemData.unit_price;
-  if (!unit_price || Number(unit_price) === 0) {
-    const widthType = itemData.constant_width === 22
-      ? "isByMeter22"
-      : itemData.constant_width === 44
-        ? "isByMeter44"
-        : "isByBlanck";
+  // السعر
+  let unit_price = Number(itemData.unit_price);
+  if (!unit_price || unit_price === 0) {
+    const widthType =
+      itemData.constant_width === 22
+        ? "isByMeter22"
+        : itemData.constant_width === 44
+          ? "isByMeter44"
+          : "isByBlanck";
 
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
       itemData.ruler_id,
@@ -510,61 +554,71 @@ export const addOrderItem = async (order_id, itemData) => {
     );
 
     if (!priceColor) {
-      const error = new Error("لم يتم العثور على سعر لهذه المنتج");
+      const error = new Error("لم يتم العثور على سعر لهذا المنتج");
       error.statusCode = 404;
       throw error;
     }
 
-    unit_price = priceColor.price_per_meter;
+    unit_price = Number(priceColor.price_per_meter);
   }
 
-  // حساب subtotal
-  const subtotal = unit_price * itemData.length * itemData.quantity;
+  const quantity = Number(itemData.quantity);
+  const length = Number(itemData.length);
 
-  // معاملة Prisma لإنشاء العنصر وتحديث الطلب
+  const subtotalBeforeDiscount = unit_price * quantity * length;
+
+  // 🔥 خصم هذا العنصر فقط
+  const quantityForDiscount = quantity * length;
+
+  let itemDiscount = 0;
+  const discount = await calculateDiscount(
+    quantityForDiscount,
+    subtotalBeforeDiscount
+  );
+
+  if (discount) {
+    itemDiscount = discount.discountAmount;
+  }
+
+  const finalSubtotal = subtotalBeforeDiscount - itemDiscount;
+
   const result = await prisma.$transaction(async (tx) => {
-    // إنشاء العنصر الجديد
-    const newItem = await tx.orderItem.create({
+    // إنشاء العنصر
+    await tx.orderItem.create({
       data: {
         order_id,
         type_item: itemData.type_item,
         ruler_id: itemData.ruler_id,
         constant_width: itemData.constant_width,
-        length: itemData.length,
+        length,
         constant_thickness: itemData.constant_thickness,
         batch_id: itemData.batch_id,
-        quantity: itemData.quantity,
+        quantity,
         unit_price,
-        subtotal,
+        subtotal: finalSubtotal,
         notes: itemData.notes,
-      },
-      include: {
-        ruler: {
-          include: {
-            material: true,
-            color: true,
-          },
-        },
-        batch: true,
       },
     });
 
-    // تحديث المبلغ الإجمالي للطلب
+    // إعادة حساب إجمالي الطلب (جمع فقط)
+    const orderItems = await tx.orderItem.findMany({
+      where: { order_id },
+    });
+
+    let newTotal = 0;
+    for (const item of orderItems) {
+      newTotal += Number(item.subtotal);
+    }
+
     const updatedOrder = await tx.order.update({
       where: { order_id },
       data: {
-        total_amount: {
-          increment: subtotal,
-        },
+        total_amount: newTotal,
       },
       include: {
         customer: true,
         sales: {
-          select: {
-            id: true,
-            username: true,
-            full_name: true,
-          },
+          select: { id: true, username: true, full_name: true },
         },
         items: {
           include: {
@@ -575,46 +629,42 @@ export const addOrderItem = async (order_id, itemData) => {
       },
     });
 
-    return { newItem, updatedOrder };
+    return updatedOrder;
   });
 
-  // إعادة تشكيل JSON مرتب
-  const type_item = await ConstantValueModel.findById(result.newItem.type_item);
-
   const response = {
-    order_id: result.updatedOrder.order_id,
-    customer_id: result.updatedOrder.customer_id,
-    sales_user_id: result.updatedOrder.sales_user_id,
-    status: result.updatedOrder.status,
-    count_items: result.updatedOrder.items.length,
-    total_amount: result.updatedOrder.total_amount,
-    created_at: result.updatedOrder.created_at,
-    notes: result.updatedOrder.notes,
+    order_id: result.order_id,
+    customer_id: result.customer_id,
+    sales_user_id: result.sales_user_id,
+    status: result.status,
+    count_items: result.items.length,
+    total_amount: result.total_amount,
+    created_at: result.created_at,
+    notes: result.notes,
     customer: {
-      name: result.updatedOrder.customer.name,
-      phone: result.updatedOrder.customer.phone,
-      balance: result.updatedOrder.customer.balance,
-      customer_type: result.updatedOrder.customer.customer_type,
-      city: result.updatedOrder.customer.city,
-      address: result.updatedOrder.customer.address,
+      name: result.customer.name,
+      phone: result.customer.phone,
+      balance: result.customer.balance,
+      customer_type: result.customer.customer_type,
+      city: result.customer.city,
+      address: result.customer.address,
     },
-    sales: result.updatedOrder.sales,
-    items: await Promise.all(result.updatedOrder.items.map(async (item) => {
-      const typeItemValue = await ConstantValueModel.findById(item.type_item);
+    sales: result.sales,
+    items: await Promise.all(result.items.map(async (item) => {
+      const type_item = await ConstantValueModel.findById(item.type_item);
       return {
         order_item_id: item.id,
-        order_id: item.order_id,
         material_name: item.ruler?.material?.material_name || null,
         color_code: item.ruler?.color?.color_code || null,
         color_name: item.ruler?.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
         ruler_type: item.ruler?.type || "new",
-        type_item: typeItemValue?.value || null,
+        type_item: type_item?.value || null,
         constant_width: item.constant_width,
-        length: item.length,
         constant_thickness: item.constant_thickness,
         batch_id: item.batch_id,
         quantity: item.quantity,
+        length: item.length,
         price_per_meter: item.unit_price,
         subtotal: item.subtotal,
         notes: item.notes,
@@ -622,7 +672,10 @@ export const addOrderItem = async (order_id, itemData) => {
     })),
   };
 
-  logger.info("Order item added", { order_id: response.order_id, item_id: result.newItem.id });
+  logger.info("Order item added with item-level discount", {
+    order_id,
+  });
+
   return response;
 };
 
@@ -630,7 +683,6 @@ export const addOrderItem = async (order_id, itemData) => {
  * تعديل عنصر من طلب
  */
 export const updateOrderItem = async (order_id, order_item_id, itemData) => {
-  // التحقق من وجود الطلب
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -638,7 +690,6 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     throw error;
   }
 
-  // التحقق من وجود العنصر
   const existingItem = await OrderItemModel.findById(order_item_id);
   if (!existingItem || existingItem.order_id !== order_id) {
     const error = new Error("العنصر غير موجود");
@@ -646,7 +697,6 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     throw error;
   }
 
-  // التحقق من المسطرة إذا تم تمريرها
   if (itemData.ruler_id) {
     const ruler = await RulerModel.findById(itemData.ruler_id);
     if (!ruler) {
@@ -656,7 +706,6 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     }
   }
 
-  // التحقق من الطبخة إذا تم تمريرها
   if (itemData.batch_id) {
     const batch = await BatchModel.findById(itemData.batch_id);
     if (!batch) {
@@ -666,54 +715,63 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     }
   }
 
-  // حساب السعر و subtotal
-  let unit_price = itemData.unit_price ?? existingItem.unit_price;
+  const finalLength = Number(itemData.length ?? existingItem.length);
+  const finalQuantity = Number(itemData.quantity ?? existingItem.quantity);
+  const finalWidth = itemData.constant_width ?? existingItem.constant_width;
+  const finalRulerId = itemData.ruler_id ?? existingItem.ruler_id;
 
-  if (!unit_price || Number(unit_price) === 0) {
-    const widthType = itemData.constant_width === 22
-      ? "isByMeter22"
-      : itemData.constant_width === 44
-        ? "isByMeter44"
-        : "isByBlanck";
+  let unit_price = Number(itemData.unit_price ?? existingItem.unit_price);
+
+  if (!unit_price || unit_price === 0) {
+    const widthType =
+      finalWidth === 22
+        ? "isByMeter22"
+        : finalWidth === 44
+          ? "isByMeter44"
+          : "isByBlanck";
 
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
-      itemData.ruler_id || existingItem.ruler_id,
+      finalRulerId,
       widthType
     );
 
     if (!priceColor) {
-      const error = new Error("لم يتم العثور على سعر لهذه المنتج");
+      const error = new Error("لم يتم العثور على سعر لهذا المنتج");
       error.statusCode = 404;
       throw error;
     }
 
-    unit_price = priceColor.price_per_meter;
+    unit_price = Number(priceColor.price_per_meter);
   }
 
-  const subtotal = unit_price * (itemData.length || existingItem.length) * (itemData.quantity || existingItem.quantity);
+  const subtotalBeforeDiscount = unit_price * finalLength * finalQuantity;
+  let discountAmount = 0;
 
-  // تحديث العنصر والطلب داخل transaction
+  const discount = await calculateDiscount(finalLength * finalQuantity, subtotalBeforeDiscount);
+  if (discount) {
+    discountAmount = discount.discountAmount;
+  }
+
+  const finalSubtotal = subtotalBeforeDiscount - discountAmount;
+
+  // تحديث العنصر وحساب إجمالي الطلب
   const result = await prisma.$transaction(async (tx) => {
-    // تحديث العنصر
     const updatedItem = await tx.orderItem.update({
       where: { order_item_id },
       data: {
         ...itemData,
         unit_price,
-        subtotal,
-      },
-      include: {
-        ruler: { include: { material: true, color: true } },
-        batch: true,
+        subtotal: finalSubtotal,
       },
     });
 
-    // تحديث المبلغ الإجمالي للطلب
+    // إعادة حساب إجمالي الطلب = مجموع subtotals فقط
+    const orderItems = await tx.orderItem.findMany({ where: { order_id } });
+    const newTotal = orderItems.reduce((sum, item) => sum + Number(item.subtotal), 0);
+
     const updatedOrder = await tx.order.update({
       where: { order_id },
-      data: {
-        total_amount: await calculateTotalAmount(tx, order_id), // دالة لحساب المجموع الجديد
-      },
+      data: { total_amount: newTotal },
       include: {
         customer: true,
         sales: { select: { id: true, username: true, full_name: true } },
@@ -724,9 +782,6 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     return { updatedItem, updatedOrder };
   });
 
-  // إعادة JSON مرتب
-  const type_item = await ConstantValueModel.findById(result.updatedItem.type_item);
-
   const response = {
     order_id: result.updatedOrder.order_id,
     customer_id: result.updatedOrder.customer_id,
@@ -746,21 +801,19 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     },
     sales: result.updatedOrder.sales,
     items: await Promise.all(result.updatedOrder.items.map(async (item) => {
-      const typeItemValue = await ConstantValueModel.findById(item.type_item);
+      const type_item = await ConstantValueModel.findById(item.type_item);
       return {
         order_item_id: item.id,
-        order_id: item.order_id,
         material_name: item.ruler?.material?.material_name || null,
         color_code: item.ruler?.color?.color_code || null,
         color_name: item.ruler?.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
         ruler_type: item.ruler?.type || "new",
-        type_item: typeItemValue?.value || null,
+        type_item: type_item?.value || null,
         constant_width: item.constant_width,
-        length: item.length,
         constant_thickness: item.constant_thickness,
-        batch_id: item.batch_id,
         quantity: item.quantity,
+        length: item.length,
         price_per_meter: item.unit_price,
         subtotal: item.subtotal,
         notes: item.notes,
@@ -768,7 +821,11 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     })),
   };
 
-  logger.info("Order item updated", { order_id: response.order_id, item_id: result.updatedItem.id });
+  logger.info("Order item updated with item-level discount", {
+    order_id: response.order_id,
+    item_id: order_item_id,
+  });
+
   return response;
 };
 
@@ -782,7 +839,6 @@ async function calculateTotalAmount(tx, order_id) {
  * حذف عنصر من طلب
  */
 export const deleteOrderItem = async (order_id, order_item_id) => {
-  // التحقق من وجود الطلب
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -790,7 +846,6 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     throw error;
   }
 
-  // التحقق من وجود العنصر
   const existingItem = await OrderItemModel.findById(order_item_id);
   if (!existingItem || existingItem.order_id !== order_id) {
     const error = new Error("عنصر الطلب غير موجود");
@@ -798,7 +853,6 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     throw error;
   }
 
-  // التحقق من أن الطلب يحتوي على أكثر من عنصر واحد
   const itemsCount = await OrderItemModel.count({ order_id });
   if (itemsCount <= 1) {
     const error = new Error("لا يمكن حذف العنصر الوحيد من الطلب");
@@ -806,21 +860,43 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     throw error;
   }
 
-  // حذف العنصر وتحديث المبلغ الإجمالي في معاملة واحدة
   const result = await prisma.$transaction(async (tx) => {
     // حذف العنصر
-    const deletedItem = await tx.orderItem.delete({
+    await tx.orderItem.delete({
       where: { order_item_id },
     });
 
-    // تحديث المبلغ الإجمالي للطلب
+    // جلب كل العناصر بعد الحذف
+    const orderItems = await tx.orderItem.findMany({ where: { order_id } });
+
+    let finalTotal = 0;
+
+    // إعادة حساب subtotal لكل عنصر بعد الحذف مع خصمه الخاص
+    const updatedItems = [];
+    for (const item of orderItems) {
+      const quantity = Number(item.quantity);
+      const length = Number(item.length);
+      const unitPrice = Number(item.unit_price);
+
+      const subtotalBeforeDiscount = unitPrice * length * quantity;
+
+      let discountAmount = 0;
+      const discount = await calculateDiscount(length * quantity, subtotalBeforeDiscount);
+      if (discount) discountAmount = discount.discountAmount;
+
+      const finalSubtotal = subtotalBeforeDiscount - discountAmount;
+      finalTotal += finalSubtotal;
+
+      updatedItems.push({
+        ...item,
+        subtotal: finalSubtotal
+      });
+    }
+
+    // تحديث الطلب بعد حذف العنصر
     const updatedOrder = await tx.order.update({
       where: { order_id },
-      data: {
-        total_amount: {
-          decrement: deletedItem.subtotal,
-        },
-      },
+      data: { total_amount: finalTotal },
       include: {
         customer: true,
         sales: { select: { id: true, username: true, full_name: true } },
@@ -833,12 +909,11 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
       },
     });
 
-    return { deletedItem, updatedOrder };
+    return { updatedOrder, updatedItems };
   });
 
-  // إعادة JSON مرتب ومنسّق
   const orderResponse = {
-    order_id: result.updatedOrder.id,
+    order_id: result.updatedOrder.order_id,
     customer_id: result.updatedOrder.customer_id,
     sales_user_id: result.updatedOrder.sales_user_id,
     status: result.updatedOrder.status,
@@ -855,30 +930,37 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
       address: result.updatedOrder.customer.address,
     },
     sales: result.updatedOrder.sales,
-    items: await Promise.all(result.updatedOrder.items.map(async (item) => {
-      const typeItemValue = await ConstantValueModel.findById(item.type_item);
-      return {
-        order_item_id: item.id,
-        order_id: item.order_id,
-        material_name: item.ruler?.material?.material_name || null,
-        color_code: item.ruler?.color?.color_code || null,
-        color_name: item.ruler?.color?.color_name || null,
-        batch_number: item.batch?.batch_number || null,
-        ruler_type: item.ruler?.type || "new",
-        type_item: typeItemValue?.value || null,
-        constant_width: item.constant_width,
-        length: item.length,
-        constant_thickness: item.constant_thickness,
-        batch_id: item.batch_id,
-        quantity: item.quantity,
-        price_per_meter: item.unit_price,
-        subtotal: item.subtotal,
-        notes: item.notes,
-      };
-    })),
+    items: await Promise.all(
+      result.updatedOrder.items.map(async (item) => {
+        const typeItemValue = await ConstantValueModel.findById(item.type_item);
+        const updatedItem = result.updatedItems.find(i => i.id === item.id);
+        return {
+          order_item_id: item.id,
+          order_id: item.order_id,
+          material_name: item.ruler?.material?.material_name || null,
+          color_code: item.ruler?.color?.color_code || null,
+          color_name: item.ruler?.color?.color_name || null,
+          batch_number: item.batch?.batch_number || null,
+          ruler_type: item.ruler?.type || "new",
+          type_item: typeItemValue?.value || null,
+          constant_width: item.constant_width,
+          length: item.length,
+          constant_thickness: item.constant_thickness,
+          batch_id: item.batch_id,
+          quantity: item.quantity,
+          price_per_meter: item.unit_price,
+          subtotal: updatedItem.subtotal,
+          notes: item.notes,
+        };
+      })
+    ),
   };
 
-  logger.info("Order item deleted", { order_id, item_id: order_item_id });
+  logger.info("Order item deleted with item-level discount recalculation", {
+    order_id,
+    item_id: order_item_id,
+  });
+
   return orderResponse;
 };
 /**
@@ -955,4 +1037,58 @@ export const updateOrderStatus = async (order_id, status) => {
 
   logger.info("Order status updated", { order_id, status });
   return orderResponse;
+};
+
+/**
+ * @param {number} totalQuantity  مجموع الكميات
+ * @param {number} totalAmount    المبلغ الإجمالي قبل الخصم
+ * @returns {{discountAmount:number, discountValue:number, discountType:string}|null}
+ */
+export const calculateDiscount = async (totalQuantity, totalAmount) => {
+  const discounts = await prisma.discount.findMany({
+    orderBy: {
+      quantity: "desc",
+    },
+  });
+
+  for (const discount of discounts) {
+    let isValid = false;
+
+    switch (discount.quantityCondition) {
+      case "LESS_THAN":
+        isValid = totalQuantity < discount.quantity;
+        break;
+      case "GREATER_THAN":
+        isValid = totalQuantity > discount.quantity;
+        break;
+      case "LESS_THAN_OR_EQUAL":
+        isValid = totalQuantity <= discount.quantity;
+        break;
+      case "GREATER_THAN_OR_EQUAL":
+        isValid = totalQuantity >= discount.quantity;
+        break;
+      case "EQUAL":
+        isValid = totalQuantity === discount.quantity;
+        break;
+    }
+
+    if (isValid) {
+      let discountAmount = 0;
+
+      if (discount.type === "percentage") {
+        discountAmount =
+          totalAmount * (Number(discount.value) / 100);
+      } else if (discount.type === "fixed") {
+        discountAmount = Number(discount.value);
+      }
+
+      return {
+        discountAmount: Number(discountAmount.toFixed(2)),
+        discountValue: Number(discount.value),
+        discountType: discount.type,
+      };
+    }
+  }
+
+  return null;
 };

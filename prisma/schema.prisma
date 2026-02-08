@@ -614,3 +614,28 @@ model PasswordReset {
   @@index([created_at])
   @@map("PasswordReset")
 }
+
+enum DiscountType {
+  percentage
+  fixed
+}
+
+enum QuantityCondition {
+  LESS_THAN
+  GREATER_THAN
+  LESS_THAN_OR_EQUAL
+  GREATER_THAN_OR_EQUAL
+  EQUAL
+}
+
+model Discount {
+  id          Int      @id @default(autoincrement())
+  type        DiscountType
+  quantityCondition QuantityCondition
+  quantity    Int
+  value       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("Discount")
+}

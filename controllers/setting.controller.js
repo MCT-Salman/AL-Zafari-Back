@@ -8,6 +8,10 @@ import {
   updateSettingByKey as updateSettingByKeyService,
   deleteSetting as deleteSettingService,
   upsertSetting as upsertSettingService,
+  getDiscounts as getDiscountsService,
+  createDiscount as createDiscountService,
+  updateDiscount as updateDiscountService,
+  deleteDiscount as deleteDiscountService,
 } from "../services/setting.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -157,6 +161,85 @@ export const upsertSetting = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Upsert setting controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+// discount controller 
+export const getDiscounts = async (req, res, next) => {
+  try {
+    const filters = {
+      search: req.query.search,
+    };
+
+    const result = await getDiscountsService(filters);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب الخصومات بنجاح",
+      data: result.discounts,
+      total: result.total,
+    });
+  } catch (error) {
+    logger.error("Get discounts controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+export const createDiscount = async (req, res, next) => {
+  try {
+    const data = req.body;
+    const discount = await createDiscountService(data);
+
+    res.status(201).json({
+      success: SUCCESS_REQUEST,
+      message: "تم إنشاء الخصم بنجاح",
+      data: discount,
+    });
+  }
+  catch (error) {
+    logger.error("Create discount controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+export const updateDiscount = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const discount = await updateDiscountService(parseInt(id), data);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم تحديث الخصم بنجاح",
+      data: discount,
+    });
+  } catch (error) {
+    logger.error("Update discount controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
+
+export const deleteDiscount = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await deleteDiscountService(parseInt(id));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: result.message,
+      data: {},
+    });
+  } catch (error) {
+    logger.error("Delete discount controller error", {
       message: error?.message,
     });
     return next(error);

@@ -34,6 +34,7 @@ import * as WarehouseMovementModel from './warehouseMovement.model.js';
 
 import * as SettingModel from './setting.model.js';
 import * as PasswordResetModel from './passwordReset.model.js';
+import * as DiscountModel from './discount.model.js';
 
 export {
   UserModel,
@@ -63,4 +64,5 @@ export {
   WarehouseMovementModel,
   SettingModel,
   PasswordResetModel,
+  DiscountModel,
 };

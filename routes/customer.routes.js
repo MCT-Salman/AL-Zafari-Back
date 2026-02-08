@@ -23,28 +23,13 @@ const router = Router();
 router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
-router.get("/", validate(getCustomersQueryRules), getAllCustomers);
-router.get("/:id", validate(customerIdParamRules), getCustomerById);
+router.get("/", requireRole(["admin", "sales", "accountant", "cashier"]), validate(getCustomersQueryRules), getAllCustomers);
+router.get("/:id", requireRole(["admin", "sales", "accountant", "cashier"]), validate(customerIdParamRules), getCustomerById);
 
 // POST, PUT, DELETE routes - admin and sales only
-router.post(
-  "/",
-  requireRole(["admin", "sales"]),
-  validate(createCustomerRules),
-  createCustomer
-);
-router.put(
-  "/:id",
-  requireRole(["admin", "sales"]),
-  validate([...customerIdParamRules, ...updateCustomerRules]),
-  updateCustomer
-);
-router.delete(
-  "/:id",
-  requireRole(["admin"]),
-  validate(customerIdParamRules),
-  deleteCustomer
-);
+router.post("/", requireRole(["admin", "sales"]), validate(createCustomerRules), createCustomer);
+router.put("/:id", requireRole(["admin", "sales"]), validate([...customerIdParamRules, ...updateCustomerRules]), updateCustomer);
+router.delete("/:id", requireRole(["admin"]), validate(customerIdParamRules), deleteCustomer);
 
 export default router;
 
