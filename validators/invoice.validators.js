@@ -90,16 +90,6 @@ export const getInvoicesQueryRules = [
     .optional()
     .isISO8601()
     .withMessage("تاريخ النهاية يجب أن يكون بصيغة ISO8601"),
-
-  query("page")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("رقم الصفحة يجب أن يكون رقماً صحيحاً أكبر من 0"),
-
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage("عدد العناصر يجب أن يكون بين 1 و 100"),
 ];
 
 /**

@@ -102,6 +102,7 @@ enum ProductionStatus {
 enum MovementDestination {
   slitting
   cutting
+  gluing
   production
 }
 
@@ -278,7 +279,7 @@ model Customer {
   address       String
   country       String?
   countryCode   String?
-  balance         Decimal  @default(0.00)
+  balance       Decimal      @default(0.00)
   is_active     Boolean      @default(true)
   fcmToken      String?
   notes         String?
@@ -324,7 +325,7 @@ model Ruler {
 
   order_items      OrderItem[]
   movements        WarehouseMovement[]
-  production_items ProductionOrderItem[]
+  productionOrders ProductionOrder[]
 
   @@map("Ruler")
 }
@@ -377,12 +378,13 @@ model ConstantValue {
   isDefault         Boolean @default(false)
   notes             String?
 
-  type               ConstantType @relation(fields: [constant_type_id], references: [constant_type_id])
-  materialsHeight    Material[]   @relation("MaterialHeight")
-  materialsWidth     Material[]   @relation("MaterialWidth")
-  materialsThickness Material[]   @relation("MaterialThickness")
-  orderItems         OrderItem[]  @relation("ConstantValueOrderItems")
+  type               ConstantType      @relation(fields: [constant_type_id], references: [constant_type_id])
+  materialsHeight    Material[]        @relation("MaterialHeight")
+  materialsWidth     Material[]        @relation("MaterialWidth")
+  materialsThickness Material[]        @relation("MaterialThickness")
+  orderItems         OrderItem[]       @relation("ConstantValueOrderItems")
   priceColors        PriceColor[]
+  productionOrders   ProductionOrder[]
 
   @@map("ConstantValue")
 }
@@ -398,7 +400,7 @@ model Batch {
 
   order_items      OrderItem[]
   movements        WarehouseMovement[]
-  production_items ProductionOrderItem[]
+  productionOrders ProductionOrder[]
 
   @@map("Batch")
 }
@@ -467,16 +469,23 @@ model Invoice {
 }
 
 model ProductionOrder {
-  production_order_id Int              @id @default(autoincrement())
+  production_order_id Int     @id @default(autoincrement())
   issued_by           Int
-  type                ProductionType
+  type_item           Int
+  constant_width      Decimal @db.Decimal(10, 2)
+  length              Decimal @db.Decimal(10, 2)
+  constant_thickness  Decimal @db.Decimal(10, 2)
+  ruler_id            Int
+  batch_id            Int
+
+  constant_type_value ConstantValue   @relation(fields: [type_item], references: [constant_value_id])
+  ruler               Ruler            @relation(fields: [ruler_id], references: [ruler_id])
+  batch               Batch            @relation(fields: [batch_id], references: [batch_id])
   status              ProductionStatus
   created_at          DateTime         @default(now())
   notes               String?
-
-  user  Users                 @relation(fields: [issued_by], references: [id])
-  items ProductionOrderItem[]
-
+  user                           Users                 @relation(fields: [issued_by], references: [id])
+  items                          ProductionOrderItem[]
   @@index([created_at])
   @@index([status])
   @@index([created_at, status])
@@ -484,26 +493,22 @@ model ProductionOrder {
 }
 
 model ProductionOrderItem {
-  production_order_item_id Int                 @id @default(autoincrement())
+  production_order_item_id Int                  @id @default(autoincrement())
   production_order_id      Int
-  type_item                Int
-  constant_width           Decimal             @db.Decimal(10, 2)
-  length                   Decimal             @db.Decimal(10, 2)
-  constant_thickness       Decimal             @db.Decimal(10, 2)
-  ruler_id                 Int
-  batch_id                 Int
-  source                   ProcessSource
-  destination              MovementDestination
-  created_at               DateTime            @default(now())
+  constant_width           Decimal              @db.Decimal(10, 2)
+  length                   Decimal              @db.Decimal(10, 2)
+  type                     ProductionType
+  quantity                 Int?
+  source                   ProcessSource?
+  destination              MovementDestination?
+  status                   ProductionStatus
+  created_at               DateTime             @default(now())
   notes                    String?
-
-  production_order ProductionOrder @relation(fields: [production_order_id], references: [production_order_id])
-  ruler            Ruler           @relation(fields: [ruler_id], references: [ruler_id])
-  batch            Batch           @relation(fields: [batch_id], references: [batch_id])
 
   processes          ProductionProcess[]
   slites             Slite[]
   warehouseMovements WarehouseMovement[]
+  productionOrder    ProductionOrder?    @relation(fields: [production_order_id], references: [production_order_id])
 
   @@map("ProductionOrderItem")
 }
@@ -530,16 +535,17 @@ model ProductionProcess {
 }
 
 model Slite {
-  slite_id                 Int      @id @default(autoincrement())
+  slite_id                 Int                  @id @default(autoincrement())
   production_order_item_id Int
-  input_length             Decimal  @db.Decimal(10, 2)
-  output_length            Decimal  @db.Decimal(10, 2)
-  input_width              Decimal  @db.Decimal(10, 2)
-  output_length_22         Decimal  @db.Decimal(10, 2)
-  output_length_44         Decimal  @db.Decimal(10, 2)
-  barcode                  String   @unique
+  input_length             Decimal              @db.Decimal(10, 2)
+  output_length            Decimal              @db.Decimal(10, 2)
+  input_width              Decimal              @db.Decimal(10, 2)
+  output_length_22         Decimal              @db.Decimal(10, 2)
+  output_length_44         Decimal              @db.Decimal(10, 2)
+  barcode                  String               @unique
   user_id                  Int
-  created_at               DateTime @default(now())
+  destination              MovementDestination?
+  created_at               DateTime             @default(now())
   notes                    String?
 
   item ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])
@@ -563,17 +569,17 @@ model Increase {
 }
 
 model WarehouseMovement {
-  movement_id              Int                 @id @default(autoincrement())
+  movement_id              Int                  @id @default(autoincrement())
   production_order_item_id Int
   ruler_id                 Int
   batch_id                 Int
   quantity                 Int
-  length                   Decimal             @db.Decimal(10, 2)
-  width                    Decimal             @db.Decimal(10, 2)
-  thickness                Decimal             @db.Decimal(10, 2)
-  destination              MovementDestination
+  length                   Decimal              @db.Decimal(10, 2)
+  width                    Decimal              @db.Decimal(10, 2)
+  thickness                Decimal              @db.Decimal(10, 2)
+  destination              MovementDestination?
   user_id                  Int
-  created_at               DateTime            @default(now())
+  created_at               DateTime             @default(now())
   notes                    String?
 
   item  ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])
@@ -629,13 +635,13 @@ enum QuantityCondition {
 }
 
 model Discount {
-  id          Int      @id @default(autoincrement())
-  type        DiscountType
+  id                Int               @id @default(autoincrement())
+  type              DiscountType
   quantityCondition QuantityCondition
-  quantity    Int
-  value       Decimal  @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  quantity          Int
+  value             Decimal           @db.Decimal(10, 2)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@map("Discount")
 }

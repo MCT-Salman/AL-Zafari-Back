@@ -58,7 +58,7 @@ export const getAllOrders = async (filters = {}) => {
         created_at: "desc",
       },
     }),
-    // ✅ هنا التصحيح المهم
+    //  هنا التصحيح المهم
     OrderModel.count(where),
   ]);
 
@@ -567,7 +567,7 @@ export const addOrderItem = async (order_id, itemData) => {
 
   const subtotalBeforeDiscount = unit_price * quantity * length;
 
-  // 🔥 خصم هذا العنصر فقط
+  //  خصم هذا العنصر فقط
   const quantityForDiscount = quantity * length;
 
   let itemDiscount = 0;
