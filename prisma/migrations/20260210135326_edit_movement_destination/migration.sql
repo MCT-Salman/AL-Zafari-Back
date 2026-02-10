@@ -1,8 +1,8 @@
 -- AlterTable
-ALTER TABLE `productionorderitem` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;
+ALTER TABLE `ProductionOrderItem` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;
 
 -- AlterTable
-ALTER TABLE `slite` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;
+ALTER TABLE `Slite` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;
 
 -- AlterTable
-ALTER TABLE `warehousemovement` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;
+ALTER TABLE `WarehouseMovement` MODIFY `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL;

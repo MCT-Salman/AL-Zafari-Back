@@ -5,10 +5,10 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `batch` DROP FOREIGN KEY `Batch_material_id_fkey`;
+ALTER TABLE `Batch` DROP FOREIGN KEY `Batch_material_id_fkey`;
 
 -- DropIndex
-DROP INDEX `Batch_material_id_fkey` ON `batch`;
+DROP INDEX `Batch_material_id_fkey` ON `Batch`;
 
 -- AlterTable
-ALTER TABLE `batch` DROP COLUMN `material_id`;
+ALTER TABLE `Batch` DROP COLUMN `material_id`;

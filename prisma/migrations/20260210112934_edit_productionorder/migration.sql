@@ -17,19 +17,19 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `productionorderitem` DROP FOREIGN KEY `ProductionOrderItem_batch_id_fkey`;
+ALTER TABLE `ProductionOrderItem` DROP FOREIGN KEY `ProductionOrderItem_batch_id_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `productionorderitem` DROP FOREIGN KEY `ProductionOrderItem_ruler_id_fkey`;
+ALTER TABLE `ProductionOrderItem` DROP FOREIGN KEY `ProductionOrderItem_ruler_id_fkey`;
 
 -- DropIndex
-DROP INDEX `ProductionOrderItem_batch_id_fkey` ON `productionorderitem`;
+DROP INDEX `ProductionOrderItem_batch_id_fkey` ON `ProductionOrderItem`;
 
 -- DropIndex
-DROP INDEX `ProductionOrderItem_ruler_id_fkey` ON `productionorderitem`;
+DROP INDEX `ProductionOrderItem_ruler_id_fkey` ON `ProductionOrderItem`;
 
 -- AlterTable
-ALTER TABLE `productionorder` DROP COLUMN `type`,
+ALTER TABLE `ProductionOrder` DROP COLUMN `type`,
     ADD COLUMN `batch_id` INTEGER NOT NULL,
     ADD COLUMN `constant_thickness` DECIMAL(10, 2) NOT NULL,
     ADD COLUMN `constant_width` DECIMAL(10, 2) NOT NULL,
@@ -38,7 +38,7 @@ ALTER TABLE `productionorder` DROP COLUMN `type`,
     ADD COLUMN `type_item` INTEGER NOT NULL;
 
 -- AlterTable
-ALTER TABLE `productionorderitem` DROP COLUMN `batch_id`,
+ALTER TABLE `ProductionOrderItem` DROP COLUMN `batch_id`,
     DROP COLUMN `constant_thickness`,
     DROP COLUMN `ruler_id`,
     DROP COLUMN `type_item`,
