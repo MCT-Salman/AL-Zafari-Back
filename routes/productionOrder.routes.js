@@ -10,6 +10,7 @@ import {
   deleteProductionOrder,
   getProductionOrderItemById,
   createProductionOrderItem,
+  updateProductionOrderItemStatus,
   updateProductionOrderItem,
   deleteProductionOrderItem,
   getProductionOrderItemsByType,
@@ -46,6 +47,7 @@ router.delete("/:id", requireRole(["admin", "sales"]), validate(productionOrderI
 router.get("/:id/items", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
 router.post("/:id/items", requireRole(["admin", "production_manager"]), validate([...productionOrderIdParamRules, ...createProductionOrderItemRules]), createProductionOrderItem);
 router.get("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionOrderItemIdParamRules), getProductionOrderItemById);
+router.patch("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), updateProductionOrderItemStatus);
 router.put("/item/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderItemIdParamRules, ...updateProductionOrderItemRules]), updateProductionOrderItem);
 router.delete("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), deleteProductionOrderItem);
 

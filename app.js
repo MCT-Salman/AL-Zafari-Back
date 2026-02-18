@@ -28,6 +28,7 @@ import customerRoutes from './routes/customer.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import invoiceRoutes from './routes/invoice.routes.js';
 import productionOrderRoutes from './routes/productionOrder.routes.js';
+import productionProcessRoutes from './routes/productionProcess.router.js';
 import settingRoutes from './routes/setting.routes.js';
 
 config();
@@ -126,6 +127,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/order') ||
       req.path.startsWith('/invoice') ||
       req.path.startsWith('/production-order') ||
+      req.path.startsWith('/production-process') ||
       req.path.startsWith('/setting')) {
     return next();
   }
@@ -155,6 +157,7 @@ app.use('/customer', customerRoutes);
 app.use('/order', orderRoutes);
 app.use('/invoice', invoiceRoutes);
 app.use('/production-order', productionOrderRoutes);
+app.use('/production-process', productionProcessRoutes);
 app.use('/setting', settingRoutes);
 
 app.get('/', (_req, res) => {

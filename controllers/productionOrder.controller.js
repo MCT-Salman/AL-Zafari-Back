@@ -7,6 +7,7 @@ import {
   deleteProductionOrder as deleteProductionOrderService,
   getProductionOrderItemById as getProductionOrderItemByIdService,
   createProductionOrderItem as createProductionOrderItemService,
+  updateProductionOrderItemStatus as updateProductionOrderItemStatusService,
   updateProductionOrderItem as updateProductionOrderItemService,
   deleteProductionOrderItem as deleteProductionOrderItemService,
   getProductionOrderItemsByType as getProductionOrderItemsByTypeService,
@@ -216,6 +217,33 @@ export const createProductionOrderItem = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Create production order item controller error", {
+      message: error?.message,
+      stack: error?.stack,
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      params: req.params,
+      body: req.body,
+    });
+    return next(error);
+  }
+};
+
+export const updateProductionOrderItemStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const userRole = req.user.role;
+
+    const item = await updateProductionOrderItemStatusService(parseInt(id), status, userRole);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم تحديث حالة عنصر طلب الإنتاج بنجاح",
+      data: item,
+    });
+  } catch (error) {
+    logger.error("Update production order item status controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,

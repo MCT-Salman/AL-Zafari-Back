@@ -401,16 +401,18 @@ export const createProductionOrderItem = async (
 
   const FLOW_MAP = {
     warehouse: { source: 'warehouse', destination: 'slitting' },
-    slitting: { source: 'slitting', destination: 'cutting' },
+    slitting: { source: 'slitting', destination: 'production' },
     cutting: { source: 'cutting', destination: 'gluing' },
     gluing: { source: 'gluing', destination: 'production' },
   };
-
 
   const createdItems = [];
 
   for (const item of data) {
     let currentSource = 'production';
+    if (item.production_types.includes('cutting')) {
+      FLOW_MAP.slitting.destination = 'cutting';
+    }
 
     for (const type of item.production_types) {
       const flow = FLOW_MAP[type];
@@ -429,8 +431,12 @@ export const createProductionOrderItem = async (
       });
 
       createdItems.push(createdItem);
-      currentSource = type; 
+      currentSource = type;
     }
+  }
+
+  if (createdItems.length > 0) {
+    await ProductionOrderModel.updateById(production_order_id, { status: 'preparing' });
   }
 
   logger.info("Production order items created", {
@@ -439,6 +445,32 @@ export const createProductionOrderItem = async (
   });
 
   return createdItems;
+};
+
+export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole) => {
+  // Check if item exists
+  const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
+  if (!existingItem) {
+    const error = new Error("عنصر طلب الإنتاج غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Check if user has permission to update this item type
+  if (!canAccessProductionType(userRole, existingItem.type)) {
+    const error = new Error("ليس لديك صلاحية لتحديث هذا العنصر");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, { status });
+
+  logger.info("Production order item status updated", {
+    production_order_item_id,
+    type: existingItem.type,
+  });
+
+  return updatedItem;
 };
 
 /**
