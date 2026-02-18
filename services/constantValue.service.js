@@ -42,7 +42,7 @@ export const getAllConstantValues = async (filters = {}) => {
  */
 export const getConstantValueById = async (constant_value_id) => {
   const constantValue = await ConstantValueModel.findById(constant_value_id);
-  
+
   if (!constantValue) {
     const error = new Error("القيمة الثابتة غير موجودة");
     error.statusCode = 404;
@@ -65,9 +65,9 @@ export const createConstantValue = async (data) => {
   }
 
   const constantValue = await ConstantValueModel.create(data);
-  
+
   logger.info('Constant value created', { constant_value_id: constantValue.constant_value_id });
-  
+
   return constantValue;
 };
 
@@ -89,9 +89,9 @@ export const updateConstantValue = async (constant_value_id, data) => {
   }
 
   const updatedConstantValue = await ConstantValueModel.updateById(constant_value_id, data);
-  
+
   logger.info('Constant value updated', { constant_value_id });
-  
+
   return updatedConstantValue;
 };
 
@@ -103,9 +103,9 @@ export const deleteConstantValue = async (constant_value_id) => {
   await getConstantValueById(constant_value_id);
 
   await ConstantValueModel.deleteById(constant_value_id);
-  
+
   logger.info('Constant value deleted', { constant_value_id });
-  
+
   return { message: "تم حذف القيمة الثابتة بنجاح" };
 };
 
@@ -127,4 +127,21 @@ export const getConstantValuesByTypeId = async (constant_type_id) => {
   }
   return constantValues;
 };
+
+export const getConstantValuesByType = async (constant_type) => {
+  const constantType = await ConstantTypeModel.findByNameType(constant_type);
+  if (!constantType) {
+    const error = new Error("النوع الثابت غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
+  const constant_type_id = constantType.constant_type_id;
+  const constantValues = await ConstantValueModel.findByTypeId(constant_type_id);
+  if (!constantValues) {
+    const error = new Error("لا توجد قيم ثابتة لهذا النوع");
+    error.statusCode = 404;
+    throw error;
+  }
+  return constantValues;
+}
 

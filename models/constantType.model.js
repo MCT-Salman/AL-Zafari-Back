@@ -25,11 +25,10 @@ export const findById = async (constant_type_id) => {
 /**
  * جلب جميع الأنواع الثابتة مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
+  console.log(where);
   return prisma.constantType.findMany({
     where,
-    skip,
-    take,
     include: {
       values: true,
     },
@@ -67,8 +66,17 @@ export const deleteById = async (constant_type_id) => {
  * البحث عن نوع ثابت حسب النوع
  */
 export const findByType = async (type) => {
-  return prisma.constantType.findMany({
-    where: { type },
+ return prisma.constantType.findMany({
+   where: { type },
+   include: {
+     values: true,
+   },
+ });
+};
+
+export const findByNameType = async (constant_type) => {
+  return prisma.constantType.findFirst({
+    where: { type: constant_type },
     include: {
       values: true,
     },

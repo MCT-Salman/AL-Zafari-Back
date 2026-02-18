@@ -8,7 +8,8 @@ import {
   createConstantValue,
   updateConstantValue,
   deleteConstantValue,
-  getConstantValuesByTypeId
+  getConstantValuesByTypeId,
+  getConstantValuesByType
   
 } from '../controllers/constantValue.controller.js';
  
@@ -17,7 +18,8 @@ import {
   updateConstantValueRules,
   constantValueIdParamRules,
   getConstantValuesQueryRules,
-  constantTypeIdParamRules
+  constantTypeIdParamRules,
+  constantTypeRules
 } from '../validators/constantValue.validators.js';
 
 const router = Router();
@@ -27,7 +29,8 @@ router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
 router.get('/', validate(getConstantValuesQueryRules), getAllConstantValues);
-router.get('/by-type/:id', validate(constantTypeIdParamRules), getConstantValuesByTypeId);
+router.get('/by-typeid/:id', validate(constantTypeIdParamRules), getConstantValuesByTypeId);
+router.get('/by-type/:type',validate(constantTypeRules), getConstantValuesByType);
 router.get('/:id', validate(constantValueIdParamRules), getConstantValueById);
 
 // POST, PUT, DELETE routes - admin only

@@ -6,6 +6,7 @@ import {
   updateConstantValue as updateConstantValueService,
   deleteConstantValue as deleteConstantValueService,
   getConstantValuesByTypeId as getConstantValuesByTypeIdService,
+  getConstantValuesByType as getConstantValuesByTypeService
 } from "../services/constantValue.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -47,6 +48,21 @@ export const getConstantValuesByTypeId = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const getConstantValuesByType = async (req, res, next) => {
+  try {
+    const { type } = req.params;
+    const constantValues = await getConstantValuesByTypeService(type);
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب القيم الثابتة بنجاح",
+      data: constantValues,
+    });
+  } catch (error) {
+    logger.error('Get constant values by type controller error', { message: error?.message, params: req.params });
+    return next(error);
+  }
+}
 
 export const getConstantValueById = async (req, res, next) => {
   try {

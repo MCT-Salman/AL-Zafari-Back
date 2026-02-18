@@ -1,6 +1,10 @@
 // validators/constantValue.validators.js
 import { body, param, query } from 'express-validator';
 
+
+// Allowed constant types
+const ALLOWED_CONSTANT_TYPES = ['width', 'height', 'thickness', 'type_order', 'source_order'];
+
 /**
  * Validation rules for creating a constant value
  */
@@ -87,4 +91,10 @@ export const constantTypeIdParamRules = [
   param('id')
     .exists().withMessage('معرف النوع الثابت مطلوب')
     .isInt({ min: 1 }).withMessage('معرف النوع الثابت يجب أن يكون رقماً صحيحاً موجباً')
+];
+
+export const constantTypeRules = [
+  param('type')
+    .exists().withMessage('نوع النوع الثابت مطلوب')
+    .isIn(ALLOWED_CONSTANT_TYPES).withMessage('نوع النوع الثابت غير صالح')
 ];
