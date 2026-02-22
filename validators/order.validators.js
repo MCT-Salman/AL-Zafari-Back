@@ -13,14 +13,14 @@ const orderItemRules = [
   body("items.*.type_item")
     .exists({ checkFalsy: true })
     .withMessage("نوع العنصر مطلوب")
-    .isInt({ min: 1 })
-    .withMessage("نوع العنصر يجب أن يكون رقماً صحيحاً موجباً"),
-  body("items.*.ruler_id")
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر غير صالح"),
+  body("items.*.color_id")
     .exists({ checkFalsy: true })
-    .withMessage("معرف المسطرة مطلوب")
+    .withMessage("معرف اللون مطلوب")
     .isInt({ min: 1 })
-    .withMessage("معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً"),
-  body("items.*.constant_width")
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً موجباً"),
+  body("items.*.width")
     .exists({ checkFalsy: true })
     .withMessage("العرض الثابت مطلوب")
     .isDecimal()
@@ -30,7 +30,7 @@ const orderItemRules = [
     .withMessage("الطول مطلوب")
     .isDecimal()
     .withMessage("الطول يجب أن يكون رقماً عشرياً"),
-  body("items.*.constant_thickness")
+  body("items.*.thickness")
     .exists({ checkFalsy: true })
     .withMessage("السماكة الثابتة مطلوبة")
     .isDecimal()
@@ -150,12 +150,12 @@ export const addOrderItemRules = [
     .withMessage("نوع العنصر مطلوب")
     .isInt({ min: 1 })
     .withMessage("نوع العنصر يجب أن يكون رقماً صحيحاً موجباً"),
-  body("ruler_id")
+  body("color_id")
     .exists({ checkFalsy: true })
-    .withMessage("معرف المسطرة مطلوب")
+    .withMessage("معرف اللون مطلوب")
     .isInt({ min: 1 })
-    .withMessage("معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً"),
-  body("constant_width")
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً موجباً"),
+  body("width")
     .exists({ checkFalsy: true })
     .withMessage("العرض الثابت مطلوب")
     .isDecimal()
@@ -165,7 +165,7 @@ export const addOrderItemRules = [
     .withMessage("الطول مطلوب")
     .isDecimal()
     .withMessage("الطول يجب أن يكون رقماً عشرياً"),
-  body("constant_thickness")
+  body("thickness")
     .exists({ checkFalsy: true })
     .withMessage("السماكة الثابتة مطلوبة")
     .isDecimal()
@@ -200,11 +200,11 @@ export const updateOrderItemRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage("نوع العنصر يجب أن يكون رقماً صحيحاً موجباً"),
-  body("ruler_id")
+  body("color_id")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً"),
-  body("constant_width")
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً موجباً"),
+  body("width")
     .optional()
     .isDecimal()
     .withMessage("العرض الثابت يجب أن يكون رقماً عشرياً"),
@@ -212,7 +212,7 @@ export const updateOrderItemRules = [
     .optional()
     .isDecimal()
     .withMessage("الطول يجب أن يكون رقماً عشرياً"),
-  body("constant_thickness")
+  body("thickness")
     .optional()
     .isDecimal()
     .withMessage("السماكة الثابتة يجب أن تكون رقماً عشرياً"),

@@ -5,7 +5,7 @@ CREATE TABLE `Users` (
     `username` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `full_name` VARCHAR(191) NOT NULL,
-    `role` ENUM('admin', 'accountant', 'sales', 'Warehouse_Keeper', 'Warehouse_Products', 'Dissection_Technician', 'Cutting_Technician', 'Gluing_Technician') NOT NULL,
+    `role` ENUM('admin', 'accountant', 'cashier', 'sales', 'production_manager', 'Warehouse_Keeper', 'Warehouse_Products', 'Dissection_Technician', 'Cutting_Technician', 'Gluing_Technician') NOT NULL,
     `country` VARCHAR(191) NULL,
     `countryCode` VARCHAR(191) NULL,
     `is_active` BOOLEAN NOT NULL DEFAULT true,
@@ -151,6 +151,7 @@ CREATE TABLE `Customer` (
     `address` VARCHAR(191) NOT NULL,
     `country` VARCHAR(191) NULL,
     `countryCode` VARCHAR(191) NULL,
+    `balance` DECIMAL(65, 30) NOT NULL DEFAULT 0.00,
     `is_active` BOOLEAN NOT NULL DEFAULT true,
     `fcmToken` VARCHAR(191) NULL,
     `notes` VARCHAR(191) NULL,
@@ -163,10 +164,6 @@ CREATE TABLE `Customer` (
 CREATE TABLE `Material` (
     `material_id` INTEGER NOT NULL AUTO_INCREMENT,
     `material_name` VARCHAR(191) NOT NULL,
-    `type` ENUM('Role', 'Blanck') NOT NULL,
-    `constant_height_id` INTEGER NULL,
-    `constant_width_id` INTEGER NULL,
-    `constant_thickness_id` INTEGER NULL,
     `constant_value_unit` VARCHAR(191) NULL,
     `notes` VARCHAR(191) NULL,
 
@@ -176,9 +173,9 @@ CREATE TABLE `Material` (
 -- CreateTable
 CREATE TABLE `Ruler` (
     `ruler_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `ruler_type` ENUM('old', 'new') NOT NULL,
-    `material_id` INTEGER NOT NULL,
-    `color_id` INTEGER NOT NULL,
+    `ruler_name` VARCHAR(191) NOT NULL,
+    `entry_date` DATETIME(3) NOT NULL,
+    `material_id` INTEGER NULL,
     `notes` VARCHAR(191) NULL,
 
     PRIMARY KEY (`ruler_id`)
@@ -187,9 +184,10 @@ CREATE TABLE `Ruler` (
 -- CreateTable
 CREATE TABLE `Color` (
     `color_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `material_id` INTEGER NOT NULL,
+    `ruler_id` INTEGER NOT NULL,
     `color_code` VARCHAR(191) NOT NULL,
     `color_name` VARCHAR(191) NOT NULL,
+    `imageUrl` VARCHAR(191) NULL,
     `notes` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Color_color_code_key`(`color_code`),
@@ -209,22 +207,13 @@ CREATE TABLE `PriceColor` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ConstantType` (
-    `constant_type_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `constants_Type_name` VARCHAR(191) NOT NULL,
-    `type` ENUM('width', 'height', 'thickness', 'type_order', 'source_order') NOT NULL,
-    `notes` VARCHAR(191) NULL,
-
-    PRIMARY KEY (`constant_type_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `ConstantValue` (
     `constant_value_id` INTEGER NOT NULL AUTO_INCREMENT,
-    `constant_type_id` INTEGER NOT NULL,
+    `material_id` INTEGER NULL,
+    `type` ENUM('width', 'height', 'thickness', 'type_order', 'source_order') NOT NULL,
     `value` VARCHAR(191) NOT NULL,
-    `unit` VARCHAR(191) NOT NULL,
-    `label` VARCHAR(191) NOT NULL,
+    `unit` VARCHAR(191) NULL,
+    `label` VARCHAR(191) NULL,
     `isDefault` BOOLEAN NOT NULL DEFAULT false,
     `notes` VARCHAR(191) NULL,
 
@@ -236,7 +225,7 @@ CREATE TABLE `Batch` (
     `batch_id` INTEGER NOT NULL AUTO_INCREMENT,
     `batch_number` VARCHAR(191) NOT NULL,
     `entry_date` DATETIME(3) NOT NULL,
-    `material_id` INTEGER NOT NULL,
+    `material_id` INTEGER NULL,
     `notes` VARCHAR(191) NULL,
 
     PRIMARY KEY (`batch_id`)
@@ -262,14 +251,14 @@ CREATE TABLE `Order` (
 CREATE TABLE `OrderItem` (
     `order_item_id` INTEGER NOT NULL AUTO_INCREMENT,
     `order_id` INTEGER NOT NULL,
-    `type_item` INTEGER NOT NULL,
+    `type_item` INTEGER NULL,
     `ruler_id` INTEGER NOT NULL,
     `constant_width` DECIMAL(10, 2) NOT NULL,
     `length` DECIMAL(10, 2) NOT NULL,
     `constant_thickness` DECIMAL(10, 2) NOT NULL,
     `batch_id` INTEGER NOT NULL,
     `quantity` INTEGER NOT NULL,
-    `unit_price` DECIMAL(10, 2) NOT NULL,
+    `unit_price` DECIMAL(10, 2) NULL,
     `subtotal` DECIMAL(12, 2) NOT NULL,
     `notes` VARCHAR(191) NULL,
 
@@ -295,7 +284,12 @@ CREATE TABLE `Invoice` (
 CREATE TABLE `ProductionOrder` (
     `production_order_id` INTEGER NOT NULL AUTO_INCREMENT,
     `issued_by` INTEGER NOT NULL,
-    `type` ENUM('orderproduction', 'warehouse', 'slitting', 'cutting', 'gluing') NOT NULL,
+    `type_item` INTEGER NOT NULL,
+    `constant_width` DECIMAL(10, 2) NOT NULL,
+    `length` DECIMAL(10, 2) NOT NULL,
+    `constant_thickness` DECIMAL(10, 2) NOT NULL,
+    `ruler_id` INTEGER NOT NULL,
+    `batch_id` INTEGER NOT NULL,
     `status` ENUM('pending', 'preparing', 'canceled', 'completed') NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `notes` VARCHAR(191) NULL,
@@ -310,14 +304,13 @@ CREATE TABLE `ProductionOrder` (
 CREATE TABLE `ProductionOrderItem` (
     `production_order_item_id` INTEGER NOT NULL AUTO_INCREMENT,
     `production_order_id` INTEGER NOT NULL,
-    `type_item` INTEGER NOT NULL,
     `constant_width` DECIMAL(10, 2) NOT NULL,
     `length` DECIMAL(10, 2) NOT NULL,
-    `constant_thickness` DECIMAL(10, 2) NOT NULL,
-    `ruler_id` INTEGER NOT NULL,
-    `batch_id` INTEGER NOT NULL,
-    `source` ENUM('warehouse', 'slitting', 'cutting', 'production') NOT NULL,
-    `destination` ENUM('slitting', 'cutting', 'production') NOT NULL,
+    `type` ENUM('orderproduction', 'warehouse', 'slitting', 'cutting', 'gluing') NOT NULL,
+    `quantity` INTEGER NULL,
+    `source` ENUM('warehouse', 'slitting', 'cutting', 'production') NULL,
+    `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL,
+    `status` ENUM('pending', 'preparing', 'canceled', 'completed') NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `notes` VARCHAR(191) NULL,
 
@@ -354,6 +347,7 @@ CREATE TABLE `Slite` (
     `output_length_44` DECIMAL(10, 2) NOT NULL,
     `barcode` VARCHAR(191) NOT NULL,
     `user_id` INTEGER NOT NULL,
+    `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `notes` VARCHAR(191) NULL,
 
@@ -382,7 +376,7 @@ CREATE TABLE `WarehouseMovement` (
     `length` DECIMAL(10, 2) NOT NULL,
     `width` DECIMAL(10, 2) NOT NULL,
     `thickness` DECIMAL(10, 2) NOT NULL,
-    `destination` ENUM('slitting', 'cutting', 'production') NOT NULL,
+    `destination` ENUM('slitting', 'cutting', 'gluing', 'production') NULL,
     `user_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `notes` VARCHAR(191) NULL,
@@ -401,6 +395,39 @@ CREATE TABLE `Settings` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Settings_key_key`(`key`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PasswordReset` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `phone` VARCHAR(191) NOT NULL,
+    `otp` VARCHAR(191) NOT NULL,
+    `expiresAt` DATETIME(3) NOT NULL,
+    `isUsed` BOOLEAN NOT NULL DEFAULT false,
+    `usedAt` DATETIME(3) NULL,
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `ip` VARCHAR(191) NULL,
+    `userAgent` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `PasswordReset_phone_idx`(`phone`),
+    INDEX `PasswordReset_otp_idx`(`otp`),
+    INDEX `PasswordReset_expiresAt_idx`(`expiresAt`),
+    INDEX `PasswordReset_created_at_idx`(`created_at`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Discount` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `type` ENUM('percentage', 'fixed') NOT NULL,
+    `quantityCondition` ENUM('LESS_THAN', 'GREATER_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN_OR_EQUAL', 'EQUAL') NOT NULL,
+    `quantity` INTEGER NOT NULL,
+    `value` DECIMAL(10, 2) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -426,22 +453,10 @@ ALTER TABLE `AuditLog` ADD CONSTRAINT `AuditLog_actorId_fkey` FOREIGN KEY (`acto
 ALTER TABLE `ActivityLog` ADD CONSTRAINT `ActivityLog_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Material` ADD CONSTRAINT `Material_constant_height_id_fkey` FOREIGN KEY (`constant_height_id`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Ruler` ADD CONSTRAINT `Ruler_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Material` ADD CONSTRAINT `Material_constant_width_id_fkey` FOREIGN KEY (`constant_width_id`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Material` ADD CONSTRAINT `Material_constant_thickness_id_fkey` FOREIGN KEY (`constant_thickness_id`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Ruler` ADD CONSTRAINT `Ruler_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Ruler` ADD CONSTRAINT `Ruler_color_id_fkey` FOREIGN KEY (`color_id`) REFERENCES `Color`(`color_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Color` ADD CONSTRAINT `Color_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Color` ADD CONSTRAINT `Color_ruler_id_fkey` FOREIGN KEY (`ruler_id`) REFERENCES `Ruler`(`ruler_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `PriceColor` ADD CONSTRAINT `PriceColor_color_id_fkey` FOREIGN KEY (`color_id`) REFERENCES `Color`(`color_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -450,16 +465,19 @@ ALTER TABLE `PriceColor` ADD CONSTRAINT `PriceColor_color_id_fkey` FOREIGN KEY (
 ALTER TABLE `PriceColor` ADD CONSTRAINT `PriceColor_constant_value_id_fkey` FOREIGN KEY (`constant_value_id`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ConstantValue` ADD CONSTRAINT `ConstantValue_constant_type_id_fkey` FOREIGN KEY (`constant_type_id`) REFERENCES `ConstantType`(`constant_type_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ConstantValue` ADD CONSTRAINT `ConstantValue_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Batch` ADD CONSTRAINT `Batch_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Batch` ADD CONSTRAINT `Batch_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `Material`(`material_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Order` ADD CONSTRAINT `Order_customer_id_fkey` FOREIGN KEY (`customer_id`) REFERENCES `Customer`(`customer_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Order` ADD CONSTRAINT `Order_sales_user_id_fkey` FOREIGN KEY (`sales_user_id`) REFERENCES `Users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_type_item_fkey` FOREIGN KEY (`type_item`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_order_id_fkey` FOREIGN KEY (`order_id`) REFERENCES `Order`(`order_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -480,16 +498,19 @@ ALTER TABLE `Invoice` ADD CONSTRAINT `Invoice_customer_id_fkey` FOREIGN KEY (`cu
 ALTER TABLE `Invoice` ADD CONSTRAINT `Invoice_issued_by_fkey` FOREIGN KEY (`issued_by`) REFERENCES `Users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `ProductionOrder` ADD CONSTRAINT `ProductionOrder_type_item_fkey` FOREIGN KEY (`type_item`) REFERENCES `ConstantValue`(`constant_value_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductionOrder` ADD CONSTRAINT `ProductionOrder_ruler_id_fkey` FOREIGN KEY (`ruler_id`) REFERENCES `Ruler`(`ruler_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductionOrder` ADD CONSTRAINT `ProductionOrder_batch_id_fkey` FOREIGN KEY (`batch_id`) REFERENCES `Batch`(`batch_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `ProductionOrder` ADD CONSTRAINT `ProductionOrder_issued_by_fkey` FOREIGN KEY (`issued_by`) REFERENCES `Users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ProductionOrderItem` ADD CONSTRAINT `ProductionOrderItem_production_order_id_fkey` FOREIGN KEY (`production_order_id`) REFERENCES `ProductionOrder`(`production_order_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `ProductionOrderItem` ADD CONSTRAINT `ProductionOrderItem_ruler_id_fkey` FOREIGN KEY (`ruler_id`) REFERENCES `Ruler`(`ruler_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `ProductionOrderItem` ADD CONSTRAINT `ProductionOrderItem_batch_id_fkey` FOREIGN KEY (`batch_id`) REFERENCES `Batch`(`batch_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ProductionProcess` ADD CONSTRAINT `ProductionProcess_production_order_item_id_fkey` FOREIGN KEY (`production_order_item_id`) REFERENCES `ProductionOrderItem`(`production_order_item_id`) ON DELETE RESTRICT ON UPDATE CASCADE;

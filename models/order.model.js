@@ -48,10 +48,13 @@ export const findById = async (order_id) => {
       },
       items: {
         include: {
-          ruler: {
+          color: {
             include: {
-              material: true,
-              color: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
           batch: true,

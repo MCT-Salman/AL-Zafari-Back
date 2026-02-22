@@ -17,14 +17,7 @@ export const findById = async (ruler_id) => {
   return prisma.ruler.findUnique({
     where: { ruler_id },
     include: {
-      material: {
-        include: {
-          height: true,
-          width: true,
-          thickness: true,
-        },
-      },
-      color: true,
+      material: true,
     },
   });
 };
@@ -32,20 +25,11 @@ export const findById = async (ruler_id) => {
 /**
  * جلب جميع المساطر مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.ruler.findMany({
     where,
-    skip,
-    take,
     include: {
-      material: {
-        include: {
-          height: true,
-          width: true,
-          thickness: true,
-        },
-      },
-      color: true,
+      material: true,
     },
     orderBy: { ruler_id: 'desc' },
   });
@@ -84,7 +68,7 @@ export const findByMaterialId = async (material_id) => {
   return prisma.ruler.findMany({
     where: { material_id },
     include: {
-      color: true,
+      material: true,
     },
   });
 };
@@ -108,8 +92,7 @@ export const findByType = async (ruler_type) => {
   return prisma.ruler.findMany({
     where: { ruler_type },
     include: {
-      material: true,
-      color: true,
+      material: true
     },
   });
 };

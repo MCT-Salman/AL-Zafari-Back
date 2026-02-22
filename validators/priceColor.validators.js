@@ -3,6 +3,7 @@ import { body, param, query } from 'express-validator';
 
 // Allowed price color by types
 const ALLOWED_PRICE_COLOR_BY = ['isByMeter22', 'isByMeter44', 'isByMeter66', 'isByBlanck'];
+const ALLOWED_TYPE_ITEM = ['Presser', 'Machine'];
 
 /**
  * Validation rules for creating a price color
@@ -11,9 +12,9 @@ export const createPriceColorRules = [
   body('color_id')
     .exists({ checkFalsy: true }).withMessage('معرف اللون مطلوب')
     .isInt({ min: 1 }).withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_value_id')
-    .exists({ checkFalsy: true }).withMessage('معرف القيمة الثابتة مطلوب')
-    .isInt({ min: 1 }).withMessage('معرف القيمة الثابتة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('type_item')
+    .exists({ checkFalsy: true }).withMessage('نوع العنصر مطلوب')
+    .isIn(ALLOWED_TYPE_ITEM).withMessage('نوع العنصر غير صالح'),
   body('price_color_By')
     .exists({ checkFalsy: true }).withMessage('نوع السعر مطلوب')
     .isIn(ALLOWED_PRICE_COLOR_BY).withMessage('نوع السعر غير صالح'),
@@ -34,9 +35,9 @@ export const updatePriceColorRules = [
   body('color_id')
     .optional()
     .isInt({ min: 1 }).withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_value_id')
+  body('type_item')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف القيمة الثابتة يجب أن يكون رقماً صحيحاً موجباً'),
+    .isIn(ALLOWED_TYPE_ITEM).withMessage('نوع العنصر غير صالح'),
   body('price_color_By')
     .optional()
     .isIn(ALLOWED_PRICE_COLOR_BY).withMessage('نوع السعر غير صالح'),
@@ -66,9 +67,9 @@ export const getPriceColorsQueryRules = [
   query('color_id')
     .optional()
     .isInt({ min: 1 }).withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
-  query('constant_value_id')
+  query('type_item')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف القيمة الثابتة يجب أن يكون رقماً صحيحاً موجباً'),
+    .isIn(ALLOWED_TYPE_ITEM).withMessage('نوع العنصر غير صالح'),
   query('price_color_By')
     .optional()
     .isIn(ALLOWED_PRICE_COLOR_BY).withMessage('نوع السعر غير صالح')

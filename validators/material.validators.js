@@ -12,18 +12,6 @@ export const createMaterialRules = [
     .exists({ checkFalsy: true }).withMessage('اسم المادة مطلوب')
     .isString().withMessage('اسم المادة يجب أن يكون نصاً')
     .isLength({ min: 2, max: 100 }).withMessage('اسم المادة يجب أن يكون بين 2 و 100 حرف'),
-  body('type')
-    .exists({ checkFalsy: true }).withMessage('نوع المادة مطلوب')
-    .isIn(ALLOWED_MATERIAL_TYPES).withMessage('نوع المادة غير صالح'),
-  body('constant_height_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف الارتفاع الثابت يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_width_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف العرض الثابت يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_thickness_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف السماكة الثابتة يجب أن يكون رقماً صحيحاً موجباً'),
   body('constant_value_unit')
     .optional()
     .isString().withMessage('وحدة القيمة الثابتة يجب أن تكون نصاً')
@@ -42,18 +30,6 @@ export const updateMaterialRules = [
     .optional()
     .isString().withMessage('اسم المادة يجب أن يكون نصاً')
     .isLength({ min: 2, max: 100 }).withMessage('اسم المادة يجب أن يكون بين 2 و 100 حرف'),
-  body('type')
-    .optional()
-    .isIn(ALLOWED_MATERIAL_TYPES).withMessage('نوع المادة غير صالح'),
-  body('constant_height_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف الارتفاع الثابت يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_width_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف العرض الثابت يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_thickness_id')
-    .optional()
-    .isInt({ min: 1 }).withMessage('معرف السماكة الثابتة يجب أن يكون رقماً صحيحاً موجباً'),
   body('constant_value_unit')
     .optional()
     .isString().withMessage('وحدة القيمة الثابتة يجب أن تكون نصاً')

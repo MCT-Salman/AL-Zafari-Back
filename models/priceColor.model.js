@@ -19,12 +19,11 @@ export const findById = async (price_color_id) => {
     include: {
       color: {
         include: {
-          material: true,
-        },
-      },
-      constant_value: {
-        include: {
-          type: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
     },
@@ -34,20 +33,17 @@ export const findById = async (price_color_id) => {
 /**
  * جلب جميع أسعار الألوان مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.priceColor.findMany({
     where,
-    skip,
-    take,
     include: {
       color: {
         include: {
-          material: true,
-        },
-      },
-      constant_value: {
-        include: {
-          type: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
     },
@@ -87,10 +83,14 @@ export const deleteById = async (price_color_id) => {
 export const findByColorId = async (color_id) => {
   return prisma.priceColor.findMany({
     where: { color_id },
-    include: {
-      constant_value: {
+     include: {
+      color: {
         include: {
-          type: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
     },
@@ -106,22 +106,25 @@ export const findByColorAndValue = async (color_id, constant_value_id) => {
       color_id,
       constant_value_id,
     },
-    include: {
-      color: true,
-      constant_value: true,
+     include: {
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
     },
   });
 };
 
-export const findPriceByColorAndValue = async (ruler_id, width) => {
+export const findPriceByColorAndValue = async (color_id, width) => {
   return prisma.priceColor.findFirst({
     where: {
       color: {
-        rulers: {
-          some: {
-            ruler_id,
-          },
-        },
+        color_id,
       },
       price_color_By: width,
     },

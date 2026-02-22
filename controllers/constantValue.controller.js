@@ -5,7 +5,7 @@ import {
   createConstantValue as createConstantValueService,
   updateConstantValue as updateConstantValueService,
   deleteConstantValue as deleteConstantValueService,
-  getConstantValuesByTypeId as getConstantValuesByTypeIdService,
+  getConstantValuesByMaterialId as getConstantValuesByMaterialIdService,
   getConstantValuesByType as getConstantValuesByTypeService
 } from "../services/constantValue.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
@@ -14,7 +14,7 @@ import logger from "../utils/logger.js";
 export const getAllConstantValues = async (req, res, next) => {
   try {
     const filters = {
-      constant_type_id: req.query.constant_type_id,
+      type: req.query.type,
       isDefault: req.query.isDefault,
       search: req.query.search,
     };
@@ -49,6 +49,24 @@ export const getConstantValuesByTypeId = async (req, res, next) => {
   }
 };
 
+export const getConstantValuesByMaterialId = async (req, res, next) => {
+  try {
+    const { material_id } = req.params;
+    const filter = {
+      type: req.query.type,
+    };
+    const constantValues = await getConstantValuesByMaterialIdService(parseInt(material_id),filter);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب القيم الثابتة بنجاح",
+      data: constantValues,
+    });
+  } catch (error) {
+    logger.error('Get constant values by material id controller error', { message: error?.message, params: req.params });
+    return next(error);
+  }
+};
 export const getConstantValuesByType = async (req, res, next) => {
   try {
     const { type } = req.params;

@@ -17,9 +17,8 @@ export const findById = async (color_id) => {
   return prisma.color.findUnique({
     where: { color_id },
     include: {
-      material: true,
       prices: true,
-      rulers: true,
+      ruler: true,
     },
   });
 };
@@ -27,13 +26,11 @@ export const findById = async (color_id) => {
 /**
  * جلب جميع الألوان مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.color.findMany({
     where,
-    skip,
-    take,
     include: {
-      material: true,
+      ruler: true,
       prices: true,
     },
     orderBy: { color_id: 'desc' },
@@ -73,7 +70,7 @@ export const findByCode = async (color_code) => {
   return prisma.color.findUnique({
     where: { color_code },
     include: {
-      material: true,
+      ruler: true,
     },
   });
 };
@@ -81,9 +78,9 @@ export const findByCode = async (color_code) => {
 /**
  * البحث عن ألوان حسب المادة
  */
-export const findByMaterialId = async (material_id) => {
+export const findByRulerId = async ( ruler_id) => {
   return prisma.color.findMany({
-    where: { material_id },
+    where: { ruler_id },
     include: {
       prices: true,
     },

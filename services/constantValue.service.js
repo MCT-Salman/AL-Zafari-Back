@@ -1,5 +1,5 @@
 // services/constantValue.service.js
-import { ConstantValueModel, ConstantTypeModel } from "../models/index.js";
+import { ConstantValueModel, MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -8,9 +8,9 @@ import logger from "../utils/logger.js";
 export const getAllConstantValues = async (filters = {}) => {
   const where = {};
 
-  // Filter by constant_type_id
-  if (filters.constant_type_id) {
-    where.constant_type_id = parseInt(filters.constant_type_id);
+  // Filter by constant_type_name
+  if (filters.type) {
+    where.type = filters.type;
   }
 
   // Filter by isDefault
@@ -56,10 +56,10 @@ export const getConstantValueById = async (constant_value_id) => {
  * إنشاء قيمة ثابتة جديدة
  */
 export const createConstantValue = async (data) => {
-  // Check if constant type exists
-  const constantType = await ConstantTypeModel.findById(data.constant_type_id);
-  if (!constantType) {
-    const error = new Error("النوع الثابت غير موجود");
+  // Check if material exists
+  const material = await MaterialModel.findById(data.material_id);
+  if (!material) {
+    const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
@@ -76,16 +76,11 @@ export const createConstantValue = async (data) => {
  */
 export const updateConstantValue = async (constant_value_id, data) => {
   // Check if exists
-  await getConstantValueById(constant_value_id);
-
-  // If updating constant_type_id, check if it exists
-  if (data.constant_type_id) {
-    const constantType = await ConstantTypeModel.findById(data.constant_type_id);
-    if (!constantType) {
-      const error = new Error("النوع الثابت غير موجود");
-      error.statusCode = 404;
-      throw error;
-    }
+  const constantValue = await getConstantValueById(constant_value_id);
+  if (!constantValue) {
+    const error = new Error("القيمة الثابتة غير موجودة");
+    error.statusCode = 404;
+    throw error;
   }
 
   const updatedConstantValue = await ConstantValueModel.updateById(constant_value_id, data);
@@ -111,7 +106,7 @@ export const deleteConstantValue = async (constant_value_id) => {
 
 /**
  * جلب قيم ثابتة حسب نوع الثابت
- */
+ *//*
 export const getConstantValuesByTypeId = async (constant_type_id) => {
   const constantType = await ConstantTypeModel.findById(constant_type_id);
   if (!constantType) {
@@ -127,16 +122,26 @@ export const getConstantValuesByTypeId = async (constant_type_id) => {
   }
   return constantValues;
 };
+*/
 
-export const getConstantValuesByType = async (constant_type) => {
-  const constantType = await ConstantTypeModel.findByNameType(constant_type);
-  if (!constantType) {
-    const error = new Error("النوع الثابت غير موجود");
+export const getConstantValuesByMaterialId = async (material_id , filters = {}) => {
+  const material = await MaterialModel.findById(material_id);
+  if (!material) {
+    const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
-  const constant_type_id = constantType.constant_type_id;
-  const constantValues = await ConstantValueModel.findByTypeId(constant_type_id);
+  const constantValues = await ConstantValueModel.findByMaterialId(material_id , filters);
+  if (!constantValues) {
+    const error = new Error("لا توجد قيم ثابتة لهذه المادة");
+    error.statusCode = 404;
+    throw error;
+  }
+  return constantValues;
+}
+export const getConstantValuesByType = async (constant_type) => {
+  console.log(constant_type);
+  const constantValues = await ConstantValueModel.findByType(constant_type);
   if (!constantValues) {
     const error = new Error("لا توجد قيم ثابتة لهذا النوع");
     error.statusCode = 404;

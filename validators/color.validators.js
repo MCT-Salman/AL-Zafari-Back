@@ -2,12 +2,21 @@
 import { body, param, query } from 'express-validator';
 
 /**
+ * Validation rules for ruler ID parameter
+ */
+export const rulerIdParamRules = [
+  param('id')
+    .exists().withMessage('معرف المسطرة مطلوب')
+    .isInt({ min: 1 }).withMessage('معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً')
+];
+
+/**
  * Validation rules for creating a color
  */
 export const createColorRules = [
-  body('material_id')
-    .exists({ checkFalsy: true }).withMessage('معرف المادة مطلوب')
-    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('ruler_id')
+    .exists({ checkFalsy: true }).withMessage('معرف المسطرة مطلوب')
+    .isInt({ min: 1 }).withMessage('معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً'),
   body('color_code')
     .exists({ checkFalsy: true }).withMessage('كود اللون مطلوب')
     .isString().withMessage('كود اللون يجب أن يكون نصاً')
@@ -16,6 +25,12 @@ export const createColorRules = [
     .exists({ checkFalsy: true }).withMessage('اسم اللون مطلوب')
     .isString().withMessage('اسم اللون يجب أن يكون نصاً')
     .isLength({ min: 2, max: 100 }).withMessage('اسم اللون يجب أن يكون بين 2 و 100 حرف'),
+  body("imageUrl").custom((value, { req }) => {
+    if (!req.file) {
+      throw new Error("الصورة مطلوبة");
+    }
+    return true;
+  }),
   body('notes')
     .optional()
     .isString().withMessage('الملاحظات يجب أن تكون نصاً')
@@ -26,9 +41,9 @@ export const createColorRules = [
  * Validation rules for updating a color
  */
 export const updateColorRules = [
-  body('material_id')
+  body('color_id')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً'),
+    .isInt({ min: 1 }).withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('color_code')
     .optional()
     .isString().withMessage('كود اللون يجب أن يكون نصاً')
@@ -37,6 +52,14 @@ export const updateColorRules = [
     .optional()
     .isString().withMessage('اسم اللون يجب أن يكون نصاً')
     .isLength({ min: 2, max: 100 }).withMessage('اسم اللون يجب أن يكون بين 2 و 100 حرف'),
+  body('imageUrl')
+    .optional()
+    .custom((value, { req }) => {
+      if (req.file || value) {
+        return true;
+      }
+      return true;
+    }),
   body('notes')
     .optional()
     .isString().withMessage('الملاحظات يجب أن تكون نصاً')
@@ -56,9 +79,9 @@ export const colorIdParamRules = [
  * Validation rules for getting colors with filters
  */
 export const getColorsQueryRules = [
-  query('material_id')
+  query('ruler_id')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً'),
+    .isInt({ min: 1 }).withMessage('معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً'),
   query('search')
     .optional()
     .isString().withMessage('نص البحث يجب أن يكون نصاً')

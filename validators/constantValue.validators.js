@@ -9,9 +9,12 @@ const ALLOWED_CONSTANT_TYPES = ['width', 'height', 'thickness', 'type_order', 's
  * Validation rules for creating a constant value
  */
 export const createConstantValueRules = [
-  body('constant_type_id')
-    .exists({ checkFalsy: true }).withMessage('معرف النوع الثابت مطلوب')
-    .isInt({ min: 1 }).withMessage('معرف النوع الثابت يجب أن يكون رقماً صحيحاً موجباً'),
+  body('material_id')
+    .exists({ checkFalsy: true }).withMessage('معرف المادة مطلوب')
+    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('type')
+    .exists({ checkFalsy: true }).withMessage('نوع الثابت مطلوب')
+    .isIn(ALLOWED_CONSTANT_TYPES).withMessage('نوع الثابت غير صالح'),
   body('value')
     .exists({ checkFalsy: true }).withMessage('القيمة مطلوبة')
     .isString().withMessage('القيمة يجب أن تكون نصاً')
@@ -39,9 +42,12 @@ export const createConstantValueRules = [
  * Validation rules for updating a constant value
  */
 export const updateConstantValueRules = [
-  body('constant_type_id')
+  body('material_id')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف النوع الثابت يجب أن يكون رقماً صحيحاً موجباً'),
+    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('type')
+    .optional()
+    .isIn(ALLOWED_CONSTANT_TYPES).withMessage('نوع الثابت غير صالح'),
   body('value')
     .optional()
     .isString().withMessage('القيمة يجب أن تكون نصاً')
@@ -76,9 +82,9 @@ export const constantValueIdParamRules = [
  * Validation rules for getting constant values with filters
  */
 export const getConstantValuesQueryRules = [
-  query('constant_type_id')
+  query('type')
     .optional()
-    .isInt({ min: 1 }).withMessage('معرف النوع الثابت يجب أن يكون رقماً صحيحاً موجباً'),
+    .isInt({ min: 1 }).withMessage('نوع الثابت يجب أن يكون نص'),
   query('isDefault')
     .optional()
     .isIn(['true', 'false']).withMessage('isDefault يجب أن يكون true أو false'),
@@ -91,6 +97,12 @@ export const constantTypeIdParamRules = [
   param('id')
     .exists().withMessage('معرف النوع الثابت مطلوب')
     .isInt({ min: 1 }).withMessage('معرف النوع الثابت يجب أن يكون رقماً صحيحاً موجباً')
+];
+
+export const materialIdParamRules = [
+  param('material_id')
+    .exists().withMessage('معرف المادة مطلوب')
+    .isInt({ min: 1 }).withMessage('معرف المادة يجب أن يكون رقماً صحيحاً موجباً')
 ];
 
 export const constantTypeRules = [

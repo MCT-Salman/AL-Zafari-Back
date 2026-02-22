@@ -4,6 +4,7 @@ import { requireRole } from '../middlewares/role.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import {
   getAllRulers,
+  getRulersByMaterialId,
   getRulerById,
   createRuler,
   updateRuler,
@@ -11,6 +12,7 @@ import {
 } from '../controllers/ruler.controller.js';
 
 import {
+  materialIdParamRules,
   createRulerRules,
   updateRulerRules,
   rulerIdParamRules,
@@ -24,6 +26,7 @@ router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
 router.get('/', validate(getRulersQueryRules), getAllRulers);
+router.get('/material/:id', validate(materialIdParamRules), getRulersByMaterialId);
 router.get('/:id', validate(rulerIdParamRules), getRulerById);
 
 // POST, PUT, DELETE routes - admin only

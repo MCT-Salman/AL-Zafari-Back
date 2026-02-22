@@ -16,23 +16,15 @@ export const create = async (data) => {
 export const findById = async (constant_value_id) => {
   return prisma.constantValue.findUnique({
     where: { constant_value_id },
-    include: {
-      type: true,
-    },
   });
 };
 
 /**
  * جلب جميع القيم الثابتة مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.constantValue.findMany({
     where,
-    skip,
-    take,
-    include: {
-      type: true,
-    },
     orderBy: { constant_value_id: 'desc' },
   });
 };
@@ -63,9 +55,21 @@ export const deleteById = async (constant_value_id) => {
   });
 };
 
+export const findByType = async (type) => {
+  console.log(type);
+  return prisma.constantValue.findMany({
+    where: { type },
+  });
+};
+
+export const findByMaterialId = async (material_id , filters = {}) => {
+  return prisma.constantValue.findMany({
+    where: { material_id , ...filters },
+  });
+};
 /**
  * البحث عن قيم ثابتة حسب نوع الثابت
- */
+ *//*
 export const findByTypeId = async (constant_type_id) => {
   return prisma.constantValue.findMany({
     where: { constant_type_id },
@@ -73,11 +77,11 @@ export const findByTypeId = async (constant_type_id) => {
       type: true,
     },
   });
-};
+};*/
 
 /**
  * البحث عن القيمة الافتراضية
- */
+ *//*
 export const findDefault = async (constant_type_id) => {
   return prisma.constantValue.findFirst({
     where: {
@@ -85,4 +89,4 @@ export const findDefault = async (constant_type_id) => {
       isDefault: true,
     },
   });
-};
+};*/

@@ -17,10 +17,7 @@ export const findById = async (material_id) => {
   return prisma.material.findUnique({
     where: { material_id },
     include: {
-      height: true,
-      width: true,
-      thickness: true,
-      colors: true,
+      constant_values: true,
       batches: true,
       rulers: true,
     },
@@ -36,10 +33,9 @@ export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
     skip,
     take,
     include: {
-      height: true,
-      width: true,
-      thickness: true,
-      colors: true,
+      constant_values: true,
+      batches: true,
+      rulers: true,
     },
     orderBy: { material_id: 'desc' },
   });
@@ -78,10 +74,9 @@ export const findByType = async (type) => {
   return prisma.material.findMany({
     where: { type },
     include: {
-      height: true,
-      width: true,
-      thickness: true,
-      colors: true,
+      constant_values: true,
+      batches: true,
+      rulers: true,
     },
   });
 };

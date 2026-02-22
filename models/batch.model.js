@@ -17,13 +17,7 @@ export const findById = async (batch_id) => {
   return prisma.batch.findUnique({
     where: { batch_id },
     include: {
-      material: {
-        include: {
-          height: true,
-          width: true,
-          thickness: true,
-        },
-      },
+      material: true,
     },
   });
 };
@@ -31,19 +25,11 @@ export const findById = async (batch_id) => {
 /**
  * جلب جميع الطبخات مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.batch.findMany({
     where,
-    skip,
-    take,
     include: {
-      material: {
-        include: {
-          height: true,
-          width: true,
-          thickness: true,
-        },
-      },
+      material: true,
     },
     orderBy: { batch_id: 'desc' },
   });

@@ -4,6 +4,7 @@ import { requireRole } from '../middlewares/role.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import {
   getAllColors,
+  getColorsByRulerId,
   getColorById,
   createColor,
   updateColor,
@@ -11,11 +12,14 @@ import {
 } from '../controllers/color.controller.js';
 
 import {
+  rulerIdParamRules,
   createColorRules,
   updateColorRules,
   colorIdParamRules,
   getColorsQueryRules
 } from '../validators/color.validators.js';
+import { uploadImage } from "../middlewares/upload.middleware.js";
+
 
 const router = Router();
 
@@ -24,11 +28,12 @@ router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
 router.get('/', validate(getColorsQueryRules), getAllColors);
+router.get('/ruler/:id', validate(rulerIdParamRules), getColorsByRulerId);
 router.get('/:id', validate(colorIdParamRules), getColorById);
 
 // POST, PUT, DELETE routes - admin only
-router.post('/', requireRole(['admin']), validate(createColorRules), createColor);
-router.put('/:id', requireRole(['admin']), validate([...colorIdParamRules, ...updateColorRules]), updateColor);
+router.post('/', requireRole(['admin']),uploadImage.single('imageUrl'), validate(createColorRules), createColor);
+router.put('/:id', requireRole(['admin']),uploadImage.single('imageUrl'), validate([...colorIdParamRules, ...updateColorRules]), updateColor);
 router.delete('/:id', requireRole(['admin']), validate(colorIdParamRules), deleteColor);
 
 export default router;

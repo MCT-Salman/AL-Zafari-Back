@@ -63,7 +63,7 @@ export const createMaterial = async (data) => {
 export const updateMaterial = async (material_id, data) => {
   // Check if exists
   await getMaterialById(material_id);
-
+  
   const updatedMaterial = await MaterialModel.updateById(material_id, data);
   
   logger.info('Material updated', { material_id });

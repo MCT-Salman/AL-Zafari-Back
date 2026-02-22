@@ -5,6 +5,7 @@ import {
   CustomerModel,
   ConstantValueModel,
   RulerModel,
+  ColorModel,
   BatchModel,
   PriceColorModel,
 } from "../models/index.js";
@@ -119,19 +120,18 @@ export const getOrderById = async (order_id) => {
     },
     sales: order.sales,
     items: await Promise.all(order.items.map(async (item) => {
-      const typeItemValue = await ConstantValueModel.findById(item.type_item);
       return {
         order_item_id: item.id,
         order_id: item.order_id,
-        material_name: item.ruler?.material?.material_name || null,
-        color_code: item.ruler?.color?.color_code || null,
-        color_name: item.ruler?.color?.color_name || null,
+        material_name: item.color?.ruler?.material?.material_name || null,
+        color_code: item.color?.color_code || null,
+        color_name: item.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
-        ruler_type: item.ruler?.type || "new",
-        type_item: typeItemValue?.value || null,
-        constant_width: item.constant_width,
+        ruler_type: item.color?.ruler?.ruler_name || null,
+        type_item: item.type_item || null,
+        width: item.width,
         length: item.length,
-        constant_thickness: item.constant_thickness,
+        thickness: item.thickness,
         batch_id: item.batch_id,
         quantity: item.quantity,
         price_per_meter: item.unit_price,
@@ -171,9 +171,9 @@ export const createOrder = async (data, userId) => {
 
   // تحقق من المساطر والـ batch لكل عنصر
   for (const item of data.items) {
-    const ruler = await RulerModel.findById(item.ruler_id);
-    if (!ruler) {
-      const error = new Error(`المسطرة ${item.ruler_id} غير موجودة`);
+    const color = await ColorModel.findById(item.color_id);
+    if (!color) {
+      const error = new Error(`اللون ${item.color_id} غير موجودة`);
       error.statusCode = 404;
       throw error;
     }
@@ -192,20 +192,20 @@ export const createOrder = async (data, userId) => {
 
   for (const item of data.items) {
     let widthType = "isByBlanck";
-    if (item.constant_width === 22) widthType = "isByMeter22";
-    else if (item.constant_width === 44) widthType = "isByMeter44";
-    else if (item.constant_width === 66) widthType = "isByMeter66";
+    if (item.width === 22) widthType = "isByMeter22";
+    else if (item.width === 44) widthType = "isByMeter44";
+    else if (item.width === 66) widthType = "isByMeter66";
 
     // جلب السعر إذا لم يكن موجود
     if (!item.unit_price || Number(item.unit_price) === 0) {
       const price = await PriceColorModel.findPriceByColorAndValue(
-        item.ruler_id,
+        item.color_id,
         widthType
       );
 
       if (!price) {
         const error = new Error(
-          `السعر للمسطرة ${item.ruler_id} مع النوع ${widthType} غير موجود`
+          `السعر لللون ${item.color_id} مع النوع ${widthType} غير موجود`
         );
         error.statusCode = 400;
         throw error;
@@ -265,7 +265,7 @@ export const createOrder = async (data, userId) => {
         },
         items: {
           include: {
-            ruler: { include: { material: true, color: true } },
+            color: { include: { ruler: { include: { material: true } } } },
             batch: true,
           },
         },
@@ -293,20 +293,19 @@ export const createOrder = async (data, userId) => {
     },
     sales: newOrder.sales,
     items: await Promise.all(newOrder.items.map(async (item) => {
-      const type_item = await ConstantValueModel.findById(item.type_item);
 
       return {
         order_item_id: item.id,
         order_id: item.order_id,
-        material_name: item.ruler?.material?.material_name || null,
-        color_code: item.ruler?.color?.color_code || null,
-        color_name: item.ruler?.color?.color_name || null,
+        material_name: item.color?.ruler?.material?.material_name || null,
+        color_code: item.color?.color_code || null,
+        color_name: item.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
-        ruler_type: item.ruler?.type || "new",
-        type_item: type_item?.value || null,
-        constant_width: item.constant_width,
+        ruler_type: item.color?.ruler?.ruler_name || null,
+        type_item: item.type_item || null,
+        width: item.width,
         length: item.length,
-        constant_thickness: item.constant_thickness,
+        thickness: item.thickness,
         batch_id: item.batch_id,
         quantity: item.quantity,
         price_per_meter: item.unit_price,
@@ -347,10 +346,10 @@ export const updateOrder = async (order_id, data) => {
   let itemsWithSubtotal = [];
   if (data.items && data.items.length > 0) {
     for (const item of data.items) {
-      // تحقق من المسطرة والطبخة
-      const ruler = await RulerModel.findById(item.ruler_id);
-      if (!ruler) {
-        const error = new Error(`المسطرة ${item.ruler_id} غير موجودة`);
+      // تحقق من اللون والطبخة
+      const color = await ColorModel.findById(item.color_id);
+      if (!color) {
+        const error = new Error(`اللون ${item.color_id} غير موجودة`);
         error.statusCode = 404;
         throw error;
       }
@@ -364,16 +363,16 @@ export const updateOrder = async (order_id, data) => {
 
       // تحديد نوع العرض للـ unit_price
       let widthType = "isByBlanck";
-      if (item.constant_width === 22) widthType = "isByMeter22";
-      else if (item.constant_width === 44) widthType = "isByMeter44";
-      else if (item.constant_width === 66) widthType = "isByMeter66";
+      if (item.width === 22) widthType = "isByMeter22";
+      else if (item.width === 44) widthType = "isByMeter44";
+      else if (item.width === 66) widthType = "isByMeter66";
 
       // جلب السعر إذا لم يكن موجود
       if (!item.unit_price || Number(item.unit_price) === 0) {
-        const price = await PriceColorModel.findPriceByColorAndValue(item.ruler_id, widthType);
+        const price = await PriceColorModel.findPriceByColorAndValue(item.color_id, widthType);
         if (!price) {
           const error = new Error(
-            `السعر للمسطرة ${item.ruler_id} مع النوع ${widthType} غير موجود`
+            `السعر لللون ${item.color_id} مع النوع ${widthType} غير موجود`
           );
           error.statusCode = 400;
           throw error;
@@ -454,7 +453,6 @@ export const updateOrder = async (order_id, data) => {
       },
       sales: updated.sales,
       items: await Promise.all(updated.items.map(async (item) => {
-        const type_item = await ConstantValueModel.findById(item.type_item);
         return {
           order_item_id: item.id,
           order_id: item.order_id,
@@ -463,10 +461,10 @@ export const updateOrder = async (order_id, data) => {
           color_name: item.ruler?.color?.color_name || null,
           batch_number: item.batch?.batch_number || null,
           ruler_type: item.ruler?.type || "new",
-          type_item: type_item?.value || null,
-          constant_width: item.constant_width,
+          type_item: item.type_item || null,
+          width: item.width,
           length: item.length,
-          constant_thickness: item.constant_thickness,
+          thickness: item.thickness,
           batch_id: item.batch_id,
           quantity: item.quantity,
           price_per_meter: item.unit_price,
@@ -542,9 +540,9 @@ export const addOrderItem = async (order_id, itemData) => {
   let unit_price = Number(itemData.unit_price);
   if (!unit_price || unit_price === 0) {
     const widthType =
-      itemData.constant_width === 22
+      itemData.width === 22
         ? "isByMeter22"
-        : itemData.constant_width === 44
+        : itemData.width === 44
           ? "isByMeter44"
           : "isByBlanck";
 
@@ -589,9 +587,9 @@ export const addOrderItem = async (order_id, itemData) => {
         order_id,
         type_item: itemData.type_item,
         ruler_id: itemData.ruler_id,
-        constant_width: itemData.constant_width,
+        width: itemData.width,
         length,
-        constant_thickness: itemData.constant_thickness,
+        thickness: itemData.thickness,
         batch_id: itemData.batch_id,
         quantity,
         unit_price,
@@ -660,8 +658,8 @@ export const addOrderItem = async (order_id, itemData) => {
         batch_number: item.batch?.batch_number || null,
         ruler_type: item.ruler?.type || "new",
         type_item: type_item?.value || null,
-        constant_width: item.constant_width,
-        constant_thickness: item.constant_thickness,
+        width: item.width,
+        thickness: item.thickness,
         batch_id: item.batch_id,
         quantity: item.quantity,
         length: item.length,
@@ -717,7 +715,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
 
   const finalLength = Number(itemData.length ?? existingItem.length);
   const finalQuantity = Number(itemData.quantity ?? existingItem.quantity);
-  const finalWidth = itemData.constant_width ?? existingItem.constant_width;
+  const finalWidth = itemData.width ?? existingItem.width;
   const finalRulerId = itemData.ruler_id ?? existingItem.ruler_id;
 
   let unit_price = Number(itemData.unit_price ?? existingItem.unit_price);
@@ -810,8 +808,8 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
         batch_number: item.batch?.batch_number || null,
         ruler_type: item.ruler?.type || "new",
         type_item: type_item?.value || null,
-        constant_width: item.constant_width,
-        constant_thickness: item.constant_thickness,
+        width: item.width,
+        thickness: item.thickness,
         quantity: item.quantity,
         length: item.length,
         price_per_meter: item.unit_price,
@@ -943,9 +941,9 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
           batch_number: item.batch?.batch_number || null,
           ruler_type: item.ruler?.type || "new",
           type_item: typeItemValue?.value || null,
-          constant_width: item.constant_width,
+          width: item.width,
           length: item.length,
-          constant_thickness: item.constant_thickness,
+          thickness: item.thickness,
           batch_id: item.batch_id,
           quantity: item.quantity,
           price_per_meter: item.unit_price,
@@ -1022,9 +1020,9 @@ export const updateOrderStatus = async (order_id, status) => {
           batch_number: item.batch?.batch_number || null,
           ruler_type: item.ruler?.type || "new",
           type_item: typeItemValue?.value || null,
-          constant_width: item.constant_width,
+          width: item.width,
           length: item.length,
-          constant_thickness: item.constant_thickness,
+          thickness: item.thickness,
           batch_id: item.batch_id,
           quantity: item.quantity,
           price_per_meter: item.unit_price,

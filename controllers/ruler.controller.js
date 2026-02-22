@@ -1,6 +1,7 @@
 // controllers/ruler.controller.js
 import {
   getAllRulers as getAllRulersService,
+  getRulersByMaterialId as getRulersByMaterialIdService,
   getRulerById as getRulerByIdService,
   createRuler as createRulerService,
   updateRuler as updateRulerService,
@@ -12,9 +13,7 @@ import logger from "../utils/logger.js";
 export const getAllRulers = async (req, res, next) => {
   try {
     const filters = {
-      material_id: req.query.material_id,
-      color_id: req.query.color_id,
-      ruler_type: req.query.ruler_type,
+      material_id: req.query.material_id
     };
 
     const result = await getAllRulersService(filters);
@@ -27,6 +26,22 @@ export const getAllRulers = async (req, res, next) => {
     });
   } catch (error) {
     logger.error('Get all rulers controller error', { message: error?.message });
+    return next(error);
+  }
+};
+
+export const getRulersByMaterialId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const rulers = await getRulersByMaterialIdService(parseInt(id));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب المساطر بنجاح",
+      data: rulers,
+    });
+  } catch (error) {
+    logger.error('Get rulers by material id controller error', { message: error?.message });
     return next(error);
   }
 };

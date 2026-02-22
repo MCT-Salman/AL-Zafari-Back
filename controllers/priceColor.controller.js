@@ -13,7 +13,7 @@ export const getAllPriceColors = async (req, res, next) => {
   try {
     const filters = {
       color_id: req.query.color_id,
-      constant_value_id: req.query.constant_value_id,
+      type_item: req.query.type_item,
       price_color_By: req.query.price_color_By,
     };
 

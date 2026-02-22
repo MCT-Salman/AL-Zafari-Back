@@ -14,8 +14,8 @@ export const getAllPriceColors = async ( filters = {}) => {
   }
 
   // Filter by constant_value_id
-  if (filters.constant_value_id) {
-    where.constant_value_id = parseInt(filters.constant_value_id);
+  if (filters.type_item) {
+    where.type_item = parseInt(filters.type_item);
   }
 
   // Filter by price_color_By
@@ -57,14 +57,6 @@ export const createPriceColor = async (data) => {
   const color = await ColorModel.findById(data.color_id);
   if (!color) {
     const error = new Error("اللون غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  // Check if constant value exists
-  const constantValue = await ConstantValueModel.findById(data.constant_value_id);
-  if (!constantValue) {
-    const error = new Error("القيمة الثابتة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
