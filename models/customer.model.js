@@ -32,11 +32,9 @@ export const findById = async (customer_id) => {
 /**
  * جلب جميع العملاء مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.customer.findMany({
     where,
-    skip,
-    take,
     orderBy: { created_at: 'desc' },
   });
 };

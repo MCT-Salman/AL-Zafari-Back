@@ -68,11 +68,9 @@ export const findById = async (order_id) => {
 /**
  * جلب جميع الطلبات مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.order.findMany({
     where,
-    skip,
-    take,
     include: {
       customer: true,
       sales: {

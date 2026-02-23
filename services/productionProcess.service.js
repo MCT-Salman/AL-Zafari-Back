@@ -147,10 +147,7 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
         error.statusCode = 403;
         throw error;
     }
-
-    const page = Number(filters.page) || 1;
-    const limit = Number(filters.limit) || 20;
-    const skip = (page - 1) * limit;
+   
 
     const where = {};
 
@@ -161,8 +158,6 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
     const [processes, total] = await Promise.all([
         prisma.productionProcess.findMany({
             where,
-            skip,
-            take: limit,
             orderBy: { created_at: "desc" },
             include: { item: true, user: true },
         }),

@@ -31,11 +31,9 @@ export const findByKey = async (key) => {
 /**
  * جلب جميع الإعدادات
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.setting.findMany({
     where,
-    skip,
-    take,
     orderBy: { key: "asc" },
   });
 };

@@ -148,8 +148,8 @@ export const addOrderItemRules = [
   body("type_item")
     .exists({ checkFalsy: true })
     .withMessage("نوع العنصر مطلوب")
-    .isInt({ min: 1 })
-    .withMessage("نوع العنصر يجب أن يكون رقماً صحيحاً موجباً"),
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر يجب أن يكون كوي أو مكنة"),
   body("color_id")
     .exists({ checkFalsy: true })
     .withMessage("معرف اللون مطلوب")
@@ -198,8 +198,8 @@ export const addOrderItemRules = [
 export const updateOrderItemRules = [
   body("type_item")
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("نوع العنصر يجب أن يكون رقماً صحيحاً موجباً"),
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر يجب أن يكون كوي أو مكنة"),
   body("color_id")
     .optional()
     .isInt({ min: 1 })

@@ -27,11 +27,9 @@ export const findById = async (material_id) => {
 /**
  * جلب جميع المواد مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.material.findMany({
     where,
-    skip,
-    take,
     include: {
       constant_values: true,
       batches: true,

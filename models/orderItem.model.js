@@ -8,10 +8,13 @@ export const create = async (data) => {
   return prisma.orderItem.create({
     data,
     include: {
-      ruler: {
+      color: {
         include: {
-          material: true,
-          color: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
       batch: true,
@@ -40,10 +43,13 @@ export const findById = async (order_item_id) => {
           customer: true,
         },
       },
-      ruler: {
+      color: {
         include: {
-          material: true,
-          color: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
       batch: true,
@@ -54,17 +60,18 @@ export const findById = async (order_item_id) => {
 /**
  * جلب جميع عناصر الطلب
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.orderItem.findMany({
     where,
-    skip,
-    take,
     include: {
       order: true,
-      ruler: {
+      color: {
         include: {
-          material: true,
-          color: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
       batch: true,
@@ -87,10 +94,13 @@ export const updateById = async (order_item_id, data) => {
     where: { order_item_id },
     data,
     include: {
-      ruler: {
+      color: {
         include: {
-          material: true,
-          color: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
       batch: true,
@@ -123,10 +133,13 @@ export const findByOrderId = async (order_id) => {
   return prisma.orderItem.findMany({
     where: { order_id },
     include: {
-      ruler: {
+      color: {
         include: {
-          material: true,
-          color: true,
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
         },
       },
       batch: true,

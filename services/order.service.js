@@ -122,7 +122,7 @@ export const getOrderById = async (order_id) => {
     sales: order.sales,
     items: await Promise.all(order.items.map(async (item) => {
       return {
-        order_item_id: item.id,
+        order_item_id: item.order_item_id,
         order_id: item.order_id,
         material_name: item.color?.ruler?.material?.material_name || null,
         color_code: item.color?.color_code || null,
@@ -298,7 +298,7 @@ export const createOrder = async (data, userId) => {
     items: await Promise.all(newOrder.items.map(async (item) => {
 
       return {
-        order_item_id: item.id,
+        order_item_id: item.order_item_id,
         order_id: item.order_id,
         material_name: item.color?.ruler?.material?.material_name || null,
         color_code: item.color?.color_code || null,
@@ -458,7 +458,7 @@ export const updateOrder = async (order_id, data) => {
       sales: updated.sales,
       items: await Promise.all(updated.items.map(async (item) => {
         return {
-          order_item_id: item.id,
+          order_item_id: item.order_item_id,
           order_id: item.order_id,
           material_name: item.color?.ruler?.material?.material_name || null,
           color_code: item.color?.color_code || null,
@@ -526,9 +526,9 @@ export const addOrderItem = async (order_id, itemData) => {
     throw error;
   }
 
-  const ruler = await RulerModel.findById(itemData.ruler_id);
-  if (!ruler) {
-    const error = new Error("المسطرة غير موجودة");
+  const color = await ColorModel.findById(itemData.color_id);
+  if (!color) {
+    const error = new Error("اللون غير موجودة");
     error.statusCode = 404;
     throw error;
   }
@@ -551,7 +551,7 @@ export const addOrderItem = async (order_id, itemData) => {
           : "isByBlanck";
 
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
-      itemData.ruler_id,
+      itemData.color_id,
       widthType,
       itemData.type_item
     );
@@ -592,7 +592,7 @@ export const addOrderItem = async (order_id, itemData) => {
       data: {
         order_id,
         type_item: itemData.type_item,
-        ruler_id: itemData.ruler_id,
+        color_id: itemData.color_id,
         width: itemData.width,
         length,
         thickness: itemData.thickness,
@@ -626,7 +626,7 @@ export const addOrderItem = async (order_id, itemData) => {
         },
         items: {
           include: {
-            ruler: { include: { material: true, color: true } },
+            color: { include: { ruler: { include: { material: true } } } },
             batch: true,
           },
         },
@@ -655,15 +655,14 @@ export const addOrderItem = async (order_id, itemData) => {
     },
     sales: result.sales,
     items: await Promise.all(result.items.map(async (item) => {
-      const type_item = await ConstantValueModel.findById(item.type_item);
       return {
-        order_item_id: item.id,
-        material_name: item.ruler?.material?.material_name || null,
-        color_code: item.ruler?.color?.color_code || null,
-        color_name: item.ruler?.color?.color_name || null,
+        order_item_id: item.order_item_id,
+        material_name: item.color?.ruler?.material?.material_name || null,
+        color_code: item.color?.color_code || null,
+        color_name: item.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
-        ruler_type: item.ruler?.type || "new",
-        type_item: type_item?.value || null,
+        ruler_type: item.color?.ruler?.ruler_name || null,
+        type_item: item.type_item || null,
         width: item.width,
         thickness: item.thickness,
         batch_id: item.batch_id,
@@ -701,10 +700,10 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     throw error;
   }
 
-  if (itemData.ruler_id) {
-    const ruler = await RulerModel.findById(itemData.ruler_id);
-    if (!ruler) {
-      const error = new Error("المسطرة غير موجودة");
+  if (itemData.color_id) {
+    const color = await ColorModel.findById(itemData.color_id);
+    if (!color) {
+      const error = new Error("اللون غير موجودة");
       error.statusCode = 404;
       throw error;
     }
@@ -722,8 +721,8 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
   const finalLength = Number(itemData.length ?? existingItem.length);
   const finalQuantity = Number(itemData.quantity ?? existingItem.quantity);
   const finalWidth = itemData.width ?? existingItem.width;
-  const finalRulerId = itemData.ruler_id ?? existingItem.ruler_id;
-
+  const finalColorId = itemData.color_id ?? existingItem.color_id;
+  
   let unit_price = Number(itemData.unit_price ?? existingItem.unit_price);
 
   if (!unit_price || unit_price === 0) {
@@ -733,13 +732,12 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
         : finalWidth === 44
           ? "isByMeter44"
           : "isByBlanck";
-
+    
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
-      finalRulerId,
+      finalColorId,
       widthType,
       itemData.type_item
     );
-
     if (!priceColor) {
       const error = new Error("لم يتم العثور على سعر لهذا المنتج");
       error.statusCode = 404;
@@ -760,6 +758,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
 
   const finalSubtotal = subtotalBeforeDiscount - discountAmount;
 
+  
   // تحديث العنصر وحساب إجمالي الطلب
   const result = await prisma.$transaction(async (tx) => {
     const updatedItem = await tx.orderItem.update({
@@ -781,7 +780,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
       include: {
         customer: true,
         sales: { select: { id: true, username: true, full_name: true } },
-        items: { include: { ruler: { include: { material: true, color: true } }, batch: true } },
+        items: { include: { color: { include: {   ruler: { include: { material: true } } } }, batch: true } },
       },
     });
 
@@ -807,15 +806,14 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     },
     sales: result.updatedOrder.sales,
     items: await Promise.all(result.updatedOrder.items.map(async (item) => {
-      const type_item = await ConstantValueModel.findById(item.type_item);
       return {
-        order_item_id: item.id,
-        material_name: item.ruler?.material?.material_name || null,
-        color_code: item.ruler?.color?.color_code || null,
-        color_name: item.ruler?.color?.color_name || null,
+        order_item_id: item.order_item_id,
+        material_name: item.color?.ruler?.material?.material_name || null,
+        color_code: item.color?.color_code || null,
+        color_name: item.color?.color_name || null,
         batch_number: item.batch?.batch_number || null,
-        ruler_type: item.ruler?.type || "new",
-        type_item: type_item?.value || null,
+        ruler_type: item.color?.ruler?.ruler_name || null,
+        type_item: item.type_item || null,
         width: item.width,
         thickness: item.thickness,
         quantity: item.quantity,
@@ -909,7 +907,7 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
         sales: { select: { id: true, username: true, full_name: true } },
         items: {
           include: {
-            ruler: { include: { material: true, color: true } },
+            color: { include: { ruler: { include: { material: true } } } },
             batch: true,
           },
         },
@@ -939,17 +937,16 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     sales: result.updatedOrder.sales,
     items: await Promise.all(
       result.updatedOrder.items.map(async (item) => {
-        const typeItemValue = await ConstantValueModel.findById(item.type_item);
         const updatedItem = result.updatedItems.find(i => i.id === item.id);
         return {
-          order_item_id: item.id,
+          order_item_id: item.order_item_id,
           order_id: item.order_id,
-          material_name: item.ruler?.material?.material_name || null,
-          color_code: item.ruler?.color?.color_code || null,
-          color_name: item.ruler?.color?.color_name || null,
+          material_name: item.color?.ruler?.material?.material_name || null,
+          color_code: item.color?.color_code || null,
+          color_name: item.color?.color_name || null,
           batch_number: item.batch?.batch_number || null,
-          ruler_type: item.ruler?.type || "new",
-          type_item: typeItemValue?.value || null,
+          ruler_type: item.color?.ruler?.ruler_name || null,
+          type_item: item.type_item || null,
           width: item.width,
           length: item.length,
           thickness: item.thickness,
@@ -991,7 +988,7 @@ export const updateOrderStatus = async (order_id, status) => {
       sales: { select: { id: true, username: true, full_name: true } },
       items: {
         include: {
-          ruler: { include: { material: true, color: true } },
+          color: { include: { ruler: { include: { material: true } } } },
           batch: true,
         },
       },
@@ -1019,16 +1016,15 @@ export const updateOrderStatus = async (order_id, status) => {
     sales: updatedOrder.sales,
     items: await Promise.all(
       updatedOrder.items.map(async (item) => {
-        const typeItemValue = await ConstantValueModel.findById(item.type_item);
         return {
-          order_item_id: item.id,
+          order_item_id: item.order_item_id,
           order_id: item.order_id,
-          material_name: item.ruler?.material?.material_name || null,
-          color_code: item.ruler?.color?.color_code || null,
-          color_name: item.ruler?.color?.color_name || null,
+          material_name: item.color?.ruler?.material?.material_name || null,
+          color_code: item.color?.color_code || null,
+          color_name: item.color?.color_name || null,
           batch_number: item.batch?.batch_number || null,
-          ruler_type: item.ruler?.type || "new",
-          type_item: typeItemValue?.value || null,
+          ruler_type: item.color?.ruler?.ruler_name || null,
+          type_item: item.type_item || null,
           width: item.width,
           length: item.length,
           thickness: item.thickness,

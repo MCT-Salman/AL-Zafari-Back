@@ -83,11 +83,9 @@ export const deleteById = async (id) => {
 /**
  * جلب جميع المستخدمين مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.users.findMany({
     where,
-    skip,
-    take,
     orderBy: { created_at: 'desc' },
   });
 };

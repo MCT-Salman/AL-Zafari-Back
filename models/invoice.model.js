@@ -62,11 +62,9 @@ export const findById = async (invoice_id) => {
 /**
  * جلب جميع الفواتير مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.invoice.findMany({
     where,
-    skip,
-    take,
     include: {
       order: true,
       customer: true,

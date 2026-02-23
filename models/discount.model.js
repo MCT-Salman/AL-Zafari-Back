@@ -21,11 +21,9 @@ export const findById = async (id) => {
 /**
  * جلب جميع الخصومات مع pagination
  */
-export const findAll = async ({ skip = 0, take = 10, where = {} }) => {
+export const findAll = async ({ where = {} }) => {
   return prisma.discount.findMany({
     where,
-    skip,
-    take,
     orderBy: { id: 'desc' },
   });
 };

@@ -30,7 +30,7 @@ router.use(requireAuth);
 // GET routes - accessible by all authenticated users
 router.get('/', validate(getConstantValuesQueryRules), getAllConstantValues);
 //router.get('/by-typeid/:id', validate(constantTypeIdParamRules), getConstantValuesByTypeId);
-router.get('/by-type-name/:type',validate(constantTypeRules), getConstantValuesByType);
+router.get('/by-type/:type',validate(constantTypeRules), getConstantValuesByType);
 router.get('/material/:material_id',validate(materialIdParamRules), getConstantValuesByMaterialId);
 router.get('/:id', validate(constantValueIdParamRules), getConstantValueById);
 
