@@ -6,7 +6,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `order` MODIFY `total_amount` DECIMAL(20, 2) NOT NULL;
+ALTER TABLE `Order` MODIFY `total_amount` DECIMAL(20, 2) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `orderitem` MODIFY `subtotal` DECIMAL(20, 2) NOT NULL;
+ALTER TABLE `OrderItem` MODIFY `subtotal` DECIMAL(20, 2) NOT NULL;

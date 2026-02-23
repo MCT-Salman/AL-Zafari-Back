@@ -16,31 +16,31 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `orderitem` DROP FOREIGN KEY `OrderItem_ruler_id_fkey`;
+ALTER TABLE `OrderItem` DROP FOREIGN KEY `OrderItem_ruler_id_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `orderitem` DROP FOREIGN KEY `OrderItem_type_item_fkey`;
+ALTER TABLE `OrderItem` DROP FOREIGN KEY `OrderItem_type_item_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `productionorder` DROP FOREIGN KEY `ProductionOrder_type_item_fkey`;
+ALTER TABLE `ProductionOrder` DROP FOREIGN KEY `ProductionOrder_type_item_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `warehousemovement` DROP FOREIGN KEY `WarehouseMovement_ruler_id_fkey`;
+ALTER TABLE `WarehouseMovement` DROP FOREIGN KEY `WarehouseMovement_ruler_id_fkey`;
 
 -- DropIndex
-DROP INDEX `OrderItem_ruler_id_fkey` ON `orderitem`;
+DROP INDEX `OrderItem_ruler_id_fkey` ON `OrderItem`;
 
 -- DropIndex
-DROP INDEX `OrderItem_type_item_fkey` ON `orderitem`;
+DROP INDEX `OrderItem_type_item_fkey` ON `OrderItem`;
 
 -- DropIndex
-DROP INDEX `ProductionOrder_type_item_fkey` ON `productionorder`;
+DROP INDEX `ProductionOrder_type_item_fkey` ON `ProductionOrder`;
 
 -- DropIndex
-DROP INDEX `WarehouseMovement_ruler_id_fkey` ON `warehousemovement`;
+DROP INDEX `WarehouseMovement_ruler_id_fkey` ON `WarehouseMovement`;
 
 -- AlterTable
-ALTER TABLE `orderitem` DROP COLUMN `constant_thickness`,
+ALTER TABLE `OrderItem` DROP COLUMN `constant_thickness`,
     DROP COLUMN `constant_width`,
     DROP COLUMN `ruler_id`,
     ADD COLUMN `color_id` INTEGER NOT NULL,
@@ -49,14 +49,14 @@ ALTER TABLE `orderitem` DROP COLUMN `constant_thickness`,
     MODIFY `type_item` ENUM('Presser', 'Machine') NULL;
 
 -- AlterTable
-ALTER TABLE `productionorder` MODIFY `type_item` ENUM('Presser', 'Machine') NOT NULL;
+ALTER TABLE `ProductionOrder` MODIFY `type_item` ENUM('Presser', 'Machine') NOT NULL;
 
 -- AlterTable
-ALTER TABLE `productionorderitem` DROP COLUMN `constant_width`,
+ALTER TABLE `ProductionOrderItem` DROP COLUMN `constant_width`,
     ADD COLUMN `width` DECIMAL(10, 2) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `warehousemovement` DROP COLUMN `ruler_id`,
+ALTER TABLE `WarehouseMovement` DROP COLUMN `ruler_id`,
     ADD COLUMN `color_id` INTEGER NOT NULL;
 
 -- AddForeignKey

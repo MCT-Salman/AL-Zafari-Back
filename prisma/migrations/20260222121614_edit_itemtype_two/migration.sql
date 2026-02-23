@@ -10,13 +10,13 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `productionorder` DROP FOREIGN KEY `ProductionOrder_ruler_id_fkey`;
+ALTER TABLE `ProductionOrder` DROP FOREIGN KEY `ProductionOrder_ruler_id_fkey`;
 
 -- DropIndex
-DROP INDEX `ProductionOrder_ruler_id_fkey` ON `productionorder`;
+DROP INDEX `ProductionOrder_ruler_id_fkey` ON `ProductionOrder`;
 
 -- AlterTable
-ALTER TABLE `productionorder` DROP COLUMN `constant_thickness`,
+ALTER TABLE `ProductionOrder` DROP COLUMN `constant_thickness`,
     DROP COLUMN `constant_width`,
     DROP COLUMN `ruler_id`,
     ADD COLUMN `color_id` INTEGER NOT NULL,

@@ -6,11 +6,11 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `pricecolor` DROP FOREIGN KEY `PriceColor_constant_value_id_fkey`;
+ALTER TABLE `PriceColor` DROP FOREIGN KEY `PriceColor_constant_value_id_fkey`;
 
 -- DropIndex
-DROP INDEX `PriceColor_constant_value_id_fkey` ON `pricecolor`;
+DROP INDEX `PriceColor_constant_value_id_fkey` ON `PriceColor`;
 
 -- AlterTable
-ALTER TABLE `pricecolor` DROP COLUMN `constant_value_id`,
+ALTER TABLE `PriceColor` DROP COLUMN `constant_value_id`,
     ADD COLUMN `type_item` ENUM('Presser', 'Machine') NOT NULL;
