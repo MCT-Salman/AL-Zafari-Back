@@ -128,18 +128,19 @@ model Users {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  orders        Order[]
-  invoices      Invoice[]
-  processes     ProductionProcess[]
-  productions   ProductionOrder[]
-  movements     WarehouseMovement[]
-  slites        Slite[]
-  sessions      Session[]
-  refreshTokens RefreshToken[]
-  loginAttempts LoginAttempt[]
-  notification  Notification[]
-  auditLog      AuditLog[]
-  activityLogs  ActivityLog[]
+  orders           Order[]
+  invoices         Invoice[]
+  processes        ProductionProcess[]
+  productions      ProductionOrder[]
+  movements        WarehouseMovement[]
+  slites           Slite[]
+  sessions         Session[]
+  refreshTokens    RefreshToken[]
+  loginAttempts    LoginAttempt[]
+  notification     Notification[]
+  auditLog         AuditLog[]
+  activityLogs     ActivityLog[]
+  exchangeRateLogs ExchangeRateLog[]
 
   @@map("Users")
 }
@@ -331,14 +332,14 @@ model Color {
 }
 
 model PriceColor {
-  price_color_id    Int          @id @default(autoincrement())
-  color_id          Int
-  type_item         TypeItem
-  price_color_By    PriceColorBy
-  price_per_meter   Decimal      @db.Decimal(10, 2)
-  notes             String?
+  price_color_id  Int          @id @default(autoincrement())
+  color_id        Int
+  type_item       TypeItem
+  price_color_By  PriceColorBy
+  price_per_meter Decimal      @db.Decimal(10, 2)
+  notes           String?
 
-  color          Color         @relation(fields: [color_id], references: [color_id])
+  color Color @relation(fields: [color_id], references: [color_id])
 
   @@map("PriceColor")
 }
@@ -379,7 +380,7 @@ model Order {
   customer_id   Int
   sales_user_id Int
   status        OrderStatus
-  total_amount  Decimal     @db.Decimal(12, 2)
+  total_amount  Decimal     @db.Decimal(20, 2)
   created_at    DateTime    @default(now())
   notes         String?
 
@@ -406,7 +407,7 @@ model OrderItem {
   batch_id      Int
   quantity      Int
   unit_price    Decimal?  @db.Decimal(10, 2)
-  subtotal      Decimal   @db.Decimal(12, 2)
+  subtotal      Decimal   @db.Decimal(20, 2)
   notes         String?
 
   order Order @relation(fields: [order_id], references: [order_id])
@@ -613,4 +614,16 @@ model Discount {
   updatedAt         DateTime          @updatedAt
 
   @@map("Discount")
+}
+
+model ExchangeRateLog {
+  id        Int      @id @default(autoincrement())
+  oldRate   Decimal  @db.Decimal(10, 2)
+  newRate   Decimal  @db.Decimal(10, 2)
+  changedBy Int?
+  user      Users?   @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("ExchangeRateLog")
 }

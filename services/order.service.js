@@ -8,6 +8,7 @@ import {
   ColorModel,
   BatchModel,
   PriceColorModel,
+  SettingModel,
 } from "../models/index.js";
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
@@ -200,7 +201,8 @@ export const createOrder = async (data, userId) => {
     if (!item.unit_price || Number(item.unit_price) === 0) {
       const price = await PriceColorModel.findPriceByColorAndValue(
         item.color_id,
-        widthType
+        widthType,
+        item.type_item
       );
 
       if (!price) {
@@ -213,11 +215,12 @@ export const createOrder = async (data, userId) => {
 
       item.unit_price = price.price_per_meter.toString();
     }
-
+    const exchangeRate = await SettingModel.findByKey("exchange");
+    const exchangeRateValue = Number(exchangeRate.value);
 
     const quantity = Number(item.quantity);
     const length = Number(item.length);
-    const unitPrice = Number(item.unit_price);
+    const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
     const subtotalBeforeDiscount = unitPrice * length * quantity;
 
@@ -369,7 +372,7 @@ export const updateOrder = async (order_id, data) => {
 
       // جلب السعر إذا لم يكن موجود
       if (!item.unit_price || Number(item.unit_price) === 0) {
-        const price = await PriceColorModel.findPriceByColorAndValue(item.color_id, widthType);
+        const price = await PriceColorModel.findPriceByColorAndValue(item.color_id, widthType, item.type_item);
         if (!price) {
           const error = new Error(
             `السعر لللون ${item.color_id} مع النوع ${widthType} غير موجود`
@@ -379,10 +382,12 @@ export const updateOrder = async (order_id, data) => {
         }
         item.unit_price = price.price_per_meter.toString();
       }
+      const exchangeRate = await SettingModel.findByKey("exchange");
+      const exchangeRateValue = Number(exchangeRate.value);
 
       const quantity = Number(item.quantity);
       const length = Number(item.length);
-      const unitPrice = Number(item.unit_price);
+      const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
       const subtotalBeforeDiscount = unitPrice * length * quantity;
 
@@ -429,11 +434,10 @@ export const updateOrder = async (order_id, data) => {
       include: {
         customer: true,
         sales: { select: { id: true, username: true, full_name: true } },
-        items: { include: { ruler: { include: { material: true, color: true } }, batch: true } },
+        items: { include: { color: { include: { ruler: { include: { material: true } } } }, batch: true } },
       },
     });
 
-    // إعادة تشكيل JSON للـ response
     return {
       order_id: updated.id,
       customer_id: updated.customer_id,
@@ -456,11 +460,11 @@ export const updateOrder = async (order_id, data) => {
         return {
           order_item_id: item.id,
           order_id: item.order_id,
-          material_name: item.ruler?.material?.material_name || null,
-          color_code: item.ruler?.color?.color_code || null,
-          color_name: item.ruler?.color?.color_name || null,
+          material_name: item.color?.ruler?.material?.material_name || null,
+          color_code: item.color?.color_code || null,
+          color_name: item.color?.color_name || null,
           batch_number: item.batch?.batch_number || null,
-          ruler_type: item.ruler?.type || "new",
+          ruler_type: item.color?.ruler?.ruler_name || null,
           type_item: item.type_item || null,
           width: item.width,
           length: item.length,
@@ -548,7 +552,8 @@ export const addOrderItem = async (order_id, itemData) => {
 
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
       itemData.ruler_id,
-      widthType
+      widthType,
+      itemData.type_item
     );
 
     if (!priceColor) {
@@ -556,8 +561,9 @@ export const addOrderItem = async (order_id, itemData) => {
       error.statusCode = 404;
       throw error;
     }
-
-    unit_price = Number(priceColor.price_per_meter);
+    const exchangeRate = await SettingModel.findByKey("exchange");
+    const exchangeRateValue = Number(exchangeRate.value);
+    unit_price = Number(priceColor.price_per_meter) * exchangeRateValue;
   }
 
   const quantity = Number(itemData.quantity);
@@ -730,7 +736,8 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
 
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
       finalRulerId,
-      widthType
+      widthType,
+      itemData.type_item
     );
 
     if (!priceColor) {
@@ -738,8 +745,9 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
       error.statusCode = 404;
       throw error;
     }
-
-    unit_price = Number(priceColor.price_per_meter);
+    const exchangeRate = await SettingModel.findByKey("exchange");
+    const exchangeRateValue = Number(exchangeRate.value);
+    unit_price = Number(priceColor.price_per_meter) * exchangeRateValue;
   }
 
   const subtotalBeforeDiscount = unit_price * finalLength * finalQuantity;
@@ -868,13 +876,14 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     const orderItems = await tx.orderItem.findMany({ where: { order_id } });
 
     let finalTotal = 0;
-
+    const exchangeRate = await SettingModel.findByKey("exchange");
+    const exchangeRateValue = Number(exchangeRate.value);
     // إعادة حساب subtotal لكل عنصر بعد الحذف مع خصمه الخاص
     const updatedItems = [];
     for (const item of orderItems) {
       const quantity = Number(item.quantity);
       const length = Number(item.length);
-      const unitPrice = Number(item.unit_price);
+      const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
       const subtotalBeforeDiscount = unitPrice * length * quantity;
 

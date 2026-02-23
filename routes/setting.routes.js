@@ -15,6 +15,7 @@ import {
   createDiscount,
   updateDiscount,
   deleteDiscount, 
+  getExchangeRateLog
 } from "../controllers/setting.controller.js";
 
 import {
@@ -54,6 +55,9 @@ router.delete("/discounts/:id", requireRole(["admin"]), validate(discountIdParam
 
 // Upsert route - admin only
 router.post("/upsert/:key", requireRole(["admin"]), validate([...settingKeyParamRules, ...upsertSettingRules]), upsertSetting);
+
+// Exchange rate log
+router.get("/exchange-rate-log", requireRole(["admin"]), getExchangeRateLog);
 
 export default router;
 

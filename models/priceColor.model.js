@@ -83,7 +83,7 @@ export const deleteById = async (price_color_id) => {
 export const findByColorId = async (color_id) => {
   return prisma.priceColor.findMany({
     where: { color_id },
-     include: {
+    include: {
       color: {
         include: {
           ruler: {
@@ -106,7 +106,7 @@ export const findByColorAndValue = async (color_id, constant_value_id) => {
       color_id,
       constant_value_id,
     },
-     include: {
+    include: {
       color: {
         include: {
           ruler: {
@@ -120,13 +120,14 @@ export const findByColorAndValue = async (color_id, constant_value_id) => {
   });
 };
 
-export const findPriceByColorAndValue = async (color_id, width) => {
+export const findPriceByColorAndValue = async (color_id, width, type_item) => {
   return prisma.priceColor.findFirst({
     where: {
       color: {
         color_id,
       },
       price_color_By: width,
+      type_item: type_item,
     },
   });
 };

@@ -1,5 +1,5 @@
 // services/setting.service.js
-import { SettingModel , DiscountModel } from "../models/index.js";
+import { SettingModel, DiscountModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -79,7 +79,7 @@ export const createSetting = async (data) => {
 /**
  * تحديث إعداد
  */
-export const updateSetting = async (id, data) => {
+export const updateSetting = async (id, data, userId) => {
   // Check if exists
   await getSettingById(id);
 
@@ -93,7 +93,7 @@ export const updateSetting = async (id, data) => {
     }
   }
 
-  const updatedSetting = await SettingModel.updateById(id, data);
+  const updatedSetting = await SettingModel.updateById(id, data, userId);
 
   logger.info("Setting updated", { setting_id: id });
 
@@ -103,11 +103,11 @@ export const updateSetting = async (id, data) => {
 /**
  * تحديث إعداد حسب المفتاح
  */
-export const updateSettingByKey = async (key, data) => {
+export const updateSettingByKey = async (key, data, userId) => {
   // Check if exists
   await getSettingByKey(key);
 
-  const updatedSetting = await SettingModel.updateByKey(key, data);
+  const updatedSetting = await SettingModel.updateByKey(key, data, userId);
 
   logger.info("Setting updated by key", { key });
 
@@ -161,7 +161,7 @@ export const getDiscounts = async (filters = {}) => {
     discounts,
     total,
   };
-};  
+};
 
 export const createDiscount = async (data) => {
   const discount = await DiscountModel.create(data);
@@ -178,3 +178,11 @@ export const deleteDiscount = async (id) => {
   return { message: "تم حذف الخصم بنجاح" };
 };
 
+export const getExchangeRateLog = async () => {
+  const log = await prisma.exchangeRateLog.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return log;
+};

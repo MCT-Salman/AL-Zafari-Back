@@ -12,6 +12,7 @@ import {
   createDiscount as createDiscountService,
   updateDiscount as updateDiscountService,
   deleteDiscount as deleteDiscountService,
+  getExchangeRateLog as getExchangeRateLogService,
 } from "../services/setting.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -96,7 +97,8 @@ export const updateSetting = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const setting = await updateSettingService(parseInt(id), data);
+    const userId = req.user.id;
+    const setting = await updateSettingService(parseInt(id), data, userId);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -115,7 +117,8 @@ export const updateSettingByKey = async (req, res, next) => {
   try {
     const { key } = req.params;
     const data = req.body;
-    const setting = await updateSettingByKeyService(key, data);
+    const userId = req.user.id;
+    const setting = await updateSettingByKeyService(key, data, userId);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -246,3 +249,19 @@ export const deleteDiscount = async (req, res, next) => {
   }
 };
 
+export const getExchangeRateLog = async (req, res, next) => {
+  try {
+    const result = await getExchangeRateLogService();
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب سجلات تبديل الصرف بنجاح",
+      data: result,
+    });
+  } catch (error) {
+    logger.error("Get exchange rate log controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};

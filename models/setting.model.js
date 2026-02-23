@@ -50,21 +50,67 @@ export const count = async (where = {}) => {
 /**
  * تحديث إعداد حسب المعرف
  */
-export const updateById = async (id, data) => {
-  return prisma.setting.update({
-    where: { id },
-    data,
+export const updateById = async (id, data, userId) => {
+  let updatedSetting;
+  await prisma.$transaction(async (tx) => {
+    const setting = await tx.setting.findUnique({
+      where: { id },
+    });
+    if (data.key === "exchange" && data.value) {
+      updatedSetting = await tx.setting.update({
+        where: { id },
+        data: {
+          key: data.key,
+          value: data.value,
+        },
+      });
+      const oldRate = setting.value;
+      const newRate = data.value;
+
+      await prisma.exchangeRateLog.create({
+        data: {
+          oldRate,
+          newRate,
+          changedBy: userId,
+        },
+      });
+
+    }
   });
+  return updatedSetting;
 };
 
 /**
  * تحديث إعداد حسب المفتاح
  */
-export const updateByKey = async (key, data) => {
-  return prisma.setting.update({
-    where: { key },
-    data,
+export const updateByKey = async (key, data, userId) => {
+  let updatedSetting;
+  await prisma.$transaction(async (tx) => {
+    const setting = await tx.setting.findUnique({
+      where: { key },
+    });
+    if (key === "exchange" && data.value) {
+      updatedSetting = await tx.setting.update({
+        where: { key },
+        data: {
+          key: data.key,
+          value: data.value,
+        },
+      });
+      const oldRate = setting.value;
+      const newRate = data.value;
+
+      await prisma.exchangeRateLog.create({
+        data: {
+          oldRate,
+          newRate,
+          changedBy: userId,
+        },
+      });
+
+    }
   });
+  return updatedSetting;
 };
 
 /**
