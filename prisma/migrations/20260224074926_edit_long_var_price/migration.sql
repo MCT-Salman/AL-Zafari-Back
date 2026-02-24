@@ -9,12 +9,12 @@
 
 */
 -- AlterTable
-ALTER TABLE `invoice` MODIFY `total_amount` DECIMAL(20, 2) NOT NULL,
+ALTER TABLE `Invoice` MODIFY `total_amount` DECIMAL(20, 2) NOT NULL,
     MODIFY `paid_amount` DECIMAL(20, 2) NOT NULL,
     MODIFY `remaining_amount` DECIMAL(20, 2) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `orderitem` MODIFY `unit_price` DECIMAL(20, 2) NULL;
+ALTER TABLE `OrderItem` MODIFY `unit_price` DECIMAL(20, 2) NULL;
 
 -- AlterTable
-ALTER TABLE `pricecolor` MODIFY `price_per_meter` DECIMAL(20, 2) NOT NULL;
+ALTER TABLE `PriceColor` MODIFY `price_per_meter` DECIMAL(20, 2) NOT NULL;
