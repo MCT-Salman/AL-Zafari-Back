@@ -336,7 +336,7 @@ model PriceColor {
   color_id        Int
   type_item       TypeItem
   price_color_By  PriceColorBy
-  price_per_meter Decimal      @db.Decimal(10, 2)
+  price_per_meter Decimal      @db.Decimal(20, 2)
   notes           String?
 
   color Color @relation(fields: [color_id], references: [color_id])
@@ -406,7 +406,7 @@ model OrderItem {
   thickness     Decimal   @db.Decimal(10, 2)
   batch_id      Int
   quantity      Int
-  unit_price    Decimal?  @db.Decimal(10, 2)
+  unit_price    Decimal?  @db.Decimal(20, 2)
   subtotal      Decimal   @db.Decimal(20, 2)
   notes         String?
 
@@ -423,9 +423,9 @@ model Invoice {
   invoice_id       Int      @id @default(autoincrement())
   order_id         Int
   customer_id      Int
-  total_amount     Decimal  @db.Decimal(12, 2)
-  paid_amount      Decimal  @db.Decimal(12, 2)
-  remaining_amount Decimal  @db.Decimal(12, 2)
+  total_amount     Decimal  @db.Decimal(20, 2)
+  paid_amount      Decimal  @db.Decimal(20, 2)
+  remaining_amount Decimal  @db.Decimal(20, 2)
   issued_by        Int
   issued_at        DateTime @default(now())
   notes            String?
