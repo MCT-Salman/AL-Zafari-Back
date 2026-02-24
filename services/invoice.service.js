@@ -59,6 +59,36 @@ export const getInvoiceById = async (invoice_id) => {
 };
 
 /**
+ * جلب فواتير حسب العميل
+ */
+export const getInvoicesByCustomerId = async (customer_id) => {
+  const customer = await CustomerModel.findById(customer_id);
+  if (!customer) {
+    const error = new Error("العميل غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const invoices = await InvoiceModel.findByCustomerId(customer_id);
+  return invoices;
+};
+
+/**
+ * جلب فواتير حسب الطلب
+ */
+export const getInvoicesByOrderId = async (order_id) => {
+  const order = await OrderModel.findById(order_id);
+  if (!order) {
+    const error = new Error("الطلب غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const invoices = await InvoiceModel.findByOrderId(order_id);
+  return invoices;
+};
+
+/**
  * إنشاء فاتورة جديدة
  */
 export const createInvoice = async (data, userId) => {
@@ -87,7 +117,19 @@ export const createInvoice = async (data, userId) => {
         issued_by: userId,
         notes: data.notes || null,
       },
+      include: {
+        customer: true,
+        user: {
+          select: { id: true, username: true, full_name: true },
+        },
+        order: {
+          include: {
+            items: true,
+          },
+        },
+      },
     });
+
 
     if (remaining_amount > 0) {
       await tx.customer.update({

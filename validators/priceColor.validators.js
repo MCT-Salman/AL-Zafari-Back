@@ -13,11 +13,12 @@ export const createPriceColorRules = [
     .exists({ checkFalsy: true }).withMessage('معرف اللون مطلوب')
     .isInt({ min: 1 }).withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('type_item')
-    .exists({ checkFalsy: true }).withMessage('نوع العنصر مطلوب')
+   // .exists({ checkFalsy: true }).withMessage('نوع العنصر مطلوب')
+   .optional()
     .isIn(ALLOWED_TYPE_ITEM).withMessage('نوع العنصر غير صالح'),
   body('price_color_By')
-    .exists({ checkFalsy: true }).withMessage('نوع السعر مطلوب')
-    .isIn(ALLOWED_PRICE_COLOR_BY).withMessage('نوع السعر غير صالح'),
+    .exists({ checkFalsy: true }).withMessage('نوع العرض مطلوب')
+    .isIn(ALLOWED_PRICE_COLOR_BY).withMessage('نوع العرض غير صالح'),
   body('price_per_meter')
     .exists({ checkFalsy: true }).withMessage('السعر لكل متر مطلوب')
     .isDecimal().withMessage('السعر لكل متر يجب أن يكون رقماً عشرياً')

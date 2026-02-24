@@ -39,6 +39,40 @@ export const getInvoiceById = async (req, res, next) => {
 };
 
 /**
+ * جلب فواتير حسب العميل
+*/
+export const getInvoicesByCustomerId = async (req, res, next) => {
+  try {
+    const invoices = await InvoiceService.getInvoicesByCustomerId(Number(req.params.id));
+    res.status(200).json({
+      success: true,
+      message: "تم جلب الفواتير بنجاح",
+      data: invoices,
+    });
+  } catch (error) {
+    logger.error("Error in getInvoicesByCustomerId controller", { error: error.message });
+    next(error);
+  }
+};
+
+/**
+ * جلب فواتير حسب الطلب
+*/
+export const getInvoicesByOrderId = async (req, res, next) => {
+  try {
+    const invoices = await InvoiceService.getInvoicesByOrderId(Number(req.params.id));
+    res.status(200).json({
+      success: true,
+      message: "تم جلب الفواتير بنجاح",
+      data: invoices,
+    });
+  } catch (error) {
+    logger.error("Error in getInvoicesByOrderId controller", { error: error.message });
+    next(error);
+  }
+};
+
+/**
  * إنشاء فاتورة جديدة
  */
 export const createInvoice = async (req, res, next) => {

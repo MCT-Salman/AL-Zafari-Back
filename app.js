@@ -134,7 +134,6 @@ app.use((req, res, next) => {
   csrfProtection(req, res, next);
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 دقيقة
@@ -143,6 +142,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use('/api/', apiLimiter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);

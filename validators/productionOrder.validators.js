@@ -47,11 +47,11 @@ export const getProductionOrdersQueryRules = [
  */
 export const createProductionOrderRules = [
   body('type_item')
-    .exists({ checkFalsy: true })
+  .exists({ checkFalsy: true })
     .withMessage('نوع العنصر مطلوب')
-    .isInt({ min: 1 })
-    .withMessage('نوع العنصر يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_width')
+    .isIn(["Presser", "Machine"])
+    .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
+  body('width')
     .exists({ checkFalsy: true })
     .withMessage('العرض الثابت مطلوب')
     .isDecimal()
@@ -61,16 +61,16 @@ export const createProductionOrderRules = [
     .withMessage('الطول مطلوب')
     .isDecimal()
     .withMessage('الطول يجب أن يكون رقماً عشرياً'),
-  body('constant_thickness')
+  body('thickness')
     .exists({ checkFalsy: true })
     .withMessage('السماكة الثابتة مطلوبة')
     .isDecimal()
     .withMessage('السماكة الثابتة يجب أن تكون رقماً عشرياً'),
-  body('ruler_id')
+  body('color_id')
     .exists({ checkFalsy: true })
-    .withMessage('معرف المسطرة مطلوب')
+    .withMessage('معرف اللون مطلوب')
     .isInt({ min: 1 })
-    .withMessage('معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً'),
+    .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('batch_id')
     .exists({ checkFalsy: true })
     .withMessage('معرف الطبخة مطلوب')
@@ -110,9 +110,9 @@ export const createProductionOrderRules = [
 export const updateProductionOrderRules = [
   body('type_item')
     .optional()
-    .isInt({ min: 1 })
-    .withMessage('نوع العنصر يجب أن يكون رقماً صحيحاً موجباً'),
-  body('constant_width')
+    .isIn(["Presser", "Machine"])
+    .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
+  body('width')
     .optional()
     .isDecimal()
     .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),
@@ -120,14 +120,14 @@ export const updateProductionOrderRules = [
     .optional()
     .isDecimal()
     .withMessage('الطول يجب أن يكون رقماً عشرياً'),
-  body('constant_thickness')
+  body('thickness')
     .optional()
     .isDecimal()
     .withMessage('السماكة الثابتة يجب أن تكون رقماً عشرياً'),
-  body('ruler_id')
+  body('color_id')
     .optional()
     .isInt({ min: 1 })
-    .withMessage('معرف المسطرة يجب أن يكون رقماً صحيحاً موجباً'),
+    .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('batch_id')
     .optional()
     .isInt({ min: 1 })
@@ -150,7 +150,7 @@ export const updateProductionOrderRules = [
 export const createProductionOrderItemRules = [
   body().isArray({ min: 1 })
     .withMessage('يجب إرسال مصفوفة عناصر إنتاج'),
-  body('*.constant_width')
+  body('*.width')
     .exists({ checkFalsy: true })
     .withMessage('العرض الثابت مطلوب')
     .isDecimal()
@@ -191,7 +191,7 @@ export const createProductionOrderItemRules = [
  * قواعد التحقق من تحديث عنصر أمر إنتاج
  */
 export const updateProductionOrderItemRules = [
-  body('constant_width')
+  body('width')
     .optional()
     .isDecimal()
     .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),

@@ -62,6 +62,22 @@ export const invoiceIdParamRules = [
     .withMessage("معرف الفاتورة يجب أن يكون رقماً صحيحاً"),
 ];
 
+export const customerIdParamRules = [
+  param("id")
+    .notEmpty()
+    .withMessage("معرف العميل مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً"),
+];
+
+export const orderIdParamRules = [
+  param("id")
+    .notEmpty()
+    .withMessage("معرف الطلب مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
+];
+
 /**
  * قواعد التحقق من فلاتر جلب الفواتير
  */

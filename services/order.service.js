@@ -103,7 +103,7 @@ export const getOrderById = async (order_id) => {
   }
 
   const orderResponse = {
-    order_id: order.id,
+    order_id: order.order_id,
     customer_id: order.customer_id,
     sales_user_id: order.sales_user_id,
     status: order.status,
@@ -196,6 +196,7 @@ export const createOrder = async (data, userId) => {
     if (item.width === 22) widthType = "isByMeter22";
     else if (item.width === 44) widthType = "isByMeter44";
     else if (item.width === 66) widthType = "isByMeter66";
+    
 
     // جلب السعر إذا لم يكن موجود
     if (!item.unit_price || Number(item.unit_price) === 0) {
@@ -204,7 +205,7 @@ export const createOrder = async (data, userId) => {
         widthType,
         item.type_item
       );
-
+      
       if (!price) {
         const error = new Error(
           `السعر لللون ${item.color_id} مع النوع ${widthType} غير موجود`
@@ -216,10 +217,15 @@ export const createOrder = async (data, userId) => {
       item.unit_price = price.price_per_meter.toString();
     }
     const exchangeRate = await SettingModel.findByKey("exchange");
+    if (!exchangeRate) {
+      const error = new Error("لم يتم العثور على سعر تصريف العملة");
+      error.statusCode = 404;
+      throw error;
+    }
     const exchangeRateValue = Number(exchangeRate.value);
 
     const quantity = Number(item.quantity);
-    const length = Number(item.length);
+    const length = Number(item.length) || 1;
     const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
     const subtotalBeforeDiscount = unitPrice * length * quantity;
@@ -278,7 +284,7 @@ export const createOrder = async (data, userId) => {
 
   // إعادة تشكيل JSON للـ response
   const orderResponse = {
-    order_id: newOrder.id,
+    order_id: newOrder.order_id,
     customer_id: newOrder.customer_id,
     sales_user_id: newOrder.sales_user_id,
     status: newOrder.status,
@@ -383,10 +389,15 @@ export const updateOrder = async (order_id, data) => {
         item.unit_price = price.price_per_meter.toString();
       }
       const exchangeRate = await SettingModel.findByKey("exchange");
+      if (!exchangeRate) {
+        const error = new Error("لم يتم العثور على سعر تصريف العملة");
+        error.statusCode = 404;
+        throw error;
+      }
       const exchangeRateValue = Number(exchangeRate.value);
 
       const quantity = Number(item.quantity);
-      const length = Number(item.length);
+      const length = Number(item.length) || 1;
       const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
       const subtotalBeforeDiscount = unitPrice * length * quantity;
@@ -562,12 +573,17 @@ export const addOrderItem = async (order_id, itemData) => {
       throw error;
     }
     const exchangeRate = await SettingModel.findByKey("exchange");
+    if (!exchangeRate) {
+      const error = new Error("لم يتم العثور على سعر تصريف العملة");
+      error.statusCode = 404;
+      throw error;
+    }
     const exchangeRateValue = Number(exchangeRate.value);
     unit_price = Number(priceColor.price_per_meter) * exchangeRateValue;
   }
 
   const quantity = Number(itemData.quantity);
-  const length = Number(itemData.length);
+  const length = Number(itemData.length) || 1;
 
   const subtotalBeforeDiscount = unit_price * quantity * length;
 
@@ -722,7 +738,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
   const finalQuantity = Number(itemData.quantity ?? existingItem.quantity);
   const finalWidth = itemData.width ?? existingItem.width;
   const finalColorId = itemData.color_id ?? existingItem.color_id;
-  
+
   let unit_price = Number(itemData.unit_price ?? existingItem.unit_price);
 
   if (!unit_price || unit_price === 0) {
@@ -732,7 +748,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
         : finalWidth === 44
           ? "isByMeter44"
           : "isByBlanck";
-    
+
     const priceColor = await PriceColorModel.findPriceByColorAndValue(
       finalColorId,
       widthType,
@@ -744,6 +760,11 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
       throw error;
     }
     const exchangeRate = await SettingModel.findByKey("exchange");
+    if (!exchangeRate) {
+      const error = new Error("لم يتم العثور على سعر تصريف العملة");
+      error.statusCode = 404;
+      throw error;
+    }
     const exchangeRateValue = Number(exchangeRate.value);
     unit_price = Number(priceColor.price_per_meter) * exchangeRateValue;
   }
@@ -758,7 +779,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
 
   const finalSubtotal = subtotalBeforeDiscount - discountAmount;
 
-  
+
   // تحديث العنصر وحساب إجمالي الطلب
   const result = await prisma.$transaction(async (tx) => {
     const updatedItem = await tx.orderItem.update({
@@ -780,7 +801,7 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
       include: {
         customer: true,
         sales: { select: { id: true, username: true, full_name: true } },
-        items: { include: { color: { include: {   ruler: { include: { material: true } } } }, batch: true } },
+        items: { include: { color: { include: { ruler: { include: { material: true } } } }, batch: true } },
       },
     });
 
@@ -875,12 +896,17 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
 
     let finalTotal = 0;
     const exchangeRate = await SettingModel.findByKey("exchange");
+    if (!exchangeRate) {
+      const error = new Error("لم يتم العثور على سعر تصريف العملة");
+      error.statusCode = 404;
+      throw error;
+    }
     const exchangeRateValue = Number(exchangeRate.value);
     // إعادة حساب subtotal لكل عنصر بعد الحذف مع خصمه الخاص
     const updatedItems = [];
     for (const item of orderItems) {
       const quantity = Number(item.quantity);
-      const length = Number(item.length);
+      const length = Number(item.length) || 1;
       const unitPrice = Number(item.unit_price) * exchangeRateValue;
 
       const subtotalBeforeDiscount = unitPrice * length * quantity;
@@ -997,7 +1023,7 @@ export const updateOrderStatus = async (order_id, status) => {
 
   // إعادة JSON مرتب ومنسّق
   const orderResponse = {
-    order_id: updatedOrder.id,
+    order_id: updatedOrder.order_id,
     customer_id: updatedOrder.customer_id,
     sales_user_id: updatedOrder.sales_user_id,
     status: updatedOrder.status,

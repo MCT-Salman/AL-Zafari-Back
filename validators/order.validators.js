@@ -11,8 +11,9 @@ const orderItemRules = [
     .isArray({ min: 1 })
     .withMessage("يجب إضافة عنصر واحد على الأقل"),
   body("items.*.type_item")
-    .exists({ checkFalsy: true })
-    .withMessage("نوع العنصر مطلوب")
+    /*.exists({ checkFalsy: true })
+    .withMessage("نوع العنصر مطلوب")*/
+    .optional()
     .isIn(["Presser", "Machine"])
     .withMessage("نوع العنصر غير صالح"),
   body("items.*.color_id")
@@ -21,13 +22,15 @@ const orderItemRules = [
     .isInt({ min: 1 })
     .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً موجباً"),
   body("items.*.width")
-    .exists({ checkFalsy: true })
-    .withMessage("العرض الثابت مطلوب")
+   /* .exists({ checkFalsy: true })
+    .withMessage("العرض الثابت مطلوب")*/
+    .optional()
     .isDecimal()
     .withMessage("العرض الثابت يجب أن يكون رقماً عشرياً"),
   body("items.*.length")
-    .exists({ checkFalsy: true })
-    .withMessage("الطول مطلوب")
+   /* .exists({ checkFalsy: true })
+    .withMessage("الطول مطلوب")*/
+    .optional()
     .isDecimal()
     .withMessage("الطول يجب أن يكون رقماً عشرياً"),
   body("items.*.thickness")
@@ -146,8 +149,9 @@ export const getOrdersQueryRules = [
  */
 export const addOrderItemRules = [
   body("type_item")
-    .exists({ checkFalsy: true })
-    .withMessage("نوع العنصر مطلوب")
+   /* .exists({ checkFalsy: true })
+    .withMessage("نوع العنصر مطلوب")*/
+    .optional()
     .isIn(["Presser", "Machine"])
     .withMessage("نوع العنصر يجب أن يكون كوي أو مكنة"),
   body("color_id")
@@ -156,13 +160,15 @@ export const addOrderItemRules = [
     .isInt({ min: 1 })
     .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً موجباً"),
   body("width")
-    .exists({ checkFalsy: true })
-    .withMessage("العرض الثابت مطلوب")
+    /*.exists({ checkFalsy: true })
+    .withMessage("العرض الثابت مطلوب")*/
+    .optional()
     .isDecimal()
     .withMessage("العرض الثابت يجب أن يكون رقماً عشرياً"),
   body("length")
-    .exists({ checkFalsy: true })
-    .withMessage("الطول مطلوب")
+    /*.exists({ checkFalsy: true })
+    .withMessage("الطول مطلوب")*/
+    .optional()
     .isDecimal()
     .withMessage("الطول يجب أن يكون رقماً عشرياً"),
   body("thickness")

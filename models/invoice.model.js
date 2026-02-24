@@ -36,10 +36,13 @@ export const findById = async (invoice_id) => {
         include: {
           items: {
             include: {
-              ruler: {
+              color: {
                 include: {
-                  material: true,
-                  color: true,
+                  ruler: {
+                    include: {
+                      material: true,
+                    },
+                  },
                 },
               },
               batch: true,

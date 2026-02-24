@@ -5,6 +5,7 @@ import {
   RulerModel,
   BatchModel,
   ConstantValueModel,
+  ColorModel,
 } from "../models/index.js";
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
@@ -84,14 +85,14 @@ export const getAllProductionOrders = async (filters = {}, userRole, userId) => 
   const response = filteredOrders.map((order) => ({
     production_order_id: order.production_order_id,
     issued_by: order.user,
-    type_item: order.constant_type_value.value,
-    constant_width: order.constant_width,
+    type_item: order.type_item,
+    width: order.width,
     length: order.length,
-    constant_thickness: order.constant_thickness,
-    ruler_type: order.ruler.ruler_type,
-    material_name: order.ruler.material.material_name,
-    color_code: order.ruler.color.color_code,
-    color_name: order.ruler.color.color_name,
+    thickness: order.thickness,
+    material_name: order.color.ruler.material.material_name,
+    ruler_type: order.color.ruler.ruler_name,
+    color_code: order.color.color_code,
+    color_name: order.color.color_name,
     batch_number: order.batch.batch_number,
     status: order.status,
     notes: order.notes,
@@ -116,14 +117,14 @@ export const getProductionOrderById = async (production_order_id, userRole) => {
   const response = {
     production_order_id: productionOrder.production_order_id,
     issued_by: productionOrder.user,
-    type_item: productionOrder.constant_type_value.value,
-    constant_width: productionOrder.constant_width,
+    type_item: productionOrder.type_item,
+    width: productionOrder.width,
     length: productionOrder.length,
-    constant_thickness: productionOrder.constant_thickness,
-    ruler_type: productionOrder.ruler.ruler_type,
-    material_name: productionOrder.ruler.material.material_name,
-    color_code: productionOrder.ruler.color.color_code,
-    color_name: productionOrder.ruler.color.color_name,
+    thickness: productionOrder.thickness,
+    material_name: productionOrder.color.ruler.material.material_name,
+    ruler_type: productionOrder.color.ruler.ruler_name,
+    color_code: productionOrder.color.color_code,
+    color_name: productionOrder.color.color_name,
     batch_number: productionOrder.batch.batch_number,
     status: productionOrder.status,
     notes: productionOrder.notes,
@@ -141,15 +142,15 @@ export const getProductionOrderById = async (production_order_id, userRole) => {
 export const createProductionOrder = async (data, userId, userRole) => {
   // Validate that user has permission to create production orders
   if (!['admin', 'production_manager'].includes(userRole)) {
-    const error = new Error("ليس لديك صلاحية لإنشاء أوامر الإنتاج");
+    const error = new Error("ليس لديك صلاحية لإنشاء طلبات الإنتاج");
     error.statusCode = 403;
     throw error;
   }
 
   // Validate ruler exists
-  const ruler = await RulerModel.findById(data.ruler_id);
-  if (!ruler) {
-    const error = new Error("المسطرة غير موجودة");
+  const color = await ColorModel.findById(data.color_id);
+  if (!color) {
+    const error = new Error("اللون غير موجودة");
     error.statusCode = 404;
     throw error;
   }
@@ -162,13 +163,6 @@ export const createProductionOrder = async (data, userId, userRole) => {
     throw error;
   }
 
-  // Validate constant value exists
-  const constantValue = await ConstantValueModel.findById(data.type_item);
-  if (!constantValue) {
-    const error = new Error("نوع العنصر غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
 
   // Create production order with items using transaction
   const result = await prisma.$transaction(async (tx) => {
@@ -177,10 +171,10 @@ export const createProductionOrder = async (data, userId, userRole) => {
       data: {
         issued_by: userId,
         type_item: data.type_item,
-        constant_width: data.constant_width,
+        width: data.width,
         length: data.length,
-        constant_thickness: data.constant_thickness,
-        ruler_id: data.ruler_id,
+        thickness: data.thickness,
+        color_id: data.color_id,
         batch_id: data.batch_id,
         status: data.status || 'pending',
         notes: data.notes || null,
@@ -198,13 +192,19 @@ export const createProductionOrder = async (data, userId, userRole) => {
             full_name: true,
           },
         },
-        constant_type_value: true,
-        ruler: {
+        color: {
           select: {
-            ruler_id: true,
-            ruler_type: true,
-            material: { select: { material_id: true, material_name: true } },
-            color: { select: { color_id: true, color_name: true } },
+            color_id: true,
+            color_code: true,
+            color_name: true,
+            imageUrl: true,
+            ruler: {
+              select: {
+                ruler_id: true,
+                ruler_name: true,
+                material: { select: { material_id: true, material_name: true } },
+              },
+            },
           },
         },
         batch: true,
@@ -214,14 +214,14 @@ export const createProductionOrder = async (data, userId, userRole) => {
     const response = {
       production_order_id: completeOrder.production_order_id,
       issued_by: completeOrder.user,
-      type_item: completeOrder.constant_type_value.value,
-      constant_width: completeOrder.constant_width,
+      type_item: completeOrder.type_item,
+      width: completeOrder.width,
       length: completeOrder.length,
-      constant_thickness: completeOrder.constant_thickness,
-      ruler_type: completeOrder.ruler.ruler_type,
-      material_name: completeOrder.ruler.material.material_name,
-      color_code: completeOrder.ruler.color.color_code,
-      color_name: completeOrder.ruler.color.color_name,
+      thickness: completeOrder.thickness,
+      material_name: completeOrder.color.ruler.material.material_name,
+      ruler_type: completeOrder.color.ruler.ruler_name,
+      color_code: completeOrder.color.ruler.color_code,
+      color_name: completeOrder.color.ruler.color_name,
       batch_number: completeOrder.batch.batch_number,
       status: completeOrder.status,
       notes: completeOrder.notes,
@@ -260,10 +260,10 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
   }
 
   // Validate ruler if provided
-  if (data.ruler_id) {
-    const ruler = await RulerModel.findById(data.ruler_id);
-    if (!ruler) {
-      const error = new Error("المسطرة غير موجودة");
+  if (data.color_id) {
+    const color = await ColorModel.findById(data.color_id);
+    if (!color) {
+      const error = new Error("اللون غير موجودة");
       error.statusCode = 404;
       throw error;
     }
@@ -279,28 +279,19 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
     }
   }
 
-  // Validate constant value if provided
-  if (data.type_item) {
-    const constantValue = await ConstantValueModel.findById(data.type_item);
-    if (!constantValue) {
-      const error = new Error("نوع العنصر غير موجود");
-      error.statusCode = 404;
-      throw error;
-    }
-  }
 
   const updatedOrder = await ProductionOrderModel.updateById(production_order_id, data);
   const response = {
     production_order_id: updatedOrder.production_order_id,
     issued_by: updatedOrder.user,
-    type_item: updatedOrder.constant_type_value.value,
-    constant_width: updatedOrder.constant_width,
+    type_item: updatedOrder.type_item,
+    width: updatedOrder.width,
     length: updatedOrder.length,
-    constant_thickness: updatedOrder.constant_thickness,
-    ruler_type: updatedOrder.ruler.ruler_type,
-    material_name: updatedOrder.ruler.material.material_name,
-    color_code: updatedOrder.ruler.color.color_code,
-    color_name: updatedOrder.ruler.color.color_name,
+    thickness: updatedOrder.thickness,
+    material_name : updatedOrder.color.ruler.material.material_name,
+    ruler_type: updatedOrder.color.ruler.ruler_name,
+    color_code: updatedOrder.color.color_code,
+    color_name: updatedOrder.color.color_name,
     batch_number: updatedOrder.batch.batch_number,
     status: updatedOrder.status,
     notes: updatedOrder.notes,
@@ -423,7 +414,7 @@ export const createProductionOrderItem = async (
         type,
         source: type === 'warehouse' ? 'warehouse' : currentSource,
         destination: flow.destination,
-        constant_width: item.constant_width,
+        width: item.width,
         length: item.length,
         status: 'pending',
         quantity: item.quantity,

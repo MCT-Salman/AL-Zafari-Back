@@ -334,7 +334,7 @@ model Color {
 model PriceColor {
   price_color_id  Int          @id @default(autoincrement())
   color_id        Int
-  type_item       TypeItem
+  type_item       TypeItem?
   price_color_By  PriceColorBy
   price_per_meter Decimal      @db.Decimal(20, 2)
   notes           String?
@@ -401,8 +401,8 @@ model OrderItem {
   order_id      Int
   type_item     TypeItem?
   color_id      Int
-  width         Decimal   @db.Decimal(10, 2)
-  length        Decimal   @db.Decimal(10, 2)
+  width         Decimal?  @db.Decimal(10, 2)
+  length        Decimal?  @db.Decimal(10, 2)
   thickness     Decimal   @db.Decimal(10, 2)
   batch_id      Int
   quantity      Int

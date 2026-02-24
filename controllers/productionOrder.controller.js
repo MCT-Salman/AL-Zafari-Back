@@ -29,7 +29,7 @@ export const getAllProductionOrders = async (req, res, next) => {
 
     res.json({
       success: SUCCESS_REQUEST,
-      message: "تم جلب أوامر الإنتاج بنجاح",
+      message: "تم جلب طلبات الإنتاج بنجاح",
       data: result,
     });
   } catch (error) {
