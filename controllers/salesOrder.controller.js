@@ -1,31 +1,29 @@
-// controllers/productionOrder.controller.js
+// controllers/SalesOrder.controller.js
 import {
-  getAllProductionOrders as getAllProductionOrdersService,
-  getProductionOrderById as getProductionOrderByIdService,
-  createProductionOrder as createProductionOrderService,
-  updateProductionOrder as updateProductionOrderService,
-  deleteProductionOrder as deleteProductionOrderService,
-  getProductionOrderItemById as getProductionOrderItemByIdService,
-  createProductionOrderItem as createProductionOrderItemService,
-  updateProductionOrderItemStatus as updateProductionOrderItemStatusService,
-  updateProductionOrderItem as updateProductionOrderItemService,
-  deleteProductionOrderItem as deleteProductionOrderItemService,
-  getProductionOrderItemsByType as getProductionOrderItemsByTypeService,
-} from "../services/productionOrder.service.js";
+  getAllSalesOrders as getAllSalesOrdersService,
+  getSalesOrderById as getSalesOrderByIdService,
+  createSalesOrder as createSalesOrderService,
+  updateSalesOrder as updateSalesOrderService,
+  deleteSalesOrder as deleteSalesOrderService,
+  getSalesOrderItemById as getSalesOrderItemByIdService,
+  createSalesOrderItem as createSalesOrderItemService,
+  updateSalesOrderItemStatus as updateSalesOrderItemStatusService,
+  updateSalesOrderItem as updateSalesOrderItemService,
+  deleteSalesOrderItem as deleteSalesOrderItemService,
+} from "../services/salesOrder.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
 
 /**
  * جلب جميع أوامر الإنتاج
- * GET /production-order
+ * GET /Sales-order
  */
-export const getAllProductionOrders = async (req, res, next) => {
+export const getAllSalesOrders = async (req, res, next) => {
   try {
     const filters = req.query;
-    const userRole = req.user.role;
     const userId = req.user.id;
 
-    const result = await getAllProductionOrdersService(filters, userRole, userId);
+    const result = await getAllSalesOrdersService(filters, userId);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -33,7 +31,7 @@ export const getAllProductionOrders = async (req, res, next) => {
       data: result,
     });
   } catch (error) {
-    logger.error("Get all production orders controller error", {
+    logger.error("Get all Sales orders controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -47,22 +45,22 @@ export const getAllProductionOrders = async (req, res, next) => {
 
 /**
  * جلب طلب إنتاج حسب المعرف
- * GET /production-order/:id
+ * GET /Sales-order/:id
  */
-export const getProductionOrderById = async (req, res, next) => {
+export const getSalesOrderById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userRole = req.user.role;
 
-    const productionOrder = await getProductionOrderByIdService(parseInt(id), userRole);
+    const SalesOrder = await getSalesOrderByIdService(parseInt(id), userRole);
 
     res.json({
       success: SUCCESS_REQUEST,
       message: "تم جلب طلب الإنتاج بنجاح",
-      data: productionOrder,
+      data: SalesOrder,
     });
   } catch (error) {
-    logger.error("Get production order by id controller error", {
+    logger.error("Get Sales order by id controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -76,23 +74,23 @@ export const getProductionOrderById = async (req, res, next) => {
 
 /**
  * إنشاء طلب إنتاج جديد
- * POST /production-order
+ * POST /Sales-order
  */
-export const createProductionOrder = async (req, res, next) => {
+export const createSalesOrder = async (req, res, next) => {
   try {
     const data = req.body;
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    const productionOrder = await createProductionOrderService(data, userId, userRole);
+    const SalesOrder = await createSalesOrderService(data, userId, userRole);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
       message: "تم إنشاء طلب الإنتاج بنجاح",
-      data: productionOrder,
+      data: SalesOrder,
     });
   } catch (error) {
-    logger.error("Create production order controller error", {
+    logger.error("Create Sales order controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -106,16 +104,16 @@ export const createProductionOrder = async (req, res, next) => {
 
 /**
  * تحديث طلب إنتاج
- * PUT /production-order/:id
+ * PUT /Sales-order/:id
  */
-export const updateProductionOrder = async (req, res, next) => {
+export const updateSalesOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    const productionOrder = await updateProductionOrderService(
+    const SalesOrder = await updateSalesOrderService(
       parseInt(id),
       data,
       userId,
@@ -125,10 +123,10 @@ export const updateProductionOrder = async (req, res, next) => {
     res.json({
       success: SUCCESS_REQUEST,
       message: "تم تحديث طلب الإنتاج بنجاح",
-      data: productionOrder,
+      data: SalesOrder,
     });
   } catch (error) {
-    logger.error("Update production order controller error", {
+    logger.error("Update Sales order controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -143,14 +141,14 @@ export const updateProductionOrder = async (req, res, next) => {
 
 /**
  * حذف طلب إنتاج
- * DELETE /production-order/:id
+ * DELETE /Sales-order/:id
  */
-export const deleteProductionOrder = async (req, res, next) => {
+export const deleteSalesOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userRole = req.user.role;
 
-    const result = await deleteProductionOrderService(parseInt(id), userRole);
+    const result = await deleteSalesOrderService(parseInt(id), userRole);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -158,7 +156,7 @@ export const deleteProductionOrder = async (req, res, next) => {
       data: {},
     });
   } catch (error) {
-    logger.error("Delete production order controller error", {
+    logger.error("Delete Sales order controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -172,14 +170,12 @@ export const deleteProductionOrder = async (req, res, next) => {
 
 /**
  * جلب عنصر طلب إنتاج حسب المعرف
- * GET /production-order/item/:id
+ * GET /Sales-order/item/:id
  */
-export const getProductionOrderItemById = async (req, res, next) => {
+export const getSalesOrderItemById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userRole = req.user.role;
-
-    const item = await getProductionOrderItemByIdService(parseInt(id), userRole);
+    const item = await getSalesOrderItemByIdService(parseInt(id));
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -187,7 +183,7 @@ export const getProductionOrderItemById = async (req, res, next) => {
       data: item,
     });
   } catch (error) {
-    logger.error("Get production order item by id controller error", {
+    logger.error("Get Sales order item by id controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -200,14 +196,14 @@ export const getProductionOrderItemById = async (req, res, next) => {
 };
 /**
  * إنشاء عنصر طلب إنتاج
- * POST /production-order/item
+ * POST /Sales-order/item
  */
-export const createProductionOrderItem = async (req, res, next) => {
+export const createSalesOrderItem = async (req, res, next) => {
   try {
-    const userId = req.user.id;
+    const { id } = req.params;
     const data = req.body;
 
-    const item = await createProductionOrderItemService(userId, data);
+    const item = await createSalesOrderItemService(parseInt(id), data);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -215,7 +211,7 @@ export const createProductionOrderItem = async (req, res, next) => {
       data: item,
     });
   } catch (error) {
-    logger.error("Create production order item controller error", {
+    logger.error("Create Sales order item controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -228,13 +224,12 @@ export const createProductionOrderItem = async (req, res, next) => {
   }
 };
 
-export const updateProductionOrderItemStatus = async (req, res, next) => {
+export const updateSalesOrderItemStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const userRole = req.user.role;
 
-    const item = await updateProductionOrderItemStatusService(parseInt(id), status, userRole);
+    const item = await updateSalesOrderItemStatusService(parseInt(id), status);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -242,7 +237,7 @@ export const updateProductionOrderItemStatus = async (req, res, next) => {
       data: item,
     });
   } catch (error) {
-    logger.error("Update production order item status controller error", {
+    logger.error("Update Sales order item status controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -257,15 +252,14 @@ export const updateProductionOrderItemStatus = async (req, res, next) => {
 
 /**
  * تحديث عنصر طلب إنتاج
- * PUT /production-order/item/:id
+ * PUT /Sales-order/item/:id
  */
-export const updateProductionOrderItem = async (req, res, next) => {
+export const updateSalesOrderItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const userRole = req.user.role;
 
-    const item = await updateProductionOrderItemService(parseInt(id), data, userRole);
+    const item = await updateSalesOrderItemService(parseInt(id), data);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -273,7 +267,7 @@ export const updateProductionOrderItem = async (req, res, next) => {
       data: item,
     });
   } catch (error) {
-    logger.error("Update production order item controller error", {
+    logger.error("Update Sales order item controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -288,14 +282,13 @@ export const updateProductionOrderItem = async (req, res, next) => {
 
 /**
  * حذف عنصر طلب إنتاج
- * DELETE /production-order/item/:id
+ * DELETE /Sales-order/item/:id
  */
-export const deleteProductionOrderItem = async (req, res, next) => {
+export const deleteSalesOrderItem = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userRole = req.user.role;
 
-    const result = await deleteProductionOrderItemService(parseInt(id), userRole);
+    const result = await deleteSalesOrderItemService(parseInt(id));
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -303,7 +296,7 @@ export const deleteProductionOrderItem = async (req, res, next) => {
       data: {},
     });
   } catch (error) {
-    logger.error("Delete production order item controller error", {
+    logger.error("Delete Sales order item controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,
@@ -315,31 +308,3 @@ export const deleteProductionOrderItem = async (req, res, next) => {
   }
 };
 
-/**
- * جلب عناصر طلب إنتاج حسب نوع الإنتاج
- * GET /production-order/:id/items
- */
-export const getProductionOrderItemsByType = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const userRole = req.user.role;
-
-    const items = await getProductionOrderItemsByTypeService(parseInt(id), userRole);
-
-    res.json({
-      success: SUCCESS_REQUEST,
-      message: "تم جلب عناصر طلب الإنتاج بنجاح",
-      data: items,
-    });
-  } catch (error) {
-    logger.error("Get production order items by type controller error", {
-      message: error?.message,
-      stack: error?.stack,
-      url: req.originalUrl,
-      method: req.method,
-      ip: req.ip,
-      params: req.params,
-    });
-    return next(error);
-  }
-};

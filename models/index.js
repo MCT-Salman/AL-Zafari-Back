@@ -23,6 +23,9 @@ import * as OrderModel from './order.model.js';
 import * as OrderItemModel from './orderItem.model.js';
 import * as InvoiceModel from './invoice.model.js';
 
+import * as SalesOrderModel from './salesOrder.model.js';
+import * as SalesOrderItemModel from './salesOrderItem.model.js';
+
 import * as ProductionOrderModel from './productionOrder.model.js';
 import * as ProductionOrderItemModel from './productionOrderItem.model.js';
 import * as ProductionProcessModel from './productionProcess.model.js';
@@ -56,6 +59,8 @@ export {
   OrderModel,
   OrderItemModel,
   InvoiceModel,
+  SalesOrderModel,
+  SalesOrderItemModel,
   ProductionOrderModel,
   ProductionOrderItemModel,
   ProductionProcessModel,

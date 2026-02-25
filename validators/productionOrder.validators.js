@@ -51,16 +51,6 @@ export const createProductionOrderRules = [
     .withMessage('نوع العنصر مطلوب')
     .isIn(["Presser", "Machine"])
     .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
-  body('width')
-    .exists({ checkFalsy: true })
-    .withMessage('العرض الثابت مطلوب')
-    .isDecimal()
-    .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),
-  body('length')
-    .exists({ checkFalsy: true })
-    .withMessage('الطول مطلوب')
-    .isDecimal()
-    .withMessage('الطول يجب أن يكون رقماً عشرياً'),
   body('thickness')
     .exists({ checkFalsy: true })
     .withMessage('السماكة الثابتة مطلوبة')
@@ -86,22 +76,44 @@ export const createProductionOrderRules = [
     .withMessage('الملاحظات يجب أن تكون نصاً')
     .isLength({ max: 500 })
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
+    body('items')
+    .exists({ checkFalsy: true })
+    .withMessage('عناصر الإنتاج مطلوبة')
+    .isArray({ min: 1 })
+    .withMessage('يجب تحديد عنصر إنتاج واحد على الأقل'),
+  body('items.*.width')
+    .exists({ checkFalsy: true })
+    .withMessage('العرض الثابت مطلوب')
+    .isDecimal()
+    .withMessage('العرض الثابت يجب أن يكون رقماً عشريام'),
+  body('items.*.length')
+    .exists({ checkFalsy: true })
+    .withMessage('الطول مطلوب')
+    .isDecimal()
+    .withMessage('الطول يجب أن يكون رقماً عشريام'),
+  body('items.*.quantity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
+  body('items.*.status')
+    .optional()
+    .isIn(PRODUCTION_STATUSES)
+    .withMessage('حالة الإنتاج غير صالحة'),
+  body('items.*.notes')
+    .optional()
+    .isString()
+    .withMessage('الملاحظات يجب أن تكون نصام')
+    .isLength({ max: 500 })
+    .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
+  body('items.*.production_types')
+    .exists({ checkFalsy: true })
+    .withMessage('أنواع الإنتاج مطلوبة')
+    .isArray({ min: 1 })
+    .withMessage('يجب تحديد نوع إنتاج واحد على الأقل'),
+  body('items.*.production_types.*')
+    .isIn(PRODUCTION_TYPES)
+    .withMessage('نوع الإنتاج غير صالح')
 
-  // Validation for production types array
-  /* body('production_types')
-     .exists({ checkFalsy: true })
-     .withMessage('أنواع الإنتاج مطلوبة')
-     .isArray({ min: 1 })
-     .withMessage('يجب تحديد نوع إنتاج واحد على الأقل'),
-   body('production_types.*')
-     .isIn(PRODUCTION_TYPES)
-     .withMessage('نوع الإنتاج غير صالح'),
- 
-   // Optional quantity for each production type
-   body('quantity')
-     .optional()
-     .isInt({ min: 1 })
-     .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً')*/
 ];
 
 /**
@@ -112,14 +124,6 @@ export const updateProductionOrderRules = [
     .optional()
     .isIn(["Presser", "Machine"])
     .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
-  body('width')
-    .optional()
-    .isDecimal()
-    .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),
-  body('length')
-    .optional()
-    .isDecimal()
-    .withMessage('الطول يجب أن يكون رقماً عشرياً'),
   body('thickness')
     .optional()
     .isDecimal()
@@ -141,76 +145,39 @@ export const updateProductionOrderRules = [
     .isString()
     .withMessage('الملاحظات يجب أن تكون نصاً')
     .isLength({ max: 500 })
-    .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف')
-];
-
-/**
- * قواعد التحقق من إنشاء عنصر أمر إنتاج
- */
-export const createProductionOrderItemRules = [
-  body().isArray({ min: 1 })
-    .withMessage('يجب إرسال مصفوفة عناصر إنتاج'),
-  body('*.width')
-    .exists({ checkFalsy: true })
-    .withMessage('العرض الثابت مطلوب')
+    .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
+    body('items')
+    .optional()
+    .isArray()
+    .withMessage('عناصر الإنتاج يجب أن تكون مصفوفة'),
+  body('items.*.width')
+    .optional()
     .isDecimal()
-    .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),
-  body('*.length')
-    .exists({ checkFalsy: true })
-    .withMessage('الطول مطلوب')
+    .withMessage('العرض الثابت يجب أن يكون رقماً عشريام'),
+  body('items.*.length')
+    .optional()
     .isDecimal()
-    .withMessage('الطول يجب أن يكون رقماً عشرياً'),
-  body('*.quantity')
+    .withMessage('الطول يجب أن يكون رقماً عشريام'),
+  body('items.*.quantity')
     .optional()
     .isInt({ min: 1 })
     .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
-  body('*.status')
+  body('items.*.status')
     .optional()
     .isIn(PRODUCTION_STATUSES)
     .withMessage('حالة الإنتاج غير صالحة'),
-  body('*.notes')
+  body('items.*.notes')
     .optional()
     .isString()
-    .withMessage('الملاحظات يجب أن تكون نصاً')
+    .withMessage('الملاحظات يجب أن تكون نصام')
     .isLength({ max: 500 })
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
-  body('*.production_types')
-    .exists({ checkFalsy: true })
-    .withMessage('أنواع الإنتاج مطلوبة')
-    .isArray({ min: 1 })
-    .withMessage('يجب تحديد نوع إنتاج واحد على الأقل'),
-  body('production_types.*')
+  body('items.*.production_types')
+    .optional()
+    .isArray()
+    .withMessage('أنواع الإنتاج يجب أن تكون مصفوفة'),
+  body('items.*.production_types.*')
+    .optional()
     .isIn(PRODUCTION_TYPES)
-    .withMessage('نوع الإنتاج غير صالح'),
-  body('*.source')
-    .optional()
-    .isIn(PROCESS_SOURCES)
-    .withMessage('مصدر الإنتاج غير صالح'),
-];
-/**
- * قواعد التحقق من تحديث عنصر أمر إنتاج
- */
-export const updateProductionOrderItemRules = [
-  body('width')
-    .optional()
-    .isDecimal()
-    .withMessage('العرض الثابت يجب أن يكون رقماً عشرياً'),
-  body('length')
-    .optional()
-    .isDecimal()
-    .withMessage('الطول يجب أن يكون رقماً عشرياً'),
-  body('quantity')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
-  body('status')
-    .optional()
-    .isIn(PRODUCTION_STATUSES)
-    .withMessage('حالة الإنتاج غير صالحة'),
-  body('notes')
-    .optional()
-    .isString()
-    .withMessage('الملاحظات يجب أن تكون نصاً')
-    .isLength({ max: 500 })
-    .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف')
+    .withMessage('نوع الإنتاج غير صالح')
 ];

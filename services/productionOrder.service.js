@@ -288,7 +288,7 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
     width: updatedOrder.width,
     length: updatedOrder.length,
     thickness: updatedOrder.thickness,
-    material_name : updatedOrder.color.ruler.material.material_name,
+    material_name: updatedOrder.color.ruler.material.material_name,
     ruler_type: updatedOrder.color.ruler.ruler_name,
     color_code: updatedOrder.color.color_code,
     color_name: updatedOrder.color.color_name,
@@ -367,75 +367,68 @@ export const getProductionOrderItemById = async (production_order_item_id, userR
  * إنشاء عنصر طلب إنتاج
  */
 export const createProductionOrderItem = async (
-  production_order_id,
+  userId,
   data,
-  userRole
 ) => {
-  const existingOrder = await ProductionOrderModel.findById(production_order_id);
-  if (!existingOrder) {
-    const error = new Error("طلب الإنتاج غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
+  return await prisma.$transaction(async (tx) => {
 
-  if (!['admin', 'production_manager'].includes(userRole)) {
-    const error = new Error("ليس لديك صلاحية لإنشاء عناصر أوامر الإنتاج");
-    error.statusCode = 403;
-    throw error;
-  }
+    const order = await tx.productionOrder.create({
+      data: {
+        issued_by: userId,
+        type_item: data.type_item,
+        color_id: data.color_id,
+        batch_id: data.batch_id,
+        thickness: data.thickness,
+        status: 'preparing',
+        notes: data.notes || null,
+      },
+    });
 
-  if (existingOrder.status !== 'pending') {
-    const error = new Error("لا يمكن إضافة أمر إنتاج إلى طلب مكتمل أو ملغى");
-    error.statusCode = 400;
-    throw error;
-  }
+    const FLOW_MAP = {
+      warehouse: { source: 'warehouse', destination: 'slitting' },
+      slitting: { source: 'slitting', destination: 'production' },
+      cutting: { source: 'cutting', destination: 'gluing' },
+      gluing: { source: 'gluing', destination: 'production' },
+    };
 
-  const FLOW_MAP = {
-    warehouse: { source: 'warehouse', destination: 'slitting' },
-    slitting: { source: 'slitting', destination: 'production' },
-    cutting: { source: 'cutting', destination: 'gluing' },
-    gluing: { source: 'gluing', destination: 'production' },
-  };
+    const createdItems = [];
 
-  const createdItems = [];
+    for (const item of data.items) {
+      let currentSource = 'production';
+      if (item.production_types.includes('cutting')) {
+        FLOW_MAP.slitting.destination = 'cutting';
+      }
 
-  for (const item of data) {
-    let currentSource = 'production';
-    if (item.production_types.includes('cutting')) {
-      FLOW_MAP.slitting.destination = 'cutting';
+      for (const type of item.production_types) {
+        const flow = FLOW_MAP[type];
+        if (!flow) continue;
+
+        const createdItem = await tx.ProductionOrderItem.create({
+          data: {
+            production_order_id: order.production_order_id,
+            type,
+            source: type === 'warehouse' ? 'warehouse' : currentSource,
+            destination: flow.destination,
+            width: item.width,
+            length: item.length,
+            status: 'pending',
+            quantity: item.quantity,
+            notes: item.notes,
+          },
+        });
+
+        createdItems.push(createdItem);
+        currentSource = type;
+      }
     }
 
-    for (const type of item.production_types) {
-      const flow = FLOW_MAP[type];
-      if (!flow) continue;
+    logger.info("Production order items created", {
+      production_order_id: order.production_order_id,
+      count: createdItems.length,
+    });
 
-      const createdItem = await ProductionOrderItemModel.create({
-        production_order_id,
-        type,
-        source: type === 'warehouse' ? 'warehouse' : currentSource,
-        destination: flow.destination,
-        width: item.width,
-        length: item.length,
-        status: 'pending',
-        quantity: item.quantity,
-        notes: item.notes,
-      });
-
-      createdItems.push(createdItem);
-      currentSource = type;
-    }
-  }
-
-  if (createdItems.length > 0) {
-    await ProductionOrderModel.updateById(production_order_id, { status: 'preparing' });
-  }
-
-  logger.info("Production order items created", {
-    production_order_id,
-    count: createdItems.length,
+    return createdItems;
   });
-
-  return createdItems;
 };
 
 export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole) => {

@@ -22,9 +22,7 @@ import {
   updateProductionOrderRules,
   productionOrderIdParamRules,
   getProductionOrdersQueryRules,
-  productionOrderItemIdParamRules,
-  createProductionOrderItemRules,
-  updateProductionOrderItemRules,
+  productionOrderItemIdParamRules
   
 } from '../validators/productionOrder.validators.js';
 
@@ -34,9 +32,9 @@ const router = Router();
 router.use(requireAuth);
 
 // GET routes - accessible by all production-related roles
-router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
+//router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
 router.get("/:id", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderById);
-router.post("/", requireRole(["admin", "sales"]), validate(createProductionOrderRules), createProductionOrder);
+//router.post("/", requireRole(["admin", "sales"]), validate(createProductionOrderRules), createProductionOrder);
 router.put("/:id", requireRole(["admin", "sales"]), validate([...productionOrderIdParamRules, ...updateProductionOrderRules]), updateProductionOrder);
 router.delete("/:id", requireRole(["admin", "sales"]), validate(productionOrderIdParamRules), deleteProductionOrder);
 
@@ -44,11 +42,11 @@ router.delete("/:id", requireRole(["admin", "sales"]), validate(productionOrderI
 /**
  * Production Order Item Routes
  */
-router.get("/:id/items", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
-router.post("/:id/items", requireRole(["admin", "production_manager"]), validate([...productionOrderIdParamRules, ...createProductionOrderItemRules]), createProductionOrderItem);
+router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
+router.post("/", requireRole(["admin", "production_manager"]), validate(createProductionOrderRules), createProductionOrderItem);
 router.get("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionOrderItemIdParamRules), getProductionOrderItemById);
 router.patch("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), updateProductionOrderItemStatus);
-router.put("/item/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderItemIdParamRules, ...updateProductionOrderItemRules]), updateProductionOrderItem);
+router.put("/item/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderItemIdParamRules, ...updateProductionOrderRules]), updateProductionOrderItem);
 router.delete("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), deleteProductionOrderItem);
 
 export default router;

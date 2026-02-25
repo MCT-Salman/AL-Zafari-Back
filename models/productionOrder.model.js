@@ -15,17 +15,6 @@ export const create = async (data) => {
           full_name: true,
         },
       },
-      items: {
-        include: {
-          ruler: {
-            include: {
-              material: true,
-              color: true,
-            },
-          },
-          batch: true,
-        },
-      },
     },
   });
 };
