@@ -5,7 +5,7 @@ import logger from "../utils/logger.js";
 /**
  * جلب جميع المساطر مع pagination
  */
-export const getAllRulers = async ( filters = {}) => {
+export const getAllRulers = async (filters = {}) => {
   const where = {};
 
   // Filter by material_id
@@ -44,7 +44,7 @@ export const getRulersByMaterialId = async (material_id) => {
  */
 export const getRulerById = async (ruler_id) => {
   const ruler = await RulerModel.findById(ruler_id);
-  
+
   if (!ruler) {
     const error = new Error("المسطرة غير موجودة");
     error.statusCode = 404;
@@ -65,11 +65,18 @@ export const createRuler = async (data) => {
     error.statusCode = 404;
     throw error;
   }
+  // Check if ruler_name already exists
+  const existingRuler = await RulerModel.findByNameAndMaterialId(data.ruler_name, data.material_id);
+  if (existingRuler) {
+    const error = new Error("اسم المسطرة موجود بالفعل ل هذه المادة");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const ruler = await RulerModel.create(data);
-  
+
   logger.info('Ruler created', { ruler_id: ruler.ruler_id });
-  
+
   return ruler;
 };
 
@@ -79,6 +86,10 @@ export const createRuler = async (data) => {
 export const updateRuler = async (ruler_id, data) => {
   // Check if exists
   await getRulerById(ruler_id);
+  const newRulerName = data.ruler_name ?? existingRuler.ruler_name;
+  const newMaterialId = data.material_id
+    ? parseInt(data.material_id)
+    : existingRuler.material_id;
 
   // If updating material_id, check if it exists
   if (data.material_id) {
@@ -90,10 +101,20 @@ export const updateRuler = async (ruler_id, data) => {
     }
   }
 
+  const rulerWithSameName = await RulerModel.findByNameAndMaterialId(
+    newRulerName,
+    newMaterialId
+  );
+  if (rulerWithSameName && rulerWithSameName.ruler_id !== ruler_id) {
+    const error = new Error("اسم المسطرة موجود بالفعل ل هذه المادة");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const updatedRuler = await RulerModel.updateById(ruler_id, data);
-  
+
   logger.info('Ruler updated', { ruler_id });
-  
+
   return updatedRuler;
 };
 
@@ -105,9 +126,9 @@ export const deleteRuler = async (ruler_id) => {
   await getRulerById(ruler_id);
 
   await RulerModel.deleteById(ruler_id);
-  
+
   logger.info('Ruler deleted', { ruler_id });
-  
+
   return { message: "تم حذف المسطرة بنجاح" };
 };
 

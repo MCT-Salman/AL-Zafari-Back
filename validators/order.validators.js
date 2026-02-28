@@ -66,8 +66,7 @@ const orderItemRules = [
  */
 export const createOrderRules = [
   body("customer_id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف العميل مطلوب")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً موجباً"),
   body("status")

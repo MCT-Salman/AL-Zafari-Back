@@ -13,6 +13,7 @@ import {
   updateDiscount as updateDiscountService,
   deleteDiscount as deleteDiscountService,
   getExchangeRateLog as getExchangeRateLogService,
+  getDiscountsByMaterialId as getDiscountsByMaterialIdService,
 } from "../services/setting.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -193,6 +194,23 @@ export const getDiscounts = async (req, res, next) => {
   }
 };
 
+export const getDiscountsByMaterialId = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await getDiscountsByMaterialIdService(parseInt(id));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب الخصومات بنجاح",
+      data: result,
+    });
+  } catch (error) {
+    logger.error("Get discounts by material id controller error", {
+      message: error?.message,
+    });
+    return next(error);
+  }
+};
 export const createDiscount = async (req, res, next) => {
   try {
     const data = req.body;

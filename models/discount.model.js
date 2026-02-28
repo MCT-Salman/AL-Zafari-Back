@@ -53,3 +53,9 @@ export const deleteById = async (id) => {
     where: { id },
   });
 };
+
+export const findByMaterialId = async (material_id) => {
+  return prisma.discount.findMany({
+    where: { material_id },
+  });
+};

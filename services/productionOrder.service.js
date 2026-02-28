@@ -310,7 +310,7 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
  * حذف طلب إنتاج
  */
 export const deleteProductionOrder = async (production_order_id, userRole) => {
-  // Check if production order exists
+
   const existingOrder = await ProductionOrderModel.findById(production_order_id);
   if (!existingOrder) {
     const error = new Error("طلب الإنتاج غير موجود");
@@ -318,23 +318,32 @@ export const deleteProductionOrder = async (production_order_id, userRole) => {
     throw error;
   }
 
-  // Validate permissions
   if (!['admin', 'production_manager'].includes(userRole)) {
     const error = new Error("ليس لديك صلاحية لحذف طلبات الإنتاج");
     error.statusCode = 403;
     throw error;
   }
 
-  // Check if order has items with processes
-  const hasProcesses = await ProductionOrderItemModel.countByProductionOrderId(production_order_id);
+  const items = await ProductionOrderItemModel.findByProductionOrderId(production_order_id);
 
-  if (hasProcesses) {
-    const error = new Error("لا يمكن حذف طلب الإنتاج لأنه يحتوي على عمليات مرتبطة");
+  // إذا عندك عمليات مرتبطة بكل عنصر
+  const hasCompletedProcess = items.some(item => item.status === 'completed');
+
+  if (hasCompletedProcess) {
+    const error = new Error("لا يمكن حذف طلب إنتاج يحتوي على عمليات مكتملة");
     error.statusCode = 400;
     throw error;
   }
 
-  await ProductionOrderModel.deleteById(production_order_id);
+  await prisma.$transaction(async (tx) => {
+    await tx.productionOrderItem.deleteMany({
+      where: { production_order_id }
+    });
+
+    await tx.productionOrder.delete({
+      where: { production_order_id }
+    });
+  });
 
   logger.info("Production order deleted", { production_order_id });
 
@@ -427,7 +436,7 @@ export const createProductionOrderItem = async (
       count: createdItems.length,
     });
 
-    return createdItems;
+    return { order, items : createdItems };
   });
 };
 

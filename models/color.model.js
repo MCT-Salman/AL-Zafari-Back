@@ -86,3 +86,12 @@ export const findByRulerId = async ( ruler_id) => {
     },
   });
 };
+
+/**
+ * البحث عن لون حسب الكود و معرف المسطرة
+ */
+export const findByCodeAndRulerId = async (color_code, ruler_id) => {
+  return prisma.color.findFirst({
+    where: { color_code, ruler_id },
+  });
+};

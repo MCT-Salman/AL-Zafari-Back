@@ -90,3 +90,19 @@ export const findDefault = async (constant_type_id) => {
     },
   });
 };*/
+
+export const findByValueAndMaterialId = async (value, material_id) => {
+  return prisma.constantValue.findFirst({
+    where: {
+      value,
+      material_id,
+    },
+  });
+};
+
+export const update = async (data, where) => {
+  return prisma.constantValue.update({
+    where,
+    data,
+  });
+};

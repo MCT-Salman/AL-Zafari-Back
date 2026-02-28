@@ -1,5 +1,5 @@
 // services/setting.service.js
-import { SettingModel, DiscountModel } from "../models/index.js";
+import { SettingModel, DiscountModel , MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -164,6 +164,14 @@ export const getDiscounts = async (filters = {}) => {
 };
 
 export const createDiscount = async (data) => {
+  // Check if material exists
+  const material = await MaterialModel.findById(data.material_id);
+  if (!material) {
+    const error = new Error("المادة غير موجودة");
+    error.statusCode = 404;
+    throw error;
+  }
+
   const discount = await DiscountModel.create(data);
   return discount;
 };
@@ -185,4 +193,9 @@ export const getExchangeRateLog = async () => {
     },
   });
   return log;
+};
+
+export const getDiscountsByMaterialId = async (material_id) => {
+  const discounts = await DiscountModel.findByMaterialId(material_id);
+  return discounts;
 };

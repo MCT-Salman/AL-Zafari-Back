@@ -15,7 +15,8 @@ import {
   createDiscount,
   updateDiscount,
   deleteDiscount, 
-  getExchangeRateLog
+  getExchangeRateLog,
+  getDiscountsByMaterialId,
 } from "../controllers/setting.controller.js";
 
 import {
@@ -28,6 +29,7 @@ import {
   createDiscountRules,
   updateDiscountRules,
   discountIdParamRules,
+  materialIdParamRules,
 
 } from "../validators/setting.validators.js";
 
@@ -49,6 +51,7 @@ router.delete("/id/:id", requireRole(["admin"]), validate(settingIdParamRules), 
 
 // discont routes
 router.get("/discounts", requireRole(["admin"]), validate(getSettingsQueryRules), getDiscounts);
+router.get("/material/:id", requireRole(["admin"]), validate(materialIdParamRules), getDiscountsByMaterialId);
 router.post("/discounts", requireRole(["admin"]), validate(createDiscountRules), createDiscount);
 router.put("/discounts/:id", requireRole(["admin"]), validate([...discountIdParamRules, ...updateDiscountRules]), updateDiscount);
 router.delete("/discounts/:id", requireRole(["admin"]), validate(discountIdParamRules), deleteDiscount);

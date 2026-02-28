@@ -71,8 +71,8 @@ export const getAllOrders = async (filters = {}) => {
     count_items: order.items?.length ?? 0,
     notes: order.notes,
     created_at: order.created_at,
-    customer: order.customer
-      ? {
+    ...(order.customer && {
+      customer: {
         customer_id: order.customer.customer_id,
         name: order.customer.name,
         phone: order.customer.phone,
@@ -80,8 +80,8 @@ export const getAllOrders = async (filters = {}) => {
         customer_type: order.customer.customer_type,
         city: order.customer.city,
         address: order.customer.address,
-      }
-      : null,
+      },
+    }),
     sales: order.sales ?? null,
   }));
 
@@ -111,14 +111,16 @@ export const getOrderById = async (order_id) => {
     total_amount: order.total_amount,
     created_at: order.created_at,
     notes: order.notes,
-    customer: {
-      name: order.customer.name,
-      phone: order.customer.phone,
-      balance: order.customer.balance,
-      customer_type: order.customer.customer_type,
-      city: order.customer.city,
-      address: order.customer.address,
-    },
+    ...(order.customer && {
+      customer: {
+        name: order.customer.name,
+        phone: order.customer.phone,
+        balance: order.customer.balance,
+        customer_type: order.customer.customer_type,
+        city: order.customer.city,
+        address: order.customer.address,
+      },
+    }),
     sales: order.sales,
     items: await Promise.all(order.items.map(async (item) => {
       return {
@@ -151,18 +153,20 @@ export const getOrderById = async (order_id) => {
 
 export const createOrder = async (data, userId) => {
   // تحقق من العميل
-  const customer = await CustomerModel.findById(data.customer_id);
-  if (!customer) {
-    const error = new Error("العميل غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
-  if (customer.balance > 0) {
-    const error = new Error("لا يمكن إنشاء طلب لعميل قبل تسديد الذمة");
-    error.statusCode = 400;
-    throw error;
-  }
+  if (data.customer_id) {
+    const customer = await CustomerModel.findById(data.customer_id);
+    if (!customer) {
+      const error = new Error("العميل غير موجود");
+      error.statusCode = 404;
+      throw error;
+    }
 
+    if (customer.balance > 0) {
+      const error = new Error("لا يمكن إنشاء طلب لعميل قبل تسديد الذمة");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
   // تحقق من وجود عناصر في الطلب
   if (!data.items || data.items.length === 0) {
     const error = new Error("يجب إضافة عنصر واحد على الأقل للطلب");
@@ -196,7 +200,7 @@ export const createOrder = async (data, userId) => {
     if (item.width === 22) widthType = "isByMeter22";
     else if (item.width === 44) widthType = "isByMeter44";
     else if (item.width === 66) widthType = "isByMeter66";
-    
+
 
     // جلب السعر إذا لم يكن موجود
     if (!item.unit_price || Number(item.unit_price) === 0) {
@@ -205,7 +209,7 @@ export const createOrder = async (data, userId) => {
         widthType,
         item.type_item
       );
-      
+
       if (!price) {
         const error = new Error(
           `السعر لللون ${item.color_id} مع النوع ${widthType} غير موجود`
@@ -292,14 +296,16 @@ export const createOrder = async (data, userId) => {
     total_amount: newOrder.total_amount,
     created_at: newOrder.created_at,
     notes: newOrder.notes,
-    customer: {
-      name: newOrder.customer.name,
-      phone: newOrder.customer.phone,
-      balance: newOrder.customer.balance,
-      customer_type: newOrder.customer.customer_type,
-      city: newOrder.customer.city,
-      address: newOrder.customer.address,
-    },
+    ...(newOrder.customer && {
+      customer: {
+        name: newOrder.customer.name || null,
+        phone: newOrder.customer.phone || null,
+        balance: newOrder.customer.balance || null,
+        customer_type: newOrder.customer.customer_type || null,
+        city: newOrder.customer.city || null,
+        address: newOrder.customer.address || null,
+      }
+    }),
     sales: newOrder.sales,
     items: await Promise.all(newOrder.items.map(async (item) => {
 
@@ -458,14 +464,16 @@ export const updateOrder = async (order_id, data) => {
       total_amount: updated.total_amount,
       created_at: updated.created_at,
       notes: updated.notes,
-      customer: {
-        name: updated.customer.name,
-        phone: updated.customer.phone,
-        balance: updated.customer.balance,
-        customer_type: updated.customer.customer_type,
-        city: updated.customer.city,
-        address: updated.customer.address,
-      },
+      ...(updated.customer && {
+        customer: {
+          name: updated.customer.name,
+          phone: updated.customer.phone,
+          balance: updated.customer.balance,
+          customer_type: updated.customer.customer_type,
+          city: updated.customer.city,
+          address: updated.customer.address,
+        },
+      }),
       sales: updated.sales,
       items: await Promise.all(updated.items.map(async (item) => {
         return {
@@ -661,14 +669,16 @@ export const addOrderItem = async (order_id, itemData) => {
     total_amount: result.total_amount,
     created_at: result.created_at,
     notes: result.notes,
-    customer: {
-      name: result.customer.name,
-      phone: result.customer.phone,
-      balance: result.customer.balance,
-      customer_type: result.customer.customer_type,
-      city: result.customer.city,
-      address: result.customer.address,
-    },
+    ...(result.customer && {
+      customer: {
+        name: result.customer.name,
+        phone: result.customer.phone,
+        balance: result.customer.balance,
+        customer_type: result.customer.customer_type,
+        city: result.customer.city,
+        address: result.customer.address,
+      },
+    }),
     sales: result.sales,
     items: await Promise.all(result.items.map(async (item) => {
       return {
@@ -817,14 +827,16 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     total_amount: result.updatedOrder.total_amount,
     created_at: result.updatedOrder.created_at,
     notes: result.updatedOrder.notes,
-    customer: {
-      name: result.updatedOrder.customer.name,
-      phone: result.updatedOrder.customer.phone,
-      balance: result.updatedOrder.customer.balance,
-      customer_type: result.updatedOrder.customer.customer_type,
-      city: result.updatedOrder.customer.city,
-      address: result.updatedOrder.customer.address,
-    },
+    ...(result.updatedOrder.customer && {
+      customer: {
+        name: result.updatedOrder.customer.name,
+        phone: result.updatedOrder.customer.phone,
+        balance: result.updatedOrder.customer.balance,
+        customer_type: result.updatedOrder.customer.customer_type,
+        city: result.updatedOrder.customer.city,
+        address: result.updatedOrder.customer.address,
+      },
+    }),
     sales: result.updatedOrder.sales,
     items: await Promise.all(result.updatedOrder.items.map(async (item) => {
       return {
@@ -952,14 +964,16 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     total_amount: result.updatedOrder.total_amount,
     created_at: result.updatedOrder.created_at,
     notes: result.updatedOrder.notes,
-    customer: {
-      name: result.updatedOrder.customer.name,
-      phone: result.updatedOrder.customer.phone,
-      balance: result.updatedOrder.customer.balance,
-      customer_type: result.updatedOrder.customer.customer_type,
-      city: result.updatedOrder.customer.city,
-      address: result.updatedOrder.customer.address,
-    },
+    ...(result.updatedOrder.customer && {
+      customer: {
+        name: result.updatedOrder.customer.name,
+        phone: result.updatedOrder.customer.phone,
+        balance: result.updatedOrder.customer.balance,
+        customer_type: result.updatedOrder.customer.customer_type,
+        city: result.updatedOrder.customer.city,
+        address: result.updatedOrder.customer.address,
+      },
+    }),
     sales: result.updatedOrder.sales,
     items: await Promise.all(
       result.updatedOrder.items.map(async (item) => {
@@ -1031,14 +1045,16 @@ export const updateOrderStatus = async (order_id, status) => {
     total_amount: updatedOrder.total_amount,
     created_at: updatedOrder.created_at,
     notes: updatedOrder.notes,
-    customer: {
-      name: updatedOrder.customer.name,
-      phone: updatedOrder.customer.phone,
-      balance: updatedOrder.customer.balance,
-      customer_type: updatedOrder.customer.customer_type,
-      city: updatedOrder.customer.city,
-      address: updatedOrder.customer.address,
-    },
+    ...(updatedOrder.customer && {
+      customer: {
+        name: updatedOrder.customer.name,
+        phone: updatedOrder.customer.phone,
+        balance: updatedOrder.customer.balance,
+        customer_type: updatedOrder.customer.customer_type,
+        city: updatedOrder.customer.city,
+        address: updatedOrder.customer.address,
+      },
+    }),
     sales: updatedOrder.sales,
     items: await Promise.all(
       updatedOrder.items.map(async (item) => {

@@ -56,38 +56,125 @@ export const getConstantValueById = async (constant_value_id) => {
  * إنشاء قيمة ثابتة جديدة
  */
 export const createConstantValue = async (data) => {
-  // Check if material exists
-  const material = await MaterialModel.findById(data.material_id);
+
+  const materialId = parseInt(data.material_id);
+
+  const material = await MaterialModel.findById(materialId);
   if (!material) {
     const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
 
-  const constantValue = await ConstantValueModel.create(data);
+  const existing = await prisma.constantValue.findFirst({
+    where: {
+      material_id: materialId,
+      type: data.type,
+      value: data.value
+    }
+  });
 
-  logger.info('Constant value created', { constant_value_id: constantValue.constant_value_id });
+  if (existing) {
+    const error = new Error("القيمة موجودة بالفعل لهذه المادة");
+    error.statusCode = 400;
+    throw error;
+  }
 
-  return constantValue;
+  const result = await prisma.$transaction(async (tx) => {
+
+    // إذا كانت Default → إلغاء أي Default سابق
+    if (data.isDefault === true) {
+      await tx.constantValue.updateMany({
+        where: {
+          material_id: materialId,
+          type: data.type
+        },
+        data: { isDefault: false }
+      });
+    }
+
+    // إنشاء السجل
+    const created = await tx.constantValue.create({
+      data: {
+        ...data,
+        material_id: materialId
+      }
+    });
+
+    return created;
+  });
+
+  logger.info('Constant value created', {
+    constant_value_id: result.constant_value_id
+  });
+
+  return result;
 };
 
 /**
  * تحديث قيمة ثابتة
  */
 export const updateConstantValue = async (constant_value_id, data) => {
-  // Check if exists
+
   const constantValue = await getConstantValueById(constant_value_id);
-  if (!constantValue) {
-    const error = new Error("القيمة الثابتة غير موجودة");
-    error.statusCode = 404;
+
+  const newValue = data.value ?? constantValue.value;
+  const newMaterialId = data.material_id
+    ? parseInt(data.material_id)
+    : constantValue.material_id;
+
+  if (data.material_id) {
+    const material = await MaterialModel.findById(newMaterialId);
+    if (!material) {
+      const error = new Error("المادة غير موجودة");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+
+  const existing = await prisma.constantValue.findFirst({
+    where: {
+      material_id: newMaterialId,
+      type: constantValue.type,
+      value: newValue,
+      NOT: { constant_value_id }
+    }
+  });
+
+  if (existing) {
+    const error = new Error("القيمة موجودة بالفعل لهذه المادة");
+    error.statusCode = 400;
     throw error;
   }
 
-  const updatedConstantValue = await ConstantValueModel.updateById(constant_value_id, data);
+  const result = await prisma.$transaction(async (tx) => {
+
+    // إذا سيتم تعيينها Default
+    if (data.isDefault === true) {
+      await tx.constantValue.updateMany({
+        where: {
+          material_id: newMaterialId,
+          type: constantValue.type
+        },
+        data: { isDefault: false }
+      });
+    }
+
+    // تحديث السجل نفسه
+    const updated = await tx.constantValue.update({
+      where: { constant_value_id },
+      data: {
+        ...data,
+        material_id: newMaterialId
+      }
+    });
+
+    return updated;
+  });
 
   logger.info('Constant value updated', { constant_value_id });
 
-  return updatedConstantValue;
+  return result;
 };
 
 /**
@@ -108,30 +195,30 @@ export const deleteConstantValue = async (constant_value_id) => {
  * جلب قيم ثابتة حسب نوع الثابت
  *//*
 export const getConstantValuesByTypeId = async (constant_type_id) => {
-  const constantType = await ConstantTypeModel.findById(constant_type_id);
-  if (!constantType) {
-    const error = new Error("النوع الثابت غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
-  const constantValues = await ConstantValueModel.findByTypeId(constant_type_id);
-  if (!constantValues) {
-    const error = new Error("لا توجد قيم ثابتة لهذا النوع");
-    error.statusCode = 404;
-    throw error;
-  }
-  return constantValues;
+ const constantType = await ConstantTypeModel.findById(constant_type_id);
+ if (!constantType) {
+   const error = new Error("النوع الثابت غير موجود");
+   error.statusCode = 404;
+   throw error;
+ }
+ const constantValues = await ConstantValueModel.findByTypeId(constant_type_id);
+ if (!constantValues) {
+   const error = new Error("لا توجد قيم ثابتة لهذا النوع");
+   error.statusCode = 404;
+   throw error;
+ }
+ return constantValues;
 };
 */
 
-export const getConstantValuesByMaterialId = async (material_id , filters = {}) => {
+export const getConstantValuesByMaterialId = async (material_id, filters = {}) => {
   const material = await MaterialModel.findById(material_id);
   if (!material) {
     const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
-  const constantValues = await ConstantValueModel.findByMaterialId(material_id , filters);
+  const constantValues = await ConstantValueModel.findByMaterialId(material_id, filters);
   if (!constantValues) {
     const error = new Error("لا توجد قيم ثابتة لهذه المادة");
     error.statusCode = 404;

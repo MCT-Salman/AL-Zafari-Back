@@ -297,6 +297,7 @@ model Material {
   constant_values ConstantValue[]
   batches         Batch[]
   rulers          Ruler[]
+  discounts       Discount[]
 
   @@map("Material")
 }
@@ -318,7 +319,7 @@ model Ruler {
 model Color {
   color_id   Int     @id @default(autoincrement())
   ruler_id   Int
-  color_code String  @unique
+  color_code String
   color_name String
   imageUrl   String?
   notes      String?
@@ -380,15 +381,15 @@ model Batch {
 
 model Order {
   order_id      Int         @id @default(autoincrement())
-  customer_id   Int
+  customer_id   Int?
   sales_user_id Int
   status        OrderStatus
   total_amount  Decimal     @db.Decimal(20, 2)
   created_at    DateTime    @default(now())
   notes         String?
 
-  customer Customer @relation(fields: [customer_id], references: [customer_id])
-  sales    Users    @relation(fields: [sales_user_id], references: [id])
+  customer Customer? @relation(fields: [customer_id], references: [customer_id])
+  sales    Users     @relation(fields: [sales_user_id], references: [id])
 
   items    OrderItem[]
   invoices Invoice[]
@@ -406,16 +407,16 @@ model OrderItem {
   color_id      Int
   width         Decimal?  @db.Decimal(10, 2)
   length        Decimal?  @db.Decimal(10, 2)
-  thickness     Decimal   @db.Decimal(10, 2)
-  batch_id      Int
+  thickness     Decimal?  @db.Decimal(10, 2)
+  batch_id      Int?
   quantity      Int
   unit_price    Decimal?  @db.Decimal(20, 2)
   subtotal      Decimal   @db.Decimal(20, 2)
   notes         String?
 
-  order Order @relation(fields: [order_id], references: [order_id])
-  color Color @relation(fields: [color_id], references: [color_id])
-  batch Batch @relation(fields: [batch_id], references: [batch_id])
+  order Order  @relation(fields: [order_id], references: [order_id])
+  color Color  @relation(fields: [color_id], references: [color_id])
+  batch Batch? @relation(fields: [batch_id], references: [batch_id])
 
   processes    ProductionProcess[]
   invoiceItems InvoiceItem[]
@@ -476,17 +477,16 @@ model SalesOrder {
 }
 
 model SalesOrderItem {
-  sales_order_item_id Int              @id @default(autoincrement())
+  sales_order_item_id Int      @id @default(autoincrement())
   sales_order_id      Int
   color_id            Int
   batch_id            Int?
   type_item           TypeItem
-  width               Decimal          @db.Decimal(10, 2)
-  length              Decimal          @db.Decimal(10, 2)
-  thickness           Decimal          @db.Decimal(10, 2)
+  width               Decimal  @db.Decimal(10, 2)
+  length              Decimal  @db.Decimal(10, 2)
+  thickness           Decimal  @db.Decimal(10, 2)
   quantity            Int?
-  status              ProductionStatus
-  created_at          DateTime         @default(now())
+  created_at          DateTime @default(now())
   notes               String?
 
   color      Color       @relation(fields: [color_id], references: [color_id])
@@ -663,12 +663,15 @@ enum QuantityCondition {
 
 model Discount {
   id                Int               @id @default(autoincrement())
+  material_id       Int
   type              DiscountType
   quantityCondition QuantityCondition
   quantity          Int
   value             Decimal           @db.Decimal(10, 2)
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+
+  material Material @relation(fields: [material_id], references: [material_id])
 
   @@map("Discount")
 }

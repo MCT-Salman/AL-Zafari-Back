@@ -25,6 +25,15 @@ export const findById = async (material_id) => {
 };
 
 /**
+ * البحث عن مادة حسب الاسم
+ */
+export const findByName = async (material_name) => {
+  return prisma.material.findFirst({
+    where: { material_name },
+  });
+};
+
+/**
  * جلب جميع المواد مع pagination
  */
 export const findAll = async ({ where = {} }) => {

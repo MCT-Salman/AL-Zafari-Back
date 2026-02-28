@@ -42,10 +42,11 @@ router.delete("/:id", requireRole(["admin", "sales"]), validate(productionOrderI
 /**
  * Production Order Item Routes
  */
-router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
+router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
+router.get("/:id/items", requireRole(["admin", "production_manager", "warehouse_keeper", "warehouse_products", "dissection_technician", "cutting_technician", "gluing_technician"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
 router.post("/", requireRole(["admin", "production_manager"]), validate(createProductionOrderRules), createProductionOrderItem);
 router.get("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionOrderItemIdParamRules), getProductionOrderItemById);
-router.patch("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), updateProductionOrderItemStatus);
+router.patch("/item/:id", requireRole(["admin", "production_manager", "warehouse_keeper", "warehouse_products", "dissection_technician", "cutting_technician", "gluing_technician"]), validate(productionOrderItemIdParamRules), updateProductionOrderItemStatus);
 router.put("/item/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderItemIdParamRules, ...updateProductionOrderRules]), updateProductionOrderItem);
 router.delete("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), deleteProductionOrderItem);
 

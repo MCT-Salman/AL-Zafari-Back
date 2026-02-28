@@ -75,10 +75,10 @@ export const createColor = async (data) => {
   }
 
   // Check if color_code already exists
-  const existingColor = await ColorModel.findByCode(data.color_code);
+  const existingColor = await ColorModel.findByCodeAndRulerId(data.color_code, parseInt(data.ruler_id));
   if (existingColor) {
     deleteFile(data.imageUrl);
-    const error = new Error("كود اللون موجود بالفعل");
+    const error = new Error("كود اللون موجود بالفعل ل هذه المسطرة");
     error.statusCode = 400;
     throw error;
   }
@@ -97,6 +97,11 @@ export const updateColor = async (color_id, data) => {
   // Check if exists
   const existingColor = await getColorById(color_id);
 
+  const newColorCode = data.color_code ?? existingColor.color_code;
+  const newRulerId = data.ruler_id
+    ? parseInt(data.ruler_id)
+    : existingColor.ruler_id;
+
   // If updating material_id, check if it exists
   if (data.ruler_id) {
     const ruler = await RulerModel.findById(parseInt(data.ruler_id));
@@ -108,15 +113,16 @@ export const updateColor = async (color_id, data) => {
     }
   }
 
-  // If updating color_code, check if it's unique
-  if (data.color_code && data.color_code !== existingColor.color_code) {
-    const colorWithSameCode = await ColorModel.findByCode(data.color_code);
-    if (colorWithSameCode) {
-      deleteFile(data.imageUrl);
-      const error = new Error("كود اللون موجود بالفعل");
-      error.statusCode = 400;
-      throw error;
-    }
+  const colorWithSameCode = await ColorModel.findByCodeAndRulerId(
+    newColorCode,
+    newRulerId
+  );
+
+  if (colorWithSameCode && colorWithSameCode.color_id !== color_id) {
+    deleteFile(data.imageUrl);
+    const error = new Error("كود اللون موجود بالفعل لهذه المسطرة");
+    error.statusCode = 400;
+    throw error;
   }
   if (data.ruler_id) {
     data.ruler_id = parseInt(data.ruler_id);

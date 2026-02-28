@@ -108,10 +108,6 @@ export const createSalesOrderItemRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
-  body('status')
-    .optional()
-    .isIn(Sales_STATUSES)
-    .withMessage('حالة الإنتاج غير صالحة'),
   body('notes')
     .optional()
     .isString()
@@ -135,10 +131,6 @@ export const updateSalesOrderItemRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
-  body('status')
-    .optional()
-    .isIn(Sales_STATUSES)
-    .withMessage('حالة الإنتاج غير صالحة'),
   body('notes')
     .optional()
     .isString()

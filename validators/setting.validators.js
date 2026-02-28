@@ -115,10 +115,23 @@ export const discountIdParamRules = [
     .withMessage("معرف الخصم يجب أن يكون رقماً صحيحاً موجباً"),
 ];
 
+export const materialIdParamRules = [
+  param("id")
+    .exists()
+    .withMessage("معرف المادة مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف المادة يجب أن يكون رقماً صحيحاً موجباً"),
+];
+
 /**
  * Validation rules for creating a discount
  */
 export const createDiscountRules = [
+  body("material_id")
+    .exists({ checkFalsy: true })
+    .withMessage("معرف المادة مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف المادة يجب أن يكون رقماً صحيحاً موجباً"),
   body("type")
     .exists({ checkFalsy: true })
     .withMessage("نوع الخصم مطلوب")
@@ -145,6 +158,10 @@ export const createDiscountRules = [
  * Validation rules for updating a discount
  */
 export const updateDiscountRules = [
+  body("material_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف المادة يجب أن يكون رقماً صحيحاً موجباً"),
   body("type")
     .optional()
     .isIn(["percentage", "fixed"])

@@ -96,3 +96,12 @@ export const findByType = async (ruler_type) => {
     },
   });
 };
+
+/**
+ * البحث عن مسطرة حسب الاسم و معرف المادة
+ */
+export const findByNameAndMaterialId = async (ruler_name, material_id) => {
+  return prisma.ruler.findFirst({
+    where: { ruler_name, material_id },
+  });
+};

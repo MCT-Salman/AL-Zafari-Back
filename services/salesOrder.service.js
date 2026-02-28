@@ -171,7 +171,6 @@ export const createSalesOrder = async (data, userId, userRole) => {
           length: item.length,
           thickness: item.thickness,
           quantity: item.quantity,
-          status: 'pending',
           notes: item.notes
         }))
       }
@@ -269,7 +268,6 @@ export const updateSalesOrder = async (salesOrderId, data, userId, userRole) => 
         length: item.length,
         thickness: item.thickness,
         quantity: item.quantity,
-        status: 'pending',
         notes: item.notes || null
       }))
     });

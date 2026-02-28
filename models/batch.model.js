@@ -82,3 +82,12 @@ export const findByBatchNumber = async (batch_number) => {
     },
   });
 };
+
+/**
+ * البحث عن طبخة حسب رقم الطبخة و معرف المادة
+ */
+export const findByBatchNumberAndMaterialId = async (batch_number, material_id) => {
+  return prisma.batch.findFirst({
+    where: { batch_number, material_id },
+  });
+};
