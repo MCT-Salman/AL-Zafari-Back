@@ -2,12 +2,26 @@
 import * as InvoiceService from "../services/invoice.service.js";
 import logger from "../utils/logger.js";
 
+export const getPriceMaterial = async (req, res, next) => {
+  try {
+    const data = req.body;
+    const price = await InvoiceService.getPriceMaterial(data);
+    res.status(200).json({
+      success: true,
+      message: "تم جلب سعر المتر بنجاح",
+      data: price,
+    });
+  } catch (error) {
+    logger.error("Error in getPriceMaterial controller", { error: error.message });
+    next(error);
+  }
+};
+
 /**
  * جلب جميع الفواتير
  */
 export const getAllInvoices = async (req, res, next) => {
   try {
-    console.log("req.query", req.query);
     const result = await InvoiceService.getAllInvoices(req.query);
     res.status(200).json({
       success: true,
@@ -51,23 +65,6 @@ export const getInvoicesByCustomerId = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Error in getInvoicesByCustomerId controller", { error: error.message });
-    next(error);
-  }
-};
-
-/**
- * جلب فواتير حسب الطلب
-*/
-export const getInvoicesByOrderId = async (req, res, next) => {
-  try {
-    const invoices = await InvoiceService.getInvoicesByOrderId(Number(req.params.id));
-    res.status(200).json({
-      success: true,
-      message: "تم جلب الفواتير بنجاح",
-      data: invoices,
-    });
-  } catch (error) {
-    logger.error("Error in getInvoicesByOrderId controller", { error: error.message });
     next(error);
   }
 };

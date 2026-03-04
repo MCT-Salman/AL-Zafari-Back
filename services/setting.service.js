@@ -1,5 +1,5 @@
 // services/setting.service.js
-import { SettingModel, DiscountModel , MaterialModel } from "../models/index.js";
+import { SettingModel, DiscountModel, MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 
 /**
@@ -171,12 +171,40 @@ export const createDiscount = async (data) => {
     error.statusCode = 404;
     throw error;
   }
+  const quantity = Number(data.quantity);
+  const existingdiscount = await DiscountModel.findByMaterialIdAndQuantity(data.material_id, quantity);
+  if (existingdiscount) {
+    const error = new Error(" الخصم موجود بالفعل لنفس المادة والكمية");
+    error.statusCode = 400;
+    throw error;
+  }
+
 
   const discount = await DiscountModel.create(data);
   return discount;
 };
 
 export const updateDiscount = async (id, data) => {
+  // Check if material exists
+  const material = await MaterialModel.findById(data.material_id);
+  if (!material) {
+    const error = new Error("المادة غير موجودة");
+    error.statusCode = 404;
+    throw error;
+  }
+  const quantity = Number(data.quantity);
+  const existingDiscount =
+    await DiscountModel.findByMaterialIdAndQuantity(
+      data.material_id,
+      quantity
+    );
+
+  if (existingDiscount && existingDiscount.id !== id) {
+    const error = new Error("الخصم موجود بالفعل لنفس المادة والكمية");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const discount = await DiscountModel.updateById(id, data);
   return discount;
 };

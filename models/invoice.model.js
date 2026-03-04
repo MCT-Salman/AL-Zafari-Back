@@ -32,22 +32,18 @@ export const findById = async (invoice_id) => {
   return prisma.invoice.findUnique({
     where: { invoice_id },
     include: {
-      order: {
+      invoiceItems: {
         include: {
-          items: {
+          color: {
             include: {
-              color: {
+              ruler: {
                 include: {
-                  ruler: {
-                    include: {
-                      material: true,
-                    },
-                  },
+                  material: true,
                 },
               },
-              batch: true,
             },
           },
+          batch: true,
         },
       },
       customer: true,
@@ -69,7 +65,19 @@ export const findAll = async ({ where = {} }) => {
   return prisma.invoice.findMany({
     where,
     include: {
-      order: true,
+      invoiceItems: {
+        include: {
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+        },
+      },
       customer: true,
       user: {
         select: {
@@ -98,9 +106,17 @@ export const updateById = async (invoice_id, data) => {
     where: { invoice_id },
     data,
     include: {
-      order: {
+      invoiceItems: {
         include: {
-          items: true,
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
         },
       },
       customer: true,
@@ -131,6 +147,19 @@ export const findByOrderId = async (order_id) => {
   return prisma.invoice.findMany({
     where: { order_id },
     include: {
+      invoiceItems: {
+        include: {
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+        },
+      },
       customer: true,
       user: {
         select: {
@@ -151,6 +180,20 @@ export const findByCustomerId = async (customer_id) => {
   return prisma.invoice.findMany({
     where: { customer_id },
     include: {
+      invoiceItems: {
+        include: {
+
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+        },
+      },
       order: true,
       user: {
         select: {

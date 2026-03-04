@@ -5,7 +5,7 @@ import logger from "../utils/logger.js";
 /**
  * جلب جميع أسعار الألوان مع pagination
  */
-export const getAllPriceColors = async ( filters = {}) => {
+export const getAllPriceColors = async (filters = {}) => {
   const where = {};
 
   // Filter by color_id
@@ -39,7 +39,7 @@ export const getAllPriceColors = async ( filters = {}) => {
  */
 export const getPriceColorById = async (price_color_id) => {
   const priceColor = await PriceColorModel.findById(price_color_id);
-  
+
   if (!priceColor) {
     const error = new Error("سعر اللون غير موجود");
     error.statusCode = 404;
@@ -60,11 +60,18 @@ export const createPriceColor = async (data) => {
     error.statusCode = 404;
     throw error;
   }
+  const type_item = data.type_item ? data.type_item : null;
+  const existingPriceColor = await PriceColorModel.findPriceByColorAndValue(data.color_id, data.price_color_By, type_item);
+  if (existingPriceColor) {
+    const error = new Error("سعر اللون موجود بالفعل لنفس اللون لنفس النوع");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const priceColor = await PriceColorModel.create(data);
-  
+
   logger.info('Price color created', { price_color_id: priceColor.price_color_id });
-  
+
   return priceColor;
 };
 
@@ -84,21 +91,18 @@ export const updatePriceColor = async (price_color_id, data) => {
       throw error;
     }
   }
-
-  // If updating constant_value_id, check if it exists
-  if (data.constant_value_id) {
-    const constantValue = await ConstantValueModel.findById(data.constant_value_id);
-    if (!constantValue) {
-      const error = new Error("القيمة الثابتة غير موجودة");
-      error.statusCode = 404;
-      throw error;
-    }
+  const type_item = data.type_item ? data.type_item : null;
+  const existingPriceColor = await PriceColorModel.findPriceByColorAndValue(data.color_id, data.price_color_By, type_item);
+  if (existingPriceColor && existingPriceColor.price_color_id !== price_color_id) {
+    const error = new Error("سعر اللون موجود بالفعل لنفس اللون لنفس النوع");
+    error.statusCode = 400;
+    throw error;
   }
 
   const updatedPriceColor = await PriceColorModel.updateById(price_color_id, data);
-  
+
   logger.info('Price color updated', { price_color_id });
-  
+
   return updatedPriceColor;
 };
 
@@ -110,9 +114,9 @@ export const deletePriceColor = async (price_color_id) => {
   await getPriceColorById(price_color_id);
 
   await PriceColorModel.deleteById(price_color_id);
-  
+
   logger.info('Price color deleted', { price_color_id });
-  
+
   return { message: "تم حذف سعر اللون بنجاح" };
 };
 

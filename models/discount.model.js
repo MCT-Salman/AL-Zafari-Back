@@ -59,3 +59,23 @@ export const findByMaterialId = async (material_id) => {
     where: { material_id },
   });
 };
+
+export const findOneByMaterialId = async (material_id) => {
+  return prisma.discount.findFirst({
+    where: { material_id },
+  });
+};
+
+export const findByMaterialIdAndQuantity = async (material_id, quantity) => {
+  return prisma.discount.findFirst({
+    where: {
+      material_id,
+      quantity: {
+        lte: quantity,
+      },
+    },
+    orderBy: {
+      quantity: "desc",
+    },
+  });
+};

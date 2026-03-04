@@ -330,6 +330,7 @@ model Color {
   warehouseMovements WarehouseMovement[]
   salesOrderItems    SalesOrderItem[]
   productionOrders   ProductionOrder[]
+  invoiceItems       InvoiceItem[]
 
   @@map("Color")
 }
@@ -375,6 +376,7 @@ model Batch {
   movements        WarehouseMovement[]
   salesOrderItems  SalesOrderItem[]
   productionOrders ProductionOrder[]
+  invoiceItems     InvoiceItem[]
 
   @@map("Batch")
 }
@@ -418,16 +420,16 @@ model OrderItem {
   color Color  @relation(fields: [color_id], references: [color_id])
   batch Batch? @relation(fields: [batch_id], references: [batch_id])
 
-  processes    ProductionProcess[]
-  invoiceItems InvoiceItem[]
+  processes ProductionProcess[]
 
   @@map("OrderItem")
 }
 
 model Invoice {
   invoice_id       Int      @id @default(autoincrement())
-  order_id         Int
+  order_id         Int?
   customer_id      Int
+  discount         Decimal  @db.Decimal(20, 2)
   total_amount     Decimal  @db.Decimal(20, 2)
   paid_amount      Decimal  @db.Decimal(20, 2)
   remaining_amount Decimal  @db.Decimal(20, 2)
@@ -435,7 +437,7 @@ model Invoice {
   issued_at        DateTime @default(now())
   notes            String?
 
-  order        Order         @relation(fields: [order_id], references: [order_id])
+  order        Order?        @relation(fields: [order_id], references: [order_id])
   customer     Customer      @relation(fields: [customer_id], references: [customer_id])
   user         Users         @relation(fields: [issued_by], references: [id])
   invoiceItems InvoiceItem[]
@@ -444,17 +446,22 @@ model Invoice {
 }
 
 model InvoiceItem {
-  invoice_item_id Int     @id @default(autoincrement())
+  invoice_item_id Int       @id @default(autoincrement())
   invoice_id      Int
-  order_item_id   Int
-  width           Decimal @db.Decimal(10, 2)
-  length          Decimal @db.Decimal(10, 2)
-  unit_price      Decimal @db.Decimal(20, 2)
+  type_item       TypeItem?
+  color_id        Int
+  width           Decimal?  @db.Decimal(10, 2)
+  length          Decimal?  @db.Decimal(10, 2)
+  thickness       Decimal?  @db.Decimal(10, 2)
+  batch_id        Int?
   quantity        Int
-  subtotal        Decimal @db.Decimal(20, 2)
+  unit_price      Decimal?  @db.Decimal(20, 2)
+  subtotal        Decimal   @db.Decimal(20, 2)
+  notes           String?
 
-  invoice   Invoice   @relation(fields: [invoice_id], references: [invoice_id])
-  orderItem OrderItem @relation(fields: [order_item_id], references: [order_item_id])
+  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  color   Color   @relation(fields: [color_id], references: [color_id])
+  batch   Batch?  @relation(fields: [batch_id], references: [batch_id])
 
   @@map("InvoiceItem")
 }

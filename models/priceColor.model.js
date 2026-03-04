@@ -129,5 +129,16 @@ export const findPriceByColorAndValue = async (color_id, width, type_item) => {
       price_color_By: width,
       type_item: type_item,
     },
+    include: {
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+    },
   });
 };

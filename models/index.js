@@ -22,6 +22,7 @@ import * as BatchModel from './batch.model.js';
 import * as OrderModel from './order.model.js';
 import * as OrderItemModel from './orderItem.model.js';
 import * as InvoiceModel from './invoice.model.js';
+import * as InvoiceItemModel from './invoiceItem.model.js';
 
 import * as SalesOrderModel from './salesOrder.model.js';
 import * as SalesOrderItemModel from './salesOrderItem.model.js';
@@ -59,6 +60,7 @@ export {
   OrderModel,
   OrderItemModel,
   InvoiceModel,
+  InvoiceItemModel,
   SalesOrderModel,
   SalesOrderItemModel,
   ProductionOrderModel,

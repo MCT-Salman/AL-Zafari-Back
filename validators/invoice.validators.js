@@ -6,11 +6,14 @@ import { body, param, query } from "express-validator";
  */
 export const createInvoiceRules = [
   body("order_id")
-    .notEmpty()
-    .withMessage("معرف الطلب مطلوب")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
-
+  body("customer_id")
+    .notEmpty()
+    .withMessage("معرف العميل مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً"),
   body("paid_amount")
     .optional()
     .isDecimal({ decimal_digits: "0,2" })
@@ -27,12 +30,59 @@ export const createInvoiceRules = [
     .isString()
     .withMessage("الملاحظات يجب أن تكون نصاً")
     .trim(),
+  body("items")
+    .notEmpty()
+    .withMessage("عناصر الفاتورة مطلوبة")
+    .isArray()
+    .withMessage("عناصر الفاتورة يجب أن تكون مصفوفة"),
+  body("items.*.type_item")
+    .optional()
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر غير صالح"),
+  body("items.*.color_id")
+    .notEmpty()
+    .withMessage("معرف اللون مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  body("items.*.batch_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
+  body("items.*.thickness")
+    .optional()
+    .isDecimal()
+    .withMessage("السماكة الثابتة يجب أن تكون رقماً عشريام"),
+  body("items.*.width")
+    .optional()
+    .isDecimal()
+    .withMessage("العرض الثابت يجب أن يكون رقماً عشريام"),
+  body("items.*.length")
+    .optional()
+    .isDecimal()
+    .withMessage("الطول يجب أن يكون رقماً عشريام"),
+  body("items.*.quantity")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("الكمية يجب أن تكون رقماً صحيحاً"),
+  body("items.*.unit_price")
+    .notEmpty()
+    .withMessage("السعر مطلوب")
+    .isDecimal()
+    .withMessage("سعر الوحدة يجب أن يكون رقماً عشريام"),
 ];
 
 /**
  * قواعد التحقق من تحديث فاتورة
  */
 export const updateInvoiceRules = [
+  body("order_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
+  body("customer_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً"),
   body("paid_amount")
     .optional()
     .isDecimal({ decimal_digits: "0,2" })
@@ -49,6 +99,43 @@ export const updateInvoiceRules = [
     .isString()
     .withMessage("الملاحظات يجب أن تكون نصاً")
     .trim(),
+
+  body("items")
+    .optional()
+    .isArray()
+    .withMessage("عناصر الفاتورة يجب أن تكون مصفوفة"),
+  body("items.*.type_item")
+    .optional()
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر غير صالح"),
+  body("items.*.color_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  body("items.*.batch_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
+  body("items.*.thickness")
+    .optional()
+    .isDecimal()
+    .withMessage("السماكة الثابتة يجب أن تكون رقماً عشريام"),
+  body("items.*.width")
+    .optional()
+    .isDecimal()
+    .withMessage("العرض الثابت يجب أن يكون رقماً عشريام"),
+  body("items.*.length")
+    .optional()
+    .isDecimal()
+    .withMessage("الطول يجب أن يكون رقماً عشريام"),
+  body("items.*.quantity")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("الكمية يجب أن تكون رقماً صحيحاً"),
+  body("items.*.unit_price")
+    .optional()
+    .isDecimal()
+    .withMessage("سعر الوحدة يجب أن يكون رقماً عشريام"),
 ];
 
 /**
@@ -78,6 +165,29 @@ export const orderIdParamRules = [
     .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
 ];
 
+export const getPriceMaterialRules = [
+  body("color_id")
+    .notEmpty()
+    .withMessage("معرف اللون مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  body("type_item")
+    .optional()
+    .isIn(["Presser", "Machine"])
+    .withMessage("نوع العنصر غير صالح"),
+  body("width")
+    .optional()
+    .isDecimal()
+    .withMessage("العرض يجب أن يكون رقماً عشريام"),
+  body("length")
+    .optional()
+    .isDecimal()
+    .withMessage("الطول يجب أن يكون رقماً عشريام"),
+  body("quantity")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("الكمية يجب أن تكون رقماً صحيحاً"),
+];
 /**
  * قواعد التحقق من فلاتر جلب الفواتير
  */
@@ -86,11 +196,6 @@ export const getInvoicesQueryRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً"),
-
-  query("order_id")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
 
   query("issued_by")
     .optional()
