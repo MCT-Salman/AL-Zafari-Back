@@ -74,7 +74,7 @@ export const getInvoicesByCustomerId = async (req, res, next) => {
  */
 export const createInvoice = async (req, res, next) => {
   try {
-    const invoice = await InvoiceService.createInvoice(req.body, req.user.id);
+    const invoice = await InvoiceService.createInvoice(req.body, req.user.id, req);
     res.status(201).json({
       success: true,
       message: "تم إنشاء الفاتورة بنجاح",
@@ -93,7 +93,8 @@ export const updateInvoice = async (req, res, next) => {
   try {
     const invoice = await InvoiceService.updateInvoice(
       Number(req.params.id),
-      req.body
+      req.body,
+      req
     );
     res.status(200).json({
       success: true,
@@ -111,7 +112,7 @@ export const updateInvoice = async (req, res, next) => {
  */
 export const deleteInvoice = async (req, res, next) => {
   try {
-    const result = await InvoiceService.deleteInvoice(Number(req.params.id));
+    const result = await InvoiceService.deleteInvoice(Number(req.params.id), req);
     res.status(200).json({
       success: true,
       message: result.message,
@@ -130,6 +131,7 @@ export const addPayment = async (req, res, next) => {
     const invoice = await InvoiceService.addPayment(
       Number(req.params.id),
       req.body.payment_amount
+      , req
     );
     res.status(200).json({
       success: true,

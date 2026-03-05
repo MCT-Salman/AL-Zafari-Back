@@ -1,82 +1,99 @@
-import prisma from "../prisma/client.js";
+import {
+  getAllSlites as getAllSlitesService,
+  getSliteById as getSliteByIdService,
+  createSlite as createSliteService,
+  updateSlite as updateSliteService,
+  deleteSlite as deleteSliteService,
+} from "../services/slite.service.js";
+import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
 
 /**
- * جلب جميع Slite
+ * GET /slites
  */
-export const getAllSlites = async (filters = {}) => {
-  const where = {};
-  if (filters.production_order_item_id) {
-    where.production_order_item_id = parseInt(filters.production_order_item_id);
+export const getAllSlites = async (req, res, next) => {
+  try {
+    const data = await getAllSlitesService(req.query);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب عمليات التشريح بنجاح",
+      data,
+    });
+  } catch (error) {
+    logger.error("Get slites controller error", { error });
+    next(error);
   }
-
-  const slites = await prisma.slite.findMany({
-    where,
-    orderBy: { created_at: "desc" },
-  });
-
-  return slites;
 };
 
 /**
- * جلب Slite واحد
+ * GET /slites/:id
  */
-export const getSliteById = async (id) => {
-  const slite = await prisma.slite.findUnique({ where: { slite_id: id } });
-  if (!slite) {
-    const error = new Error("عملية Slite غير موجودة");
-    error.statusCode = 404;
-    throw error;
+export const getSliteById = async (req, res, next) => {
+  try {
+    const slite = await getSliteByIdService(parseInt(req.params.id));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب عملية التشريح بنجاح",
+      data: slite,
+    });
+  } catch (error) {
+    logger.error("Get slite by id controller error", { error });
+    next(error);
   }
-  return slite;
 };
 
 /**
- * إنشاء Slite جديد
+ * POST /slites
  */
-export const createSlite = async (data, userId) => {
-  const slite = await prisma.slite.create({
-    data: {
-      ...data,
-      user_id: userId,
-    },
-  });
-  logger.info("Slite created", { slite_id: slite.slite_id, user_id: userId });
-  return slite;
+export const createSlite = async (req, res, next) => {
+  try {
+    const slite = await createSliteService(req.body, req.user.id , req);
+
+    res.status(201).json({
+      success: SUCCESS_REQUEST,
+      message: "تم إنشاء عملية التشريح بنجاح",
+      data: slite,
+    });
+  } catch (error) {
+    logger.error("Create slite controller error", { error });
+    next(error);
+  }
 };
 
 /**
- * تحديث Slite
+ * PUT /slites/:id
  */
-export const updateSlite = async (id, data) => {
-  const existing = await prisma.slite.findUnique({ where: { slite_id: id } });
-  if (!existing) {
-    const error = new Error("عملية Slite غير موجودة");
-    error.statusCode = 404;
-    throw error;
+export const updateSlite = async (req, res, next) => {
+  try {
+    const slite = await updateSliteService(parseInt(req.params.id), req.body , req);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم تحديث عملية التشريح بنجاح",
+      data: slite,
+    });
+  } catch (error) {
+    logger.error("Update slite controller error", { error });
+    next(error);
   }
-
-  const slite = await prisma.slite.update({
-    where: { slite_id: id },
-    data,
-  });
-
-  logger.info("Slite updated", { slite_id: id });
-  return slite;
 };
 
 /**
- * حذف Slite
+ * DELETE /slites/:id
  */
-export const deleteSlite = async (id) => {
-  const existing = await prisma.slite.findUnique({ where: { slite_id: id } });
-  if (!existing) {
-    const error = new Error("عملية Slite غير موجودة");
-    error.statusCode = 404;
-    throw error;
-  }
+export const deleteSlite = async (req, res, next) => {
+  try {
+    const result = await deleteSliteService(parseInt(req.params.id) , req);
 
-  await prisma.slite.delete({ where: { slite_id: id } });
-  logger.info("Slite deleted", { slite_id: id });
-  return { message: "تم حذف عملية التقطيع بنجاح" };
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: result.message,
+      data: null,
+    });
+  } catch (error) {
+    logger.error("Delete slite controller error", { error });
+    next(error);
+  }
 };

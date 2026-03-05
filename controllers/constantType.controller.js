@@ -74,7 +74,7 @@ export const getConstantTypeById = async (req, res, next) => {
 export const createConstantType = async (req, res, next) => {
   try {
     const data = req.body;
-    const constantType = await createConstantTypeService(data);
+    const constantType = await createConstantTypeService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -102,7 +102,7 @@ export const updateConstantType = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const constantType = await updateConstantTypeService(parseInt(id), data);
+    const constantType = await updateConstantTypeService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -130,7 +130,7 @@ export const updateConstantType = async (req, res, next) => {
 export const deleteConstantType = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteConstantTypeService(parseInt(id));
+    const result = await deleteConstantTypeService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

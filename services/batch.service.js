@@ -1,6 +1,7 @@
 // services/batch.service.js
 import { BatchModel, MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع الطبخات مع pagination
@@ -49,7 +50,7 @@ export const getBatchById = async (batch_id) => {
 /**
  * إنشاء طبخة جديدة
  */
-export const createBatch = async (data) => {
+export const createBatch = async (data , req = null) => {
   // Check if material exists
   const material = await MaterialModel.findById(data.material_id);
   if (!material) {
@@ -69,6 +70,10 @@ export const createBatch = async (data) => {
   const batch = await BatchModel.create(data);
 
   logger.info('Batch created', { batch_id: batch.batch_id });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "batch", batch.batch_id, batch, `Batch-${batch.batch_id}`);
+  }
 
   return batch;
 };
@@ -76,7 +81,7 @@ export const createBatch = async (data) => {
 /**
  * تحديث طبخة
  */
-export const updateBatch = async (batch_id, data) => {
+export const updateBatch = async (batch_id, data , req = null) => {
   // Check if exists
   const existingBatch = await getBatchById(batch_id);
 
@@ -109,6 +114,10 @@ export const updateBatch = async (batch_id, data) => {
   const updatedBatch = await BatchModel.updateById(batch_id, data);
 
   logger.info('Batch updated', { batch_id });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "batch", batch_id, existingBatch, updatedBatch, `Batch-${updatedBatch.batch_id}`);
+  }
 
   return updatedBatch;
 };
@@ -116,14 +125,17 @@ export const updateBatch = async (batch_id, data) => {
 /**
  * حذف طبخة
  */
-export const deleteBatch = async (batch_id) => {
+export const deleteBatch = async (batch_id , req = null) => {
   // Check if exists
   await getBatchById(batch_id);
 
   await BatchModel.deleteById(batch_id);
 
   logger.info('Batch deleted', { batch_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "batch", batch_id, existingBatch, `Batch-${batch_id}`);
+  }
   return { message: "تم حذف الطبخة بنجاح" };
 };
 

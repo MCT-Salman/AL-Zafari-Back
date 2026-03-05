@@ -6,6 +6,7 @@ import { FAILURE_LOGOUT, FALIURE_REFERESH_TOKEN, IN_ACTIVE_ACCOUNT, Username_OR_
 import logger from '../utils/logger.js';
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { logLogin, logLogout } from "../utils/activityLogger.js";
 
 
 /**
@@ -38,6 +39,10 @@ export const loginUser = async (loginIdentifier, password, req) => {
 
   const tokens = await generateTokenPair(user.id, session.id, user.role);
   await rateLimiter.recordSuccessfulAttempt(loginIdentifier, ip, req.headers['user-agent'], user.id);
+
+  // تسجيل نشاط تسجيل الدخول
+  await logLogin(req, user.id);
+
   const users = { ...user, password: undefined };
   return { ...users, ...tokens };
 };
@@ -86,7 +91,7 @@ export const verifyToken = async (token) => {
  * تسجيل خروج المستخدم
  */
 // export const logoutUser = async (userId, sessionId, refreshToken) => {
-export const logoutUser = async (userId) => {
+export const logoutUser = async (userId, req) => {
   try {
     // إلغاء جميع الجلسات
     await SessionModel.revokeAllSessions(userId);
@@ -96,6 +101,9 @@ export const logoutUser = async (userId) => {
 
     // إلغاء جميع refresh tokens
     await revokeAllUserRefreshTokens(userId);
+
+    // تسجيل نشاط تسجيل الخروج
+    await logLogout(req, userId);
 
     return { success: SUCCESS_REQUEST, message: SUCCESS_LOGOUT };
   } catch (error) {
@@ -107,7 +115,7 @@ export const logoutUser = async (userId) => {
 /**
  * تسجيل خروج من جميع الأجهزة
  */
-export const logoutAllDevices = async (userId) => {
+export const logoutAllDevices = async (userId, req) => {
   try {
     // إلغاء جميع الجلسات
     await SessionModel.revokeAllSessions(userId);
@@ -117,6 +125,9 @@ export const logoutAllDevices = async (userId) => {
 
     // إلغاء جميع refresh tokens
     await revokeAllUserRefreshTokens(userId);
+
+    // تسجيل نشاط تسجيل الخروج من جميع الأجهزة
+    await logLogout(req, userId);
 
     return { success: true, message: "تم تسجيل الخروج من جميع الأجهزة" };
   } catch (error) {

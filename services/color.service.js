@@ -2,6 +2,7 @@
 import { ColorModel, RulerModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 import { deleteFile } from "../utils/deleteFile.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع الألوان 
@@ -64,7 +65,7 @@ export const getColorById = async (color_id) => {
 /**
  * إنشاء لون جديد
  */
-export const createColor = async (data) => {
+export const createColor = async (data , req = null) => {
   // Check if ruler exists
   const ruler = await RulerModel.findById(parseInt(data.ruler_id));
   if (!ruler) {
@@ -86,14 +87,17 @@ export const createColor = async (data) => {
   const color = await ColorModel.create(data);
 
   logger.info('Color created', { color_id: color.color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "color", color.color_id, color, `Color-${color.color_id}`);
+  }
   return color;
 };
 
 /**
  * تحديث لون
  */
-export const updateColor = async (color_id, data) => {
+export const updateColor = async (color_id, data , req = null) => {
   // Check if exists
   const existingColor = await getColorById(color_id);
 
@@ -131,21 +135,27 @@ export const updateColor = async (color_id, data) => {
   const updatedColor = await ColorModel.updateById(color_id, data);
 
   logger.info('Color updated', { color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "color", color_id, existingColor, updatedColor, `Color-${updatedColor.color_id}`);
+  }
   return updatedColor;
 };
 
 /**
  * حذف لون
  */
-export const deleteColor = async (color_id) => {
+export const deleteColor = async (color_id , req = null) => {
   // Check if exists
   await getColorById(color_id);
 
   await ColorModel.deleteById(color_id);
 
   logger.info('Color deleted', { color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "color", color_id, existingColor, `Color-${color_id}`);
+  }
   return { message: "تم حذف اللون بنجاح" };
 };
 

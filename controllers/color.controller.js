@@ -73,7 +73,7 @@ export const createColor = async (req, res, next) => {
       ? `/uploads/images/colors/${req.file.filename}`
       : undefined;
     data.imageUrl = imageUrl;
-    const color = await createColorService(data);
+    const color = await createColorService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -90,7 +90,7 @@ export const updateColor = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const oldcolor = await getColorByIdService(parseInt(id));
+    const oldcolor = await getColorByIdService(parseInt(id), req);
     if (req.file) {
       if (oldcolor.imageUrl) {
         deleteFile(oldcolor.imageUrl);
@@ -113,7 +113,7 @@ export const updateColor = async (req, res, next) => {
 export const deleteColor = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteColorService(parseInt(id));
+    const result = await deleteColorService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

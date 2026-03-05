@@ -12,7 +12,7 @@ import { hashPassword } from '../utils/hash.js';
  */
 export const getAllUsers = async (filters = {}) => {
   try {
-    const {search = '', role, isActive } = filters;
+    const { search = '', role, isActive } = filters;
 
     // Build where clause
     const where = {};
@@ -110,7 +110,7 @@ export const getUserById = async (userId) => {
  * @param {number} adminId - ID of admin creating the user
  * @returns {Promise<User>}
  */
-export const createUser = async (userData, adminId) => {
+export const createUser = async (userData, adminId, req = null) => {
   try {
     const { username, phone, password, full_name, role, notes } = userData;
 
@@ -163,7 +163,10 @@ export const createUser = async (userData, adminId) => {
     });
 
     logger.info('User created', { userId: newUser.id, createdBy: adminId, username: newUser.username });
-
+    // تسجيل النشاط
+    if (req) {
+      await logCreate(req, "user", newUser.id, newUser, `User-${newUser.username}`);
+    }
     return newUser;
   } catch (error) {
     logger.error('Create user error', { message: error?.message, stack: error?.stack, adminId });
@@ -178,7 +181,7 @@ export const createUser = async (userData, adminId) => {
  * @param {number} adminId - ID of admin updating the user
  * @returns {Promise<User>}
  */
-export const updateUser = async (userId, updateData, adminId) => {
+export const updateUser = async (userId, updateData, adminId, req = null) => {
   try {
     // Check if user exists
     const existingUser = await UserModel.findById(userId);
@@ -247,7 +250,10 @@ export const updateUser = async (userId, updateData, adminId) => {
     });
 
     logger.info('User updated', { userId, updatedBy: adminId, changes: Object.keys(dataToUpdate) });
-
+    // تسجيل النشاط
+    if (req) {
+      await logUpdate(req, "user", userId, existingUser, updatedUser, `User-${updatedUser.username}`);
+    }
     return updatedUser;
   } catch (error) {
     logger.error('Update user error', { message: error?.message, stack: error?.stack, userId, adminId });
@@ -261,7 +267,7 @@ export const updateUser = async (userId, updateData, adminId) => {
  * @param {number} adminId - ID of admin deleting the user
  * @returns {Promise<{success: boolean, message: string}>}
  */
-export const deleteUser = async (userId, adminId) => {
+export const deleteUser = async (userId, adminId, req = null) => {
   try {
     // Check if user exists
     const user = await UserModel.findById(userId);
@@ -280,7 +286,10 @@ export const deleteUser = async (userId, adminId) => {
     });
 
     logger.info('User deleted', { userId, deletedBy: adminId, username: user.username });
-
+    // تسجيل النشاط
+    if (req) {
+      await logDelete(req, "user", userId, user, `User-${user.username}`);
+    }
     return {
       success: true,
       message: 'تم حذف المستخدم بنجاح'
@@ -297,7 +306,7 @@ export const deleteUser = async (userId, adminId) => {
  * @param {number} adminId - ID of admin toggling status
  * @returns {Promise<User>}
  */
-export const toggleUserStatus = async (userId, adminId) => {
+export const toggleUserStatus = async (userId, adminId, req = null) => {
   try {
     // Check if user exists
     const user = await UserModel.findById(userId);
@@ -327,7 +336,10 @@ export const toggleUserStatus = async (userId, adminId) => {
     });
 
     logger.info('User status toggled', { userId, toggledBy: adminId, newStatus: updatedUser.is_active });
-
+    // تسجيل النشاط
+    if (req) {
+      await logUpdate(req, "user", userId, user, updatedUser, `User-${updatedUser.username}`);
+    }
     return updatedUser;
   } catch (error) {
     logger.error('Toggle user status error', { message: error?.message, stack: error?.stack, userId, adminId });

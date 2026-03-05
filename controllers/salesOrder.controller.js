@@ -82,7 +82,7 @@ export const createSalesOrder = async (req, res, next) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    const SalesOrder = await createSalesOrderService(data, userId, userRole);
+    const SalesOrder = await createSalesOrderService(data, userId, userRole , req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -117,7 +117,8 @@ export const updateSalesOrder = async (req, res, next) => {
       parseInt(id),
       data,
       userId,
-      userRole
+      userRole,
+      req
     );
 
     res.json({
@@ -148,7 +149,7 @@ export const deleteSalesOrder = async (req, res, next) => {
     const { id } = req.params;
     const userRole = req.user.role;
 
-    const result = await deleteSalesOrderService(parseInt(id), userRole);
+    const result = await deleteSalesOrderService(parseInt(id), userRole , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -203,7 +204,7 @@ export const createSalesOrderItem = async (req, res, next) => {
     const { id } = req.params;
     const data = req.body;
 
-    const item = await createSalesOrderItemService(parseInt(id), data);
+    const item = await createSalesOrderItemService(parseInt(id), data , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -259,7 +260,7 @@ export const updateSalesOrderItem = async (req, res, next) => {
     const { id } = req.params;
     const data = req.body;
 
-    const item = await updateSalesOrderItemService(parseInt(id), data);
+    const item = await updateSalesOrderItemService(parseInt(id), data , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -288,7 +289,7 @@ export const deleteSalesOrderItem = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const result = await deleteSalesOrderItemService(parseInt(id));
+    const result = await deleteSalesOrderItemService(parseInt(id) , req);
 
     res.json({
       success: SUCCESS_REQUEST,

@@ -55,6 +55,27 @@ enum NotificationType {
   LESSON_NEW
   QUIZ_AVAILABLE
   SYSTEM
+  ORDER_NEW
+  ORDER_UPDATE
+  ORDER_DELETE
+  INVOICE_NEW
+  INVOICE_UPDATE
+  INVOICE_DELETE
+  INVOICE_PAYMENT
+  CUSTOMER_NEW
+  CUSTOMER_UPDATE
+  PRODUCTION_NEW
+  PRODUCTION_UPDATE
+  WAREHOUSE_MOVEMENT
+  SLITE_NEW
+  SALES_ORDER_NEW
+  SALES_ORDER_UPDATE
+  PRODUCTION_ORDER_NEW
+  PRODUCTION_ORDER_SLITTING
+  PRODUCTION_ORDER_CUTTING
+  PRODUCTION_ORDER_GLUING
+  PRODUCTION_ORDER_WAREHOUSE
+  PRODUCTION_ORDER_PRODUCTION
 }
 
 enum PriceColorBy {
@@ -547,16 +568,23 @@ model ProductionOrderItem {
   @@map("ProductionOrderItem")
 }
 
+enum ProcessType {
+  cutting
+  gluing
+}
+
 model ProductionProcess {
-  process_id               Int      @id @default(autoincrement())
+  process_id               Int                  @id @default(autoincrement())
   production_order_item_id Int
-  input_length             Decimal  @db.Decimal(10, 2)
-  output_length            Decimal  @db.Decimal(10, 2)
-  input_width              Decimal  @db.Decimal(10, 2)
-  waste                    Decimal  @db.Decimal(10, 2)
-  barcode                  String   @unique
+  input_length             Decimal              @db.Decimal(10, 2)
+  output_length            Decimal              @db.Decimal(10, 2)
+  input_width              Decimal              @db.Decimal(10, 2)
+  waste                    Decimal              @db.Decimal(10, 2)
+  barcode                  String               @unique
+  type                     ProcessType
+  destination              MovementDestination?
   user_id                  Int
-  created_at               DateTime @default(now())
+  created_at               DateTime             @default(now())
   notes                    String?
 
   item                   ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])

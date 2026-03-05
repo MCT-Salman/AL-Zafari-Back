@@ -50,7 +50,7 @@ export const getPriceColorById = async (req, res, next) => {
 export const createPriceColor = async (req, res, next) => {
   try {
     const data = req.body;
-    const priceColor = await createPriceColorService(data);
+    const priceColor = await createPriceColorService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -67,7 +67,7 @@ export const updatePriceColor = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const priceColor = await updatePriceColorService(parseInt(id), data);
+    const priceColor = await updatePriceColorService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -83,7 +83,7 @@ export const updatePriceColor = async (req, res, next) => {
 export const deletePriceColor = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deletePriceColorService(parseInt(id));
+    const result = await deletePriceColorService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

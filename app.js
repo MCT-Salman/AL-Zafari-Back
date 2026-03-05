@@ -30,7 +30,13 @@ import invoiceRoutes from './routes/invoice.routes.js';
 import salesOrderRoutes from './routes/salesOrder.routes.js';
 import productionOrderRoutes from './routes/productionOrder.routes.js';
 import productionProcessRoutes from './routes/productionProcess.router.js';
+import sliteRoutes from './routes/slite.router.js';
+import warehouseMovementRoutes from './routes/warehouseMovement.routes.js';
 import settingRoutes from './routes/setting.routes.js';
+import activityLogRoutes from './routes/activityLog.routes.js';
+import auditLogRoutes from './routes/auditLog.routes.js';
+import loginAttemptRoutes from './routes/loginAttempt.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
 config();
 
@@ -130,7 +136,12 @@ app.use((req, res, next) => {
       req.path.startsWith('/sales-order') ||
       req.path.startsWith('/production-order') ||
       req.path.startsWith('/production-process') ||
-      req.path.startsWith('/setting')) {
+      req.path.startsWith('/slite') ||
+      req.path.startsWith('/warehouse-movement') ||
+      req.path.startsWith('/setting') ||
+      req.path.startsWith('/activity-logs') ||
+      req.path.startsWith('/audit-logs') ||
+      req.path.startsWith('/login-attempts')) {
     return next();
   }
   csrfProtection(req, res, next);
@@ -161,7 +172,13 @@ app.use('/invoice', invoiceRoutes);
 app.use('/sales-order', salesOrderRoutes);
 app.use('/production-order', productionOrderRoutes);
 app.use('/production-process', productionProcessRoutes);
+app.use('/slite', sliteRoutes);
+app.use('/warehouse-movement', warehouseMovementRoutes);
 app.use('/setting', settingRoutes);
+app.use('/activity-logs', activityLogRoutes);
+app.use('/audit-logs', auditLogRoutes);
+app.use('/login-attempts', loginAttemptRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
@@ -208,6 +225,21 @@ app.use((error, req, res, _next) => {
   res.status(500).json({ success: false, error: 'خطأ في الخادم', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
 });
 
-app.listen(port, () => {
-  console.log('Server is running on port 3000');
+// إنشاء HTTP Server لدعم Socket.IO
+import { createServer } from 'http';
+import { initializeSocket } from './socket/socketServer.js';
+import { setSocketIO } from './utils/notificationHelper.js';
+
+const httpServer = createServer(app);
+
+// تهيئة Socket.IO
+const io = initializeSocket(httpServer);
+setSocketIO(io);
+
+// جعل io متاحة في جميع routes
+app.set('io', io);
+
+httpServer.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+  console.log(`Socket.IO is ready for connections`);
 });

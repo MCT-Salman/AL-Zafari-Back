@@ -13,6 +13,7 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { count } from "../models/notification.model.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع الطلبات مع pagination
@@ -151,7 +152,7 @@ export const getOrderById = async (order_id) => {
  * إنشاء طلب جديد مع عناصره
  */
 
-export const createOrder = async (data, userId) => {
+export const createOrder = async (data, userId, req = null) => {
   // تحقق من العميل
   if (data.customer_id) {
     const customer = await CustomerModel.findById(data.customer_id);
@@ -331,13 +332,27 @@ export const createOrder = async (data, userId) => {
   };
 
   logger.info("Order created", { order_id: orderResponse.order_id });
+
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "order", orderResponse.order_id, orderResponse, orderResponse.order_id);
+
+    // إرسال إشعار لمستخدم المبيعات والمدراء
+    try {
+      const { notifyNewOrder } = await import("../utils/notificationHelper.js");
+      await notifyNewOrder(orderResponse, userId);
+    } catch (error) {
+      logger.error("Error sending order notification:", error);
+    }
+  }
+
   return orderResponse;
 };
 
 /**
  * تحديث طلب
  */
-export const updateOrder = async (order_id, data) => {
+export const updateOrder = async (order_id, data, req = null) => {
   // تحقق من وجود الطلب
   const existingOrder = await getOrderById(order_id);
   if (!existingOrder) {
@@ -499,13 +514,19 @@ export const updateOrder = async (order_id, data) => {
   });
 
   logger.info("Order updated", { order_id: updatedOrder.order_id });
+
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "order", order_id, existingOrder, updatedOrder, updatedOrder.order_id);
+  }
+
   return updatedOrder;
 };
 
 /**
  * حذف طلب
  */
-export const deleteOrder = async (order_id) => {
+export const deleteOrder = async (order_id, req = null) => {
   // Check if exists
   const order = await getOrderById(order_id);
 
@@ -531,13 +552,18 @@ export const deleteOrder = async (order_id) => {
 
   logger.info("Order deleted", { order_id });
 
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "order", order_id, order, order.order_number);
+  }
+
   return { message: "تم حذف الطلب بنجاح" };
 };
 
 /**
  * إضافة عنصر جديد لطلب موجود
  */
-export const addOrderItem = async (order_id, itemData) => {
+export const addOrderItem = async (order_id, itemData , req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -704,6 +730,10 @@ export const addOrderItem = async (order_id, itemData) => {
   logger.info("Order item added with item-level discount", {
     order_id,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "order_item", result.items.map(item => item.order_item_id), result.items, `Order item-${result.items.map(item => item.order_item_id)}`);
+  }
 
   return response;
 };
@@ -711,7 +741,7 @@ export const addOrderItem = async (order_id, itemData) => {
 /**
  * تعديل عنصر من طلب
  */
-export const updateOrderItem = async (order_id, order_item_id, itemData) => {
+export const updateOrderItem = async (order_id, order_item_id, itemData , req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -862,7 +892,10 @@ export const updateOrderItem = async (order_id, order_item_id, itemData) => {
     order_id: response.order_id,
     item_id: order_item_id,
   });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "order_item", order_item_id, existingItem, result.updatedItem, `Order item-${order_item_id}`);
+  }
   return response;
 };
 
@@ -875,7 +908,7 @@ async function calculateTotalAmount(tx, order_id) {
 /**
  * حذف عنصر من طلب
  */
-export const deleteOrderItem = async (order_id, order_item_id) => {
+export const deleteOrderItem = async (order_id, order_item_id , req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -1004,6 +1037,10 @@ export const deleteOrderItem = async (order_id, order_item_id) => {
     order_id,
     item_id: order_item_id,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "order_item", order_item_id, existingItem, `Order item-${order_item_id}`);
+  }
 
   return orderResponse;
 };

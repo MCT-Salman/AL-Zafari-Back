@@ -2,6 +2,7 @@
 import { InvoiceModel, PriceColorModel, CustomerModel, SettingModel, DiscountModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 export const getPriceMaterial = async (data) => {
   const widthType =
@@ -160,7 +161,7 @@ export const getInvoicesByCustomerId = async (customer_id) => {
 /**
  * إنشاء فاتورة جديدة
  */
-export const createInvoice = async (data, userId) => {
+export const createInvoice = async (data, userId, req = null) => {
 
   const customer = await CustomerModel.findById(data.customer_id);
   if (!customer) {
@@ -265,13 +266,18 @@ export const createInvoice = async (data, userId) => {
     items_count: invoice.invoiceItems.length,
   });
 
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "invoice", invoice.invoice_id, invoice, invoice.invoice_number);
+  }
+
   return invoice;
 };
 
 /**
  * تحديث فاتورة
  */
-export const updateInvoice = async (invoice_id, data) => {
+export const updateInvoice = async (invoice_id, data, req = null) => {
   const existingInvoice = await getInvoiceById(invoice_id);
   if (!existingInvoice) {
     const error = new Error("الفاتورة غير موجودة");
@@ -335,12 +341,18 @@ export const updateInvoice = async (invoice_id, data) => {
   });
 
   logger.info("Invoice updated", { invoice_id });
+
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "invoice", invoice_id, existingInvoice, updatedInvoice, updatedInvoice.invoice_number);
+  }
+
   return updatedInvoice;
 };
 /**
  * حذف فاتورة
  */
-export const deleteInvoice = async (invoice_id) => {
+export const deleteInvoice = async (invoice_id, req = null) => {
   const invoice = await getInvoiceById(invoice_id);
   if (!invoice) {
     const error = new Error("الفاتورة غير موجودة");
@@ -370,13 +382,19 @@ export const deleteInvoice = async (invoice_id) => {
   });
 
   logger.info("Invoice deleted", { invoice_id });
+
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "invoice", invoice_id, invoice, invoice.invoice_number);
+  }
+
   return { message: "تم حذف الفاتورة بنجاح" };
 };
 
 /**
  * إضافة دفعة للفاتورة
  */
-export const addPayment = async (invoice_id, payment_amount) => {
+export const addPayment = async (invoice_id, payment_amount , req = null) => {
   const invoice = await getInvoiceById(invoice_id);
   if (!invoice) throw new Error("الفاتورة غير موجودة");
 
@@ -425,6 +443,11 @@ export const addPayment = async (invoice_id, payment_amount) => {
     payment_amount: paymentAmount,
     new_paid_amount: newPaidAmount
   });
+
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "invoice", invoice_id, invoice, updatedInvoice, updatedInvoice.invoice_number);
+  }
 
   return updatedInvoice;
 };

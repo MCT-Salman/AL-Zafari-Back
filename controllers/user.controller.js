@@ -86,7 +86,8 @@ export const createUser = async (req, res, next) => {
 
     const newUser = await UserService.createUser(
       { username, phone, password, full_name, role, notes },
-      adminId
+      adminId,
+      req
     );
 
     res.status(SUCCESS_CREATE_STATUS_CODE).json({
@@ -131,7 +132,8 @@ export const updateUser = async (req, res, next) => {
     const updatedUser = await UserService.updateUser(
       userId,
       { username, phone, password, full_name, role, is_active, notes },
-      adminId
+      adminId,
+      req
     );
 
     res.status(SUCCESS_STATUS_CODE).json({
@@ -172,7 +174,7 @@ export const deleteUser = async (req, res, next) => {
     }
 
     const adminId = req.user.id;
-    const result = await UserService.deleteUser(userId, adminId);
+    const result = await UserService.deleteUser(userId, adminId , req);
 
     res.status(SUCCESS_STATUS_CODE).json({
       success: SUCCESS_REQUEST,
@@ -211,7 +213,7 @@ export const toggleUserStatus = async (req, res, next) => {
     }
 
     const adminId = req.user.id;
-    const updatedUser = await UserService.toggleUserStatus(userId, adminId);
+    const updatedUser = await UserService.toggleUserStatus(userId, adminId , req);
 
     res.status(SUCCESS_STATUS_CODE).json({
       success: SUCCESS_REQUEST,

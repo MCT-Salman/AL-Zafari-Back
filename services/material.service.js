@@ -1,7 +1,7 @@
 // services/material.service.js
 import { MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
-
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 /**
  * جلب جميع المواد مع pagination
  */
@@ -49,7 +49,7 @@ export const getMaterialById = async (material_id) => {
 /**
  * إنشاء مادة جديدة
  */
-export const createMaterial = async (data) => {
+export const createMaterial = async (data , req = null) => {
   // Check if material_name already exists
   const existingMaterial = await MaterialModel.findByName(data.material_name);
   if (existingMaterial) {
@@ -60,14 +60,17 @@ export const createMaterial = async (data) => {
   const material = await MaterialModel.create(data);
 
   logger.info('Material created', { material_id: material.material_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "material", material.material_id, material, `Material-${material.material_id}`);
+  }
   return material;
 };
 
 /**
  * تحديث مادة
  */
-export const updateMaterial = async (material_id, data) => {
+export const updateMaterial = async (material_id, data, req = null) => {
   // Check if exists
   await getMaterialById(material_id);
   const newMaterialName = data.material_name ?? existingMaterial.material_name;
@@ -81,21 +84,27 @@ export const updateMaterial = async (material_id, data) => {
   const updatedMaterial = await MaterialModel.updateById(material_id, data);
 
   logger.info('Material updated', { material_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "material", material_id, existingMaterial, updatedMaterial, `Material-${updatedMaterial.material_id}`);
+  }
   return updatedMaterial;
 };
 
 /**
  * حذف مادة
  */
-export const deleteMaterial = async (material_id) => {
+export const deleteMaterial = async (material_id, req = null) => {
   // Check if exists
   await getMaterialById(material_id);
 
   await MaterialModel.deleteById(material_id);
 
   logger.info('Material deleted', { material_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "material", material_id, existingMaterial, `Material-${material_id}`);
+  }
   return { message: "تم حذف المادة بنجاح" };
 };
 

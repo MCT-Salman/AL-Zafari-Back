@@ -2,6 +2,7 @@
 import { CustomerModel } from "../models/index.js";
 import logger from "../utils/logger.js";
 import { getCountryFromPhone } from "../utils/phoneCountry.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع العملاء مع pagination
@@ -63,7 +64,7 @@ export const getCustomerById = async (customer_id) => {
 /**
  * إنشاء عميل جديد
  */
-export const createCustomer = async (data) => {
+export const createCustomer = async (data, req = null) => {
   // Check if phone already exists
   const existingCustomer = await CustomerModel.findByPhone(data.phone);
   if (existingCustomer) {
@@ -91,15 +92,20 @@ export const createCustomer = async (data) => {
 
   logger.info("Customer created", { customer_id: customer.customer_id });
 
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "customer", customer.customer_id, customer, customer.customer_name);
+  }
+
   return customer;
 };
 
 /**
  * تحديث عميل
  */
-export const updateCustomer = async (customer_id, data) => {
+export const updateCustomer = async (customer_id, data, req = null) => {
   // Check if exists
-  await getCustomerById(customer_id);
+  const existingCustomer = await getCustomerById(customer_id);
 
   // If updating phone, check if it's unique
   if (data.phone) {
@@ -126,13 +132,18 @@ export const updateCustomer = async (customer_id, data) => {
 
   logger.info("Customer updated", { customer_id });
 
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "customer", customer_id, existingCustomer, updatedCustomer, updatedCustomer.customer_name);
+  }
+
   return updatedCustomer;
 };
 
 /**
  * حذف عميل
  */
-export const deleteCustomer = async (customer_id) => {
+export const deleteCustomer = async (customer_id, req = null) => {
   // Check if exists
   const customer = await getCustomerById(customer_id);
 
@@ -146,6 +157,11 @@ export const deleteCustomer = async (customer_id) => {
   await CustomerModel.deleteById(customer_id);
 
   logger.info("Customer deleted", { customer_id });
+
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "customer", customer_id, customer, customer.customer_name);
+  }
 
   return { message: "تم حذف العميل بنجاح" };
 };

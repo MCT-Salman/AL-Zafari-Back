@@ -55,7 +55,7 @@ export const getCustomerById = async (req, res, next) => {
 export const createCustomer = async (req, res, next) => {
   try {
     const data = req.body;
-    const customer = await createCustomerService(data);
+    const customer = await createCustomerService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -74,7 +74,7 @@ export const updateCustomer = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const customer = await updateCustomerService(parseInt(id), data);
+    const customer = await updateCustomerService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -92,7 +92,7 @@ export const updateCustomer = async (req, res, next) => {
 export const deleteCustomer = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteCustomerService(parseInt(id));
+    const result = await deleteCustomerService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

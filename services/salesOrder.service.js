@@ -9,25 +9,7 @@ import {
 } from "../models/index.js";
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
-
-/**
- * Helper function to check user permissions based on Sales type
- */
-const canAccessSalesType = (userRole, SalesType) => {
-  const rolePermissions = {
-    admin: ['warehouse', 'slitting', 'cutting', 'gluing'],
-    Sales_manager: ['warehouse', 'slitting', 'cutting', 'gluing'],
-    Warehouse_Keeper: ['warehouse'],
-    Warehouse_Products: ['warehouse'],
-    Dissection_Technician: ['slitting'],
-    Cutting_Technician: ['cutting'],
-    Gluing_Technician: ['gluing'],
-  };
-
-  const allowedTypes = rolePermissions[userRole] || [];
-  return allowedTypes.includes(SalesType);
-};
-
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع أوامر الإنتاج مع الفلتر والصلاحيات
@@ -122,10 +104,10 @@ export const getSalesOrderById = async (sales_order_id, userRole) => {
 /**
  * إنشاء طلب إنتاج جديد مع عناصر متعددة حسب أنواع الإنتاج
  */
-export const createSalesOrder = async (data, userId, userRole) => {
+export const createSalesOrder = async (data, userId, userRole, req = null) => {
 
   // ✅ التحقق من الصلاحيات
-  if (!['admin', 'production_manager' , 'sales', 'accountant'].includes(userRole)) {
+  if (!['admin', 'production_manager', 'sales', 'accountant'].includes(userRole)) {
     const error = new Error("ليس لديك صلاحية لإنشاء طلبات الإنتاج");
     error.statusCode = 403;
     throw error;
@@ -187,6 +169,18 @@ export const createSalesOrder = async (data, userId, userRole) => {
     sales_order_id: result.sales_order_id,
     user_id: userId,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "sales_order", result.sales_order_id, result, `Sales order-${result.sales_order_id}`);
+
+    // إرسال إشعار لمسؤول الإنتاج
+    try {
+      const { notifySalesOrder } = await import("../utils/notificationHelper.js");
+      await notifySalesOrder(result, userId);
+    } catch (error) {
+      logger.error("Error sending sales order notification:", error);
+    }
+  }
 
   return result;
 };
@@ -194,7 +188,7 @@ export const createSalesOrder = async (data, userId, userRole) => {
 /**
  * تحديث طلب إنتاج
  */
-export const updateSalesOrder = async (salesOrderId, data, userId, userRole) => {
+export const updateSalesOrder = async (salesOrderId, data, userId, userRole, req = null) => {
 
   // ✅ التحقق من الصلاحيات
   if (!['admin', 'production_manager'].includes(userRole)) {
@@ -303,6 +297,10 @@ export const updateSalesOrder = async (salesOrderId, data, userId, userRole) => 
     sales_order_id: salesOrderId,
     updated_by: userId,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "sales_order", salesOrderId, existingOrder, result, `Sales order-${salesOrderId}`);
+  }
 
   return result;
 };
@@ -310,7 +308,7 @@ export const updateSalesOrder = async (salesOrderId, data, userId, userRole) => 
 /**
  * حذف طلب إنتاج
  */
-export const deleteSalesOrder = async (salesOrderId, userRole) => {
+export const deleteSalesOrder = async (salesOrderId, userRole, req = null) => {
 
   if (!['admin', 'production_manager'].includes(userRole)) {
     throw new Error("ليس لديك صلاحية لحذف الطلب");
@@ -335,7 +333,13 @@ export const deleteSalesOrder = async (salesOrderId, userRole) => {
     });
 
   });
-
+  logger.info("Sales order deleted", {
+    sales_order_id: salesOrderId,
+  });
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "sales_order", salesOrderId, existingOrder, `Sales order-${salesOrderId}`);
+  }
   return { message: "تم حذف الطلب بنجاح" };
 };
 
@@ -360,6 +364,7 @@ export const getSalesOrderItemById = async (Sales_order_item_id) => {
 export const createSalesOrderItem = async (
   Sales_order_id,
   data,
+  req = null
 ) => {
   const existingOrder = await SalesOrderModel.findById(Sales_order_id);
   if (!existingOrder) {
@@ -380,6 +385,10 @@ export const createSalesOrderItem = async (
     Sales_order_id,
     count: createdItem.length,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "sales_order_item", createdItem.sales_order_item_id, createdItem, `Sales order item-${createdItem.sales_order_item_id}`);
+  }
 
   return createdItem;
 };
@@ -406,7 +415,7 @@ export const updateSalesOrderItemStatus = async (Sales_order_item_id, status) =>
 /**
  * تحديث عنصر طلب إنتاج
  */
-export const updateSalesOrderItem = async (Sales_order_item_id, data) => {
+export const updateSalesOrderItem = async (Sales_order_item_id, data, req = null) => {
   // Check if item exists
   const existingItem = await SalesOrderItemModel.findById(Sales_order_item_id);
   if (!existingItem) {
@@ -421,6 +430,10 @@ export const updateSalesOrderItem = async (Sales_order_item_id, data) => {
     Sales_order_item_id,
     type: existingItem.type,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "sales_order_item", Sales_order_item_id, existingItem, updatedItem, `Sales order item-${Sales_order_item_id}`);
+  }
 
   return updatedItem;
 };
@@ -428,7 +441,7 @@ export const updateSalesOrderItem = async (Sales_order_item_id, data) => {
 /**
  * حذف عنصر طلب إنتاج
  */
-export const deleteSalesOrderItem = async (Sales_order_item_id) => {
+export const deleteSalesOrderItem = async (Sales_order_item_id, req = null) => {
   // Check if item exists
   const existingItem = await SalesOrderItemModel.findById(Sales_order_item_id);
   if (!existingItem) {
@@ -440,7 +453,10 @@ export const deleteSalesOrderItem = async (Sales_order_item_id) => {
   await SalesOrderItemModel.deleteById(Sales_order_item_id);
 
   logger.info("Sales order item deleted", { Sales_order_item_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "sales_order_item", Sales_order_item_id, existingItem, `Sales order item-${Sales_order_item_id}`);
+  }
   return { message: "تم حذف عنصر طلب الإنتاج بنجاح" };
 };
 

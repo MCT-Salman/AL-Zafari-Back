@@ -1,5 +1,7 @@
 import prisma from "../prisma/client.js";
 import logger from "../utils/logger.js";
+import * as ProductionProcessModel from "../models/productionProcess.model.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * صلاحيات الوصول حسب نوع العملية
@@ -18,7 +20,7 @@ const canAccessProcess = (userRole) => {
 /**
  * إنشاء عملية إنتاج
  */
-export const createProductionProcess = async (data, userId, userRole) => {
+export const createProductionProcess = async (data, userId, userRole, req = null) => {
     if (!canAccessProcess(userRole)) {
         const error = new Error("ليس لديك صلاحية لإنشاء عملية إنتاج");
         error.statusCode = 403;
@@ -37,6 +39,7 @@ export const createProductionProcess = async (data, userId, userRole) => {
         error.statusCode = 400;
         throw error;
     }
+
     if (existingItem.type !== "cutting" && existingItem.type !== "gluing") {
         const error = new Error("لا يمكن إنشاء عملية إنتاج لعنصر طلب إنتاج من هذا النوع");
         error.statusCode = 400;
@@ -44,9 +47,7 @@ export const createProductionProcess = async (data, userId, userRole) => {
     }
 
     // التأكد من عدم تكرار الباركود
-    const existingBarcode = await prisma.productionProcess.findUnique({
-        where: { barcode: data.barcode },
-    });
+    const existingBarcode = await ProductionProcessModel.findByBarcode(data.barcode);
 
     if (existingBarcode) {
         const error = new Error("الباركود مستخدم مسبقاً");
@@ -54,40 +55,35 @@ export const createProductionProcess = async (data, userId, userRole) => {
         throw error;
     }
 
-    const process = await prisma.productionProcess.create({
-        data: {
-            production_order_item_id: data.production_order_item_id,
-            input_length: data.input_length,
-            output_length: data.output_length,
-            input_width: data.input_width,
-            waste: data.waste,
-            barcode: data.barcode,
-            user_id: userId,
-            notes: data.notes || null,
-        },
-        include: {
-            item: true,
-            user: {
-                select: { id: true, username: true, full_name: true },
-            },
-        },
+    const process = await ProductionProcessModel.create({
+        production_order_item_id: data.production_order_item_id,
+        input_length: data.input_length,
+        output_length: data.output_length,
+        input_width: data.input_width,
+        waste: data.waste,
+        barcode: data.barcode,
+        type: existingItem.type,
+        destination: data.destination,
+        user_id: userId,
+        notes: data.notes || null,
     });
 
     logger.info("Production process created", {
         process_id: process.process_id,
         user_id: userId,
     });
-
+    // تسجيل النشاط
+    if (req) {
+        await logCreate(req, "production_process", process.process_id, process, `Production process-${process.process_id}`);
+    }
     return process;
 };
 
 /**
  * تحديث عملية إنتاج
  */
-export const updateProductionProcess = async (process_id, data, userRole) => {
-    const existing = await prisma.productionProcess.findUnique({
-        where: { process_id },
-    });
+export const updateProductionProcess = async (process_id, data, userRole, req = null) => {
+    const existing = await ProductionProcessModel.findById(process_id);
 
     if (!existing) {
         const error = new Error("عملية الإنتاج غير موجودة");
@@ -101,12 +97,13 @@ export const updateProductionProcess = async (process_id, data, userRole) => {
         throw error;
     }
 
-    const updated = await prisma.productionProcess.update({
-        where: { process_id },
-        data,
-    });
+    const updated = await ProductionProcessModel.updateById(process_id, data);
 
     logger.info("Production process updated", { process_id });
+    // تسجيل النشاط
+    if (req) {
+        await logUpdate(req, "production_process", process_id, existing, updated, `Production process-${process_id}`);
+    }
 
     return updated;
 };
@@ -121,13 +118,7 @@ export const getProductionProcessById = async (process_id, userRole) => {
         throw error;
     }
 
-    const process = await prisma.productionProcess.findUnique({
-        where: { process_id },
-        include: {
-            item: true,
-            user: true,
-        },
-    });
+    const process = await ProductionProcessModel.findById(process_id);
 
     if (!process) {
         const error = new Error("عملية الإنتاج غير موجودة");
@@ -147,21 +138,19 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
         error.statusCode = 403;
         throw error;
     }
-   
 
     const where = {};
 
     if (filters.production_order_item_id) {
         where.production_order_item_id = Number(filters.production_order_item_id);
     }
+    if (filters.type) {
+        where.type = filters.type;
+    }
 
     const [processes, total] = await Promise.all([
-        prisma.productionProcess.findMany({
-            where,
-            orderBy: { created_at: "desc" },
-            include: { item: true, user: true },
-        }),
-        prisma.productionProcess.count({ where }),
+        ProductionProcessModel.findAll({ where }),
+        ProductionProcessModel.count(where),
     ]);
 
     return { processes, total };
@@ -170,16 +159,14 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
 /**
  * حذف عملية إنتاج
  */
-export const deleteProductionProcess = async (process_id, userRole) => {
+export const deleteProductionProcess = async (process_id, userRole, req = null) => {
     if (!["admin", "production_manager"].includes(userRole)) {
         const error = new Error("ليس لديك صلاحية للحذف");
         error.statusCode = 403;
         throw error;
     }
 
-    const existing = await prisma.productionProcess.findUnique({
-        where: { process_id },
-    });
+    const existing = await ProductionProcessModel.findById(process_id);
 
     if (!existing) {
         const error = new Error("عملية الإنتاج غير موجودة");
@@ -187,11 +174,12 @@ export const deleteProductionProcess = async (process_id, userRole) => {
         throw error;
     }
 
-    await prisma.productionProcess.delete({
-        where: { process_id },
-    });
+    await ProductionProcessModel.deleteById(process_id);
 
     logger.info("Production process deleted", { process_id });
-
+    // تسجيل النشاط
+    if (req) {
+        await logDelete(req, "production_process", process_id, existing, `Production process-${process_id}`);
+    }
     return { message: "تم حذف عملية الإنتاج بنجاح" };
 };

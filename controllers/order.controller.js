@@ -61,7 +61,7 @@ export const createOrder = async (req, res, next) => {
   try {
     const data = req.body;
     const userId = req.user.id; // من middleware المصادقة
-    const order = await createOrderService(data, userId);
+    const order = await createOrderService(data, userId, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -80,7 +80,7 @@ export const updateOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const order = await updateOrderService(parseInt(id), data);
+    const order = await updateOrderService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -98,7 +98,7 @@ export const updateOrder = async (req, res, next) => {
 export const deleteOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteOrderService(parseInt(id));
+    const result = await deleteOrderService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -120,7 +120,7 @@ export const addOrderItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const itemData = req.body;
-    const result = await addOrderItemService(parseInt(id), itemData);
+    const result = await addOrderItemService(parseInt(id), itemData , req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -142,7 +142,7 @@ export const updateOrderItem = async (req, res, next) => {
   try {
     const { id, itemId } = req.params;
     const itemData = req.body;
-    const result = await updateOrderItemService(parseInt(id), parseInt(itemId), itemData);
+    const result = await updateOrderItemService(parseInt(id), parseInt(itemId), itemData , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -163,7 +163,7 @@ export const updateOrderItem = async (req, res, next) => {
 export const deleteOrderItem = async (req, res, next) => {
   try {
     const { id, itemId } = req.params;
-    const result = await deleteOrderItemService(parseInt(id), parseInt(itemId));
+    const result = await deleteOrderItemService(parseInt(id), parseInt(itemId) , req);
 
     res.json({
       success: SUCCESS_REQUEST,

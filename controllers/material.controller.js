@@ -49,7 +49,7 @@ export const getMaterialById = async (req, res, next) => {
 export const createMaterial = async (req, res, next) => {
   try {
     const data = req.body;
-    const material = await createMaterialService(data);
+    const material = await createMaterialService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -66,7 +66,7 @@ export const updateMaterial = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const material = await updateMaterialService(parseInt(id), data);
+    const material = await updateMaterialService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -82,7 +82,7 @@ export const updateMaterial = async (req, res, next) => {
 export const deleteMaterial = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteMaterialService(parseInt(id));
+    const result = await deleteMaterialService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

@@ -9,6 +9,7 @@ import {
 } from "../models/index.js";
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * Helper function to check user permissions based on production type
@@ -139,7 +140,7 @@ export const getProductionOrderById = async (production_order_id, userRole) => {
 /**
  * إنشاء طلب إنتاج جديد مع عناصر متعددة حسب أنواع الإنتاج
  */
-export const createProductionOrder = async (data, userId, userRole) => {
+export const createProductionOrder = async (data, userId, userRole , req = null) => {
   // Validate that user has permission to create production orders
   if (!['admin', 'production_manager'].includes(userRole)) {
     const error = new Error("ليس لديك صلاحية لإنشاء طلبات الإنتاج");
@@ -235,6 +236,10 @@ export const createProductionOrder = async (data, userId, userRole) => {
     user_id: userId,
     production_types: data.production_types,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "production_order", result.production_order_id, result, `Production order-${result.production_order_id}`);
+  }
 
   return result;
 };
@@ -242,7 +247,7 @@ export const createProductionOrder = async (data, userId, userRole) => {
 /**
  * تحديث طلب إنتاج
  */
-export const updateProductionOrder = async (production_order_id, data, userId, userRole) => {
+export const updateProductionOrder = async (production_order_id, data, userId, userRole , req = null) => {
   // Check if production order exists
   const existingOrder = await ProductionOrderModel.findById(production_order_id);
   if (!existingOrder) {
@@ -302,14 +307,17 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
     production_order_id,
     user_id: userId,
   });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "production_order", production_order_id, existingOrder, updatedOrder, `Production order-${production_order_id}`);
+  }
   return response;
 };
 
 /**
  * حذف طلب إنتاج
  */
-export const deleteProductionOrder = async (production_order_id, userRole) => {
+export const deleteProductionOrder = async (production_order_id, userRole , req = null) => {
 
   const existingOrder = await ProductionOrderModel.findById(production_order_id);
   if (!existingOrder) {
@@ -346,7 +354,10 @@ export const deleteProductionOrder = async (production_order_id, userRole) => {
   });
 
   logger.info("Production order deleted", { production_order_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "production_order", production_order_id, existingOrder, `Production order-${production_order_id}`);
+  }
   return { message: "تم حذف طلب الإنتاج بنجاح" };
 };
 
@@ -378,6 +389,7 @@ export const getProductionOrderItemById = async (production_order_item_id, userR
 export const createProductionOrderItem = async (
   userId,
   data,
+  req = null
 ) => {
   return await prisma.$transaction(async (tx) => {
 
@@ -435,12 +447,23 @@ export const createProductionOrderItem = async (
       production_order_id: order.production_order_id,
       count: createdItems.length,
     });
+    // تسجيل النشاط
+    if (req) {
+      await logCreate(req, "production_order_item", createdItems.map(item => item.production_order_item_id), createdItems, `Production order item-${createdItems.map(item => item.production_order_item_id)}`);
 
+      // إرسال إشعارات مخصصة حسب نوع العنصر
+      try {
+        const { notifyProductionOrder } = await import("../utils/notificationHelper.js");
+        await notifyProductionOrder(order, createdItems, userId);
+      } catch (error) {
+        logger.error("Error sending production order notification:", error);
+      }
+    }
     return { order, items : createdItems };
   });
 };
 
-export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole) => {
+export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole , req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -462,6 +485,10 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
     production_order_item_id,
     type: existingItem.type,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "production_order_item", production_order_item_id, existingItem, updatedItem, `Production order item-${production_order_item_id}`);
+  }
 
   return updatedItem;
 };
@@ -469,7 +496,7 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
 /**
  * تحديث عنصر طلب إنتاج
  */
-export const updateProductionOrderItem = async (production_order_item_id, data, userRole) => {
+export const updateProductionOrderItem = async (production_order_item_id, data, userRole , req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -491,14 +518,17 @@ export const updateProductionOrderItem = async (production_order_item_id, data, 
     production_order_item_id,
     type: existingItem.type,
   });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "production_order_item", production_order_item_id, existingItem, updatedItem, `Production order item-${production_order_item_id}`);
+  }
   return updatedItem;
 };
 
 /**
  * حذف عنصر طلب إنتاج
  */
-export const deleteProductionOrderItem = async (production_order_item_id, userRole) => {
+export const deleteProductionOrderItem = async (production_order_item_id, userRole , req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -524,7 +554,10 @@ export const deleteProductionOrderItem = async (production_order_item_id, userRo
   await ProductionOrderItemModel.deleteById(production_order_item_id);
 
   logger.info("Production order item deleted", { production_order_item_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "production_order_item", production_order_item_id, existingItem, `Production order item-${production_order_item_id}`);
+  }
   return { message: "تم حذف عنصر طلب الإنتاج بنجاح" };
 };
 

@@ -1,7 +1,7 @@
 // services/ruler.service.js
 import { RulerModel, MaterialModel, ColorModel } from "../models/index.js";
 import logger from "../utils/logger.js";
-
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 /**
  * جلب جميع المساطر مع pagination
  */
@@ -57,7 +57,7 @@ export const getRulerById = async (ruler_id) => {
 /**
  * إنشاء مسطرة جديدة
  */
-export const createRuler = async (data) => {
+export const createRuler = async (data , req = null) => {
   // Check if material exists
   const material = await MaterialModel.findById(data.material_id);
   if (!material) {
@@ -76,14 +76,17 @@ export const createRuler = async (data) => {
   const ruler = await RulerModel.create(data);
 
   logger.info('Ruler created', { ruler_id: ruler.ruler_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "ruler", ruler.ruler_id, ruler, `Ruler-${ruler.ruler_id}`);
+  }
   return ruler;
 };
 
 /**
  * تحديث مسطرة
  */
-export const updateRuler = async (ruler_id, data) => {
+export const updateRuler = async (ruler_id, data , req = null) => {
   // Check if exists
   await getRulerById(ruler_id);
   const newRulerName = data.ruler_name ?? existingRuler.ruler_name;
@@ -114,21 +117,27 @@ export const updateRuler = async (ruler_id, data) => {
   const updatedRuler = await RulerModel.updateById(ruler_id, data);
 
   logger.info('Ruler updated', { ruler_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "ruler", ruler_id, existingRuler, updatedRuler, `Ruler-${updatedRuler.ruler_id}`);
+  }
   return updatedRuler;
 };
 
 /**
  * حذف مسطرة
  */
-export const deleteRuler = async (ruler_id) => {
+export const deleteRuler = async (ruler_id , req = null) => {
   // Check if exists
   await getRulerById(ruler_id);
 
   await RulerModel.deleteById(ruler_id);
 
   logger.info('Ruler deleted', { ruler_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "ruler", ruler_id, existingRuler, `Ruler-${ruler_id}`);
+  }
   return { message: "تم حذف المسطرة بنجاح" };
 };
 

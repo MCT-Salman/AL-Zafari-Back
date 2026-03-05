@@ -56,7 +56,8 @@ export const createProcess = async (req, res, next) => {
     const process = await createProductionProcess(
       req.body,
       req.user.id,
-      req.user.role
+      req.user.role,
+      req
     );
 
     res.status(201).json({
@@ -78,7 +79,8 @@ export const updateProcess = async (req, res, next) => {
     const process = await updateProductionProcess(
       parseInt(req.params.id),
       req.body,
-      req.user.role
+      req.user.role,
+      req
     );
 
     res.json({
@@ -99,7 +101,8 @@ export const deleteProcess = async (req, res, next) => {
   try {
     const result = await deleteProductionProcess(
       parseInt(req.params.id),
-      req.user.role
+      req.user.role,
+      req
     );
 
     res.json({

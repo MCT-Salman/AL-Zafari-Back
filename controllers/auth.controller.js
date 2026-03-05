@@ -115,7 +115,7 @@ export const logout = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const result = await logoutUser(userId);
+    const result = await logoutUser(userId, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -140,7 +140,7 @@ export const logoutAll = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    const result = await logoutAllDevices(userId);
+    const result = await logoutAllDevices(userId, req);
 
     res.json({
       success: true,

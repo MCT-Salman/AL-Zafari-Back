@@ -79,7 +79,7 @@ export const getSettingByKey = async (req, res, next) => {
 export const createSetting = async (req, res, next) => {
   try {
     const data = req.body;
-    const setting = await createSettingService(data);
+    const setting = await createSettingService(data , req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -99,7 +99,7 @@ export const updateSetting = async (req, res, next) => {
     const { id } = req.params;
     const data = req.body;
     const userId = req.user.id;
-    const setting = await updateSettingService(parseInt(id), data, userId);
+    const setting = await updateSettingService(parseInt(id), data, userId , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -119,7 +119,7 @@ export const updateSettingByKey = async (req, res, next) => {
     const { key } = req.params;
     const data = req.body;
     const userId = req.user.id;
-    const setting = await updateSettingByKeyService(key, data, userId);
+    const setting = await updateSettingByKeyService(key, data, userId , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -137,7 +137,7 @@ export const updateSettingByKey = async (req, res, next) => {
 export const deleteSetting = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteSettingService(parseInt(id));
+    const result = await deleteSettingService(parseInt(id) , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -156,7 +156,7 @@ export const upsertSetting = async (req, res, next) => {
   try {
     const { key } = req.params;
     const data = req.body;
-    const setting = await upsertSettingService(key, data);
+    const setting = await upsertSettingService(key, data , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -214,7 +214,7 @@ export const getDiscountsByMaterialId = async (req, res, next) => {
 export const createDiscount = async (req, res, next) => {
   try {
     const data = req.body;
-    const discount = await createDiscountService(data);
+    const discount = await createDiscountService(data , req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -234,7 +234,7 @@ export const updateDiscount = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const discount = await updateDiscountService(parseInt(id), data);
+    const discount = await updateDiscountService(parseInt(id), data , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -252,7 +252,7 @@ export const updateDiscount = async (req, res, next) => {
 export const deleteDiscount = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteDiscountService(parseInt(id));
+    const result = await deleteDiscountService(parseInt(id) , req);
 
     res.json({
       success: SUCCESS_REQUEST,

@@ -55,7 +55,7 @@ export const getConstantValuesByMaterialId = async (req, res, next) => {
     const filter = {
       type: req.query.type,
     };
-    const constantValues = await getConstantValuesByMaterialIdService(parseInt(material_id),filter);
+    const constantValues = await getConstantValuesByMaterialIdService(parseInt(material_id), filter);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -101,7 +101,7 @@ export const getConstantValueById = async (req, res, next) => {
 export const createConstantValue = async (req, res, next) => {
   try {
     const data = req.body;
-    const constantValue = await createConstantValueService(data);
+    const constantValue = await createConstantValueService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -118,7 +118,7 @@ export const updateConstantValue = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const constantValue = await updateConstantValueService(parseInt(id), data);
+    const constantValue = await updateConstantValueService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -134,7 +134,7 @@ export const updateConstantValue = async (req, res, next) => {
 export const deleteConstantValue = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteConstantValueService(parseInt(id));
+    const result = await deleteConstantValueService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

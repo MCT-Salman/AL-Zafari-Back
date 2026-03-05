@@ -65,7 +65,7 @@ export const getRulerById = async (req, res, next) => {
 export const createRuler = async (req, res, next) => {
   try {
     const data = req.body;
-    const ruler = await createRulerService(data);
+    const ruler = await createRulerService(data, req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -82,7 +82,7 @@ export const updateRuler = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const ruler = await updateRulerService(parseInt(id), data);
+    const ruler = await updateRulerService(parseInt(id), data, req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -98,7 +98,7 @@ export const updateRuler = async (req, res, next) => {
 export const deleteRuler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteRulerService(parseInt(id));
+    const result = await deleteRulerService(parseInt(id), req);
 
     res.json({
       success: SUCCESS_REQUEST,

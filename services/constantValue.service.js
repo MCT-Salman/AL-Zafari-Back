@@ -1,6 +1,7 @@
 // services/constantValue.service.js
 import { ConstantValueModel, MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع القيم الثابتة مع pagination
@@ -55,7 +56,7 @@ export const getConstantValueById = async (constant_value_id) => {
 /**
  * إنشاء قيمة ثابتة جديدة
  */
-export const createConstantValue = async (data) => {
+export const createConstantValue = async (data , req = null) => {
 
   const materialId = parseInt(data.material_id);
 
@@ -107,14 +108,17 @@ export const createConstantValue = async (data) => {
   logger.info('Constant value created', {
     constant_value_id: result.constant_value_id
   });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "constant_value", result.constant_value_id, result, `Constant value-${result.constant_value_id}`);
+  }
   return result;
 };
 
 /**
  * تحديث قيمة ثابتة
  */
-export const updateConstantValue = async (constant_value_id, data) => {
+export const updateConstantValue = async (constant_value_id, data , req = null) => {
 
   const constantValue = await getConstantValueById(constant_value_id);
 
@@ -173,43 +177,29 @@ export const updateConstantValue = async (constant_value_id, data) => {
   });
 
   logger.info('Constant value updated', { constant_value_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "constant_value", constant_value_id, constantValue, result, `Constant value-${constant_value_id}`);
+  }
   return result;
 };
 
 /**
  * حذف قيمة ثابتة
  */
-export const deleteConstantValue = async (constant_value_id) => {
+export const deleteConstantValue = async (constant_value_id , req = null) => {
   // Check if exists
   await getConstantValueById(constant_value_id);
 
   await ConstantValueModel.deleteById(constant_value_id);
 
   logger.info('Constant value deleted', { constant_value_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "constant_value", constant_value_id, existingConstantValue, `Constant value-${constant_value_id}`);
+  }
   return { message: "تم حذف القيمة الثابتة بنجاح" };
 };
-
-/**
- * جلب قيم ثابتة حسب نوع الثابت
- *//*
-export const getConstantValuesByTypeId = async (constant_type_id) => {
- const constantType = await ConstantTypeModel.findById(constant_type_id);
- if (!constantType) {
-   const error = new Error("النوع الثابت غير موجود");
-   error.statusCode = 404;
-   throw error;
- }
- const constantValues = await ConstantValueModel.findByTypeId(constant_type_id);
- if (!constantValues) {
-   const error = new Error("لا توجد قيم ثابتة لهذا النوع");
-   error.statusCode = 404;
-   throw error;
- }
- return constantValues;
-};
-*/
 
 export const getConstantValuesByMaterialId = async (material_id, filters = {}) => {
   const material = await MaterialModel.findById(material_id);

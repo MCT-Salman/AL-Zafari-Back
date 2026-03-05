@@ -49,7 +49,7 @@ export const getBatchById = async (req, res, next) => {
 export const createBatch = async (req, res, next) => {
   try {
     const data = req.body;
-    const batch = await createBatchService(data);
+    const batch = await createBatchService(data , req);
 
     res.status(201).json({
       success: SUCCESS_REQUEST,
@@ -66,7 +66,7 @@ export const updateBatch = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const batch = await updateBatchService(parseInt(id), data);
+    const batch = await updateBatchService(parseInt(id), data , req);
 
     res.json({
       success: SUCCESS_REQUEST,
@@ -82,7 +82,7 @@ export const updateBatch = async (req, res, next) => {
 export const deleteBatch = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await deleteBatchService(parseInt(id));
+    const result = await deleteBatchService(parseInt(id) , req);
 
     res.json({
       success: SUCCESS_REQUEST,

@@ -60,7 +60,10 @@ export const createProductionProcessRules = [
     .isString()
     .isLength({ max: 191 })
     .withMessage('الباركود يجب ألا يتجاوز 191 حرف'),
-
+  body('destination')
+    .optional()
+    .isIn(['slitting', 'cutting', 'gluing', 'production'])
+    .withMessage('الوجهة غير صالحة'),
   body('notes')
     .optional()
     .isString()
@@ -80,6 +83,9 @@ export const updateProductionProcessRules = [
     .optional()
     .isString()
     .isLength({ max: 191 }),
+  body('destination')
+    .optional()
+    .isIn(['slitting', 'cutting', 'gluing', 'production']),
   body('notes')
     .optional()
     .isString()

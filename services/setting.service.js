@@ -1,6 +1,7 @@
 // services/setting.service.js
 import { SettingModel, DiscountModel, MaterialModel } from "../models/index.js";
 import logger from "../utils/logger.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع الإعدادات
@@ -60,7 +61,7 @@ export const getSettingByKey = async (key) => {
 /**
  * إنشاء إعداد جديد
  */
-export const createSetting = async (data) => {
+export const createSetting = async (data, req = null) => {
   // Check if key already exists
   const existingSetting = await SettingModel.findByKey(data.key);
   if (existingSetting) {
@@ -72,14 +73,17 @@ export const createSetting = async (data) => {
   const setting = await SettingModel.create(data);
 
   logger.info("Setting created", { setting_id: setting.id, key: setting.key });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "setting", setting.id, setting, `Setting-${setting.key}`);
+  }
   return setting;
 };
 
 /**
  * تحديث إعداد
  */
-export const updateSetting = async (id, data, userId) => {
+export const updateSetting = async (id, data, userId, req = null) => {
   // Check if exists
   await getSettingById(id);
 
@@ -96,46 +100,58 @@ export const updateSetting = async (id, data, userId) => {
   const updatedSetting = await SettingModel.updateById(id, data, userId);
 
   logger.info("Setting updated", { setting_id: id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "setting", id, existingSetting, updatedSetting, `Setting-${updatedSetting.key}`);
+  }
   return updatedSetting;
 };
 
 /**
  * تحديث إعداد حسب المفتاح
  */
-export const updateSettingByKey = async (key, data, userId) => {
+export const updateSettingByKey = async (key, data, userId, req = null) => {
   // Check if exists
   await getSettingByKey(key);
 
   const updatedSetting = await SettingModel.updateByKey(key, data, userId);
 
   logger.info("Setting updated by key", { key });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "setting", updatedSetting.id, existingSetting, updatedSetting, `Setting-${updatedSetting.key}`);
+  }
   return updatedSetting;
 };
 
 /**
  * حذف إعداد
  */
-export const deleteSetting = async (id) => {
+export const deleteSetting = async (id, req = null) => {
   // Check if exists
   await getSettingById(id);
 
   await SettingModel.deleteById(id);
 
   logger.info("Setting deleted", { setting_id: id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "setting", id, existingSetting, `Setting-${existingSetting.key}`);
+  }
   return { message: "تم حذف الإعداد بنجاح" };
 };
 
 /**
  * إنشاء أو تحديث إعداد (upsert)
  */
-export const upsertSetting = async (key, data) => {
+export const upsertSetting = async (key, data, req = null) => {
   const setting = await SettingModel.upsert(key, data);
 
   logger.info("Setting upserted", { key });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "setting", setting.id, existingSetting, setting, `Setting-${setting.key}`);
+  }
   return setting;
 };
 
@@ -163,7 +179,7 @@ export const getDiscounts = async (filters = {}) => {
   };
 };
 
-export const createDiscount = async (data) => {
+export const createDiscount = async (data, req = null) => {
   // Check if material exists
   const material = await MaterialModel.findById(data.material_id);
   if (!material) {
@@ -181,10 +197,15 @@ export const createDiscount = async (data) => {
 
 
   const discount = await DiscountModel.create(data);
+  logger.info("Discount created", { discount_id: discount.discount_id });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "discount", discount.discount_id, discount, `Discount-${discount.discount_id}`);
+  }
   return discount;
 };
 
-export const updateDiscount = async (id, data) => {
+export const updateDiscount = async (id, data, req = null) => {
   // Check if material exists
   const material = await MaterialModel.findById(data.material_id);
   if (!material) {
@@ -206,11 +227,21 @@ export const updateDiscount = async (id, data) => {
   }
 
   const discount = await DiscountModel.updateById(id, data);
+  logger.info("Discount updated", { discount_id: id });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "discount", id, existingDiscount, discount, `Discount-${discount.discount_id}`);
+  }
   return discount;
 };
 
-export const deleteDiscount = async (id) => {
+export const deleteDiscount = async (id, req = null) => {
   await DiscountModel.deleteById(id);
+  logger.info("Discount deleted", { discount_id: id });
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "discount", id, existingDiscount, `Discount-${existingDiscount.discount_id}`);
+  }
   return { message: "تم حذف الخصم بنجاح" };
 };
 

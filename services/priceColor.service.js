@@ -1,6 +1,7 @@
 // services/priceColor.service.js
 import { PriceColorModel, ColorModel, ConstantValueModel } from "../models/index.js";
 import logger from "../utils/logger.js";
+import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
  * جلب جميع أسعار الألوان مع pagination
@@ -52,7 +53,7 @@ export const getPriceColorById = async (price_color_id) => {
 /**
  * إنشاء سعر لون جديد
  */
-export const createPriceColor = async (data) => {
+export const createPriceColor = async (data, req = null) => {
   // Check if color exists
   const color = await ColorModel.findById(data.color_id);
   if (!color) {
@@ -71,14 +72,17 @@ export const createPriceColor = async (data) => {
   const priceColor = await PriceColorModel.create(data);
 
   logger.info('Price color created', { price_color_id: priceColor.price_color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "price_color", priceColor.price_color_id, priceColor, `Price color-${priceColor.price_color_id}`);
+  }
   return priceColor;
 };
 
 /**
  * تحديث سعر لون
  */
-export const updatePriceColor = async (price_color_id, data) => {
+export const updatePriceColor = async (price_color_id, data, req = null) => {
   // Check if exists
   await getPriceColorById(price_color_id);
 
@@ -102,21 +106,27 @@ export const updatePriceColor = async (price_color_id, data) => {
   const updatedPriceColor = await PriceColorModel.updateById(price_color_id, data);
 
   logger.info('Price color updated', { price_color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "price_color", price_color_id, existingPriceColor, updatedPriceColor, `Price color-${price_color_id}`);
+  }
   return updatedPriceColor;
 };
 
 /**
  * حذف سعر لون
  */
-export const deletePriceColor = async (price_color_id) => {
+export const deletePriceColor = async (price_color_id, req = null) => {
   // Check if exists
   await getPriceColorById(price_color_id);
 
   await PriceColorModel.deleteById(price_color_id);
 
   logger.info('Price color deleted', { price_color_id });
-
+  // تسجيل النشاط
+  if (req) {
+    await logDelete(req, "price_color", price_color_id, existingPriceColor, `Price color-${price_color_id}`);
+  }
   return { message: "تم حذف سعر اللون بنجاح" };
 };
 
