@@ -4,6 +4,7 @@ import { INSUFFICIENT_PERMISSIONS, NUMBER_ALREADY_EXIST, USERNAME_ALREADY_EXIST,
 import prisma from '../prisma/client.js';
 import logger from '../utils/logger.js';
 import { hashPassword } from '../utils/hash.js';
+import { logCreate, logUpdate, logDelete } from '../utils/activityLogger.js';
 
 /**
  * Get all users with filtering and pagination (for admins)

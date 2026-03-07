@@ -39,8 +39,7 @@ const orderItemRules = [
     .isDecimal()
     .withMessage("السماكة الثابتة يجب أن تكون رقماً عشرياً"),
   body("items.*.batch_id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف الطبخة مطلوب")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً"),
   body("items.*.quantity")
