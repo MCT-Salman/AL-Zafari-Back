@@ -183,12 +183,13 @@ export const createOrder = async (data, userId, req = null) => {
       error.statusCode = 404;
       throw error;
     }
-
-    const batch = await BatchModel.findById(item.batch_id);
-    if (!batch) {
-      const error = new Error(`الطبخة ${item.batch_id} غير موجودة`);
-      error.statusCode = 404;
-      throw error;
+    if (item.batch_id) {
+      const batch = await BatchModel.findById(item.batch_id);
+      if (!batch) {
+        const error = new Error(`الطبخة ${item.batch_id} غير موجودة`);
+        error.statusCode = 404;
+        throw error;
+      }
     }
   }
 
@@ -383,12 +384,13 @@ export const updateOrder = async (order_id, data, req = null) => {
         error.statusCode = 404;
         throw error;
       }
-
-      const batch = await BatchModel.findById(item.batch_id);
-      if (!batch) {
-        const error = new Error(`الطبخة ${item.batch_id} غير موجودة`);
-        error.statusCode = 404;
-        throw error;
+      if (item.batch_id) {
+        const batch = await BatchModel.findById(item.batch_id);
+        if (!batch) {
+          const error = new Error(`الطبخة ${item.batch_id} غير موجودة`);
+          error.statusCode = 404;
+          throw error;
+        }
       }
 
       // تحديد نوع العرض للـ unit_price
@@ -563,7 +565,7 @@ export const deleteOrder = async (order_id, req = null) => {
 /**
  * إضافة عنصر جديد لطلب موجود
  */
-export const addOrderItem = async (order_id, itemData , req = null) => {
+export const addOrderItem = async (order_id, itemData, req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -577,12 +579,13 @@ export const addOrderItem = async (order_id, itemData , req = null) => {
     error.statusCode = 404;
     throw error;
   }
-
-  const batch = await BatchModel.findById(itemData.batch_id);
-  if (!batch) {
-    const error = new Error("الطبخة غير موجودة");
-    error.statusCode = 404;
-    throw error;
+  if (itemData.batch_id) {
+    const batch = await BatchModel.findById(itemData.batch_id);
+    if (!batch) {
+      const error = new Error("الطبخة غير موجودة");
+      error.statusCode = 404;
+      throw error;
+    }
   }
 
   // السعر
@@ -741,7 +744,7 @@ export const addOrderItem = async (order_id, itemData , req = null) => {
 /**
  * تعديل عنصر من طلب
  */
-export const updateOrderItem = async (order_id, order_item_id, itemData , req = null) => {
+export const updateOrderItem = async (order_id, order_item_id, itemData, req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
@@ -908,7 +911,7 @@ async function calculateTotalAmount(tx, order_id) {
 /**
  * حذف عنصر من طلب
  */
-export const deleteOrderItem = async (order_id, order_item_id , req = null) => {
+export const deleteOrderItem = async (order_id, order_item_id, req = null) => {
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");

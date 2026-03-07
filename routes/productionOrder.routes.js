@@ -33,16 +33,16 @@ router.use(requireAuth);
 
 // GET routes - accessible by all production-related roles
 //router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
-router.get("/:id", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderById);
+router.get("/:id", requireRole(["admin", "production_manager", "accountant"]), validate(productionOrderIdParamRules), getProductionOrderById);
 //router.post("/", requireRole(["admin", "sales"]), validate(createProductionOrderRules), createProductionOrder);
-router.put("/:id", requireRole(["admin", "sales"]), validate([...productionOrderIdParamRules, ...updateProductionOrderRules]), updateProductionOrder);
-router.delete("/:id", requireRole(["admin", "sales"]), validate(productionOrderIdParamRules), deleteProductionOrder);
+router.put("/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderIdParamRules, ...updateProductionOrderRules]), updateProductionOrder);
+router.delete("/:id", requireRole(["admin", "production_manager"]), validate(productionOrderIdParamRules), deleteProductionOrder);
 
 
 /**
  * Production Order Item Routes
  */
-router.get("/", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
+router.get("/", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician" , "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
 router.get("/:id/items", requireRole(["admin", "production_manager", "warehouse_keeper", "warehouse_products", "dissection_technician", "cutting_technician", "gluing_technician"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
 router.post("/", requireRole(["admin", "production_manager"]), validate(createProductionOrderRules), createProductionOrderItem);
 router.get("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionOrderItemIdParamRules), getProductionOrderItemById);

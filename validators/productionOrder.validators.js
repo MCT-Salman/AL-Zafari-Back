@@ -62,8 +62,7 @@ export const createProductionOrderRules = [
     .isInt({ min: 1 })
     .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('batch_id')
-    .exists({ checkFalsy: true })
-    .withMessage('معرف الطبخة مطلوب')
+    .optional()
     .isInt({ min: 1 })
     .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
   body('status')

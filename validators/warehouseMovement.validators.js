@@ -50,8 +50,7 @@ export const createWarehouseMovementRules = [
     .isInt({ min: 1 })
     .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
   body("batch_id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف الدفعة مطلوب")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("معرف الدفعة يجب أن يكون رقماً صحيحاً"),
   body("quantity")

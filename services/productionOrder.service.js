@@ -140,7 +140,7 @@ export const getProductionOrderById = async (production_order_id, userRole) => {
 /**
  * إنشاء طلب إنتاج جديد مع عناصر متعددة حسب أنواع الإنتاج
  */
-export const createProductionOrder = async (data, userId, userRole , req = null) => {
+export const createProductionOrder = async (data, userId, userRole, req = null) => {
   // Validate that user has permission to create production orders
   if (!['admin', 'production_manager'].includes(userRole)) {
     const error = new Error("ليس لديك صلاحية لإنشاء طلبات الإنتاج");
@@ -157,11 +157,13 @@ export const createProductionOrder = async (data, userId, userRole , req = null)
   }
 
   // Validate batch exists
-  const batch = await BatchModel.findById(data.batch_id);
-  if (!batch) {
-    const error = new Error("الطبخة غير موجودة");
-    error.statusCode = 404;
-    throw error;
+  if (data.batch_id) {
+    const batch = await BatchModel.findById(data.batch_id);
+    if (!batch) {
+      const error = new Error("الطبخة غير موجودة");
+      error.statusCode = 404;
+      throw error;
+    }
   }
 
 
@@ -247,7 +249,7 @@ export const createProductionOrder = async (data, userId, userRole , req = null)
 /**
  * تحديث طلب إنتاج
  */
-export const updateProductionOrder = async (production_order_id, data, userId, userRole , req = null) => {
+export const updateProductionOrder = async (production_order_id, data, userId, userRole, req = null) => {
   // Check if production order exists
   const existingOrder = await ProductionOrderModel.findById(production_order_id);
   if (!existingOrder) {
@@ -317,7 +319,7 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
 /**
  * حذف طلب إنتاج
  */
-export const deleteProductionOrder = async (production_order_id, userRole , req = null) => {
+export const deleteProductionOrder = async (production_order_id, userRole, req = null) => {
 
   const existingOrder = await ProductionOrderModel.findById(production_order_id);
   if (!existingOrder) {
@@ -459,11 +461,11 @@ export const createProductionOrderItem = async (
         logger.error("Error sending production order notification:", error);
       }
     }
-    return { order, items : createdItems };
+    return { order, items: createdItems };
   });
 };
 
-export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole , req = null) => {
+export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole, req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -496,7 +498,7 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
 /**
  * تحديث عنصر طلب إنتاج
  */
-export const updateProductionOrderItem = async (production_order_item_id, data, userRole , req = null) => {
+export const updateProductionOrderItem = async (production_order_item_id, data, userRole, req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -528,7 +530,7 @@ export const updateProductionOrderItem = async (production_order_item_id, data, 
 /**
  * حذف عنصر طلب إنتاج
  */
-export const deleteProductionOrderItem = async (production_order_item_id, userRole , req = null) => {
+export const deleteProductionOrderItem = async (production_order_item_id, userRole, req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
