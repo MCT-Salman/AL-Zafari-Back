@@ -50,7 +50,6 @@ const getAllowedProductionTypes = (userRole) => {
  * جلب جميع أوامر الإنتاج مع الفلتر والصلاحيات
  */
 export const getAllProductionOrders = async (filters = {}, userRole, userId) => {
-
   const where = {};
 
   // Filter by status
@@ -83,18 +82,10 @@ export const getAllProductionOrders = async (filters = {}, userRole, userId) => 
       items: filteredItems,
     };
   });
+
   const response = filteredOrders.map((order) => ({
     production_order_id: order.production_order_id,
     issued_by: order.user,
-    type_item: order.type_item,
-    width: order.width,
-    length: order.length,
-    thickness: order.thickness,
-    material_name: order.color.ruler.material.material_name,
-    ruler_type: order.color.ruler.ruler_name,
-    color_code: order.color.color_code,
-    color_name: order.color.color_name,
-    batch_number: order.batch.batch_number,
     status: order.status,
     notes: order.notes,
     created_at: order.created_at,
@@ -140,110 +131,103 @@ export const getProductionOrderById = async (production_order_id, userRole) => {
 /**
  * إنشاء طلب إنتاج جديد مع عناصر متعددة حسب أنواع الإنتاج
  */
-export const createProductionOrder = async (data, userId, userRole, req = null) => {
-  // Validate that user has permission to create production orders
-  if (!['admin', 'production_manager'].includes(userRole)) {
-    const error = new Error("ليس لديك صلاحية لإنشاء طلبات الإنتاج");
-    error.statusCode = 403;
-    throw error;
-  }
+export const createProductionOrder = async (userId, data, req = null) => {
+  return await prisma.$transaction(async (tx) => {
 
-  // Validate ruler exists
-  const color = await ColorModel.findById(data.color_id);
-  if (!color) {
-    const error = new Error("اللون غير موجودة");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  // Validate batch exists
-  if (data.batch_id) {
-    const batch = await BatchModel.findById(data.batch_id);
-    if (!batch) {
-      const error = new Error("الطبخة غير موجودة");
-      error.statusCode = 404;
-      throw error;
-    }
-  }
-
-
-  // Create production order with items using transaction
-  const result = await prisma.$transaction(async (tx) => {
-    // Create the main production order
-    const productionOrder = await tx.productionOrder.create({
+    const order = await tx.productionOrder.create({
       data: {
         issued_by: userId,
-        type_item: data.type_item,
-        width: data.width,
-        length: data.length,
-        thickness: data.thickness,
-        color_id: data.color_id,
-        batch_id: data.batch_id,
-        status: data.status || 'pending',
+        status: "preparing",
         notes: data.notes || null,
       },
     });
 
-    // Fetch the complete production order with items
-    const completeOrder = await tx.productionOrder.findUnique({
-      where: { production_order_id: productionOrder.production_order_id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            full_name: true,
-          },
-        },
-        color: {
-          select: {
-            color_id: true,
-            color_code: true,
-            color_name: true,
-            imageUrl: true,
-            ruler: {
-              select: {
-                ruler_id: true,
-                ruler_name: true,
-                material: { select: { material_id: true, material_name: true } },
-              },
-            },
-          },
-        },
-        batch: true,
-        items: true,
-      },
-    });
-    const response = {
-      production_order_id: completeOrder.production_order_id,
-      issued_by: completeOrder.user,
-      type_item: completeOrder.type_item,
-      width: completeOrder.width,
-      length: completeOrder.length,
-      thickness: completeOrder.thickness,
-      material_name: completeOrder.color.ruler.material.material_name,
-      ruler_type: completeOrder.color.ruler.ruler_name,
-      color_code: completeOrder.color.ruler.color_code,
-      color_name: completeOrder.color.ruler.color_name,
-      batch_number: completeOrder.batch.batch_number,
-      status: completeOrder.status,
-      notes: completeOrder.notes,
-      created_at: completeOrder.created_at,
+    const FLOW_MAP = {
+      warehouse: { destination: "slitting" },
+      slitting: { destination: "production" },
+      cutting: { destination: "gluing" },
+      gluing: { destination: "production" },
     };
-    return response;
-  });
 
-  logger.info("Production order created", {
-    production_order_id: result.production_order_id,
-    user_id: userId,
-    production_types: data.production_types,
-  });
-  // تسجيل النشاط
-  if (req) {
-    await logCreate(req, "production_order", result.production_order_id, result, `Production order-${result.production_order_id}`);
-  }
+    const PROCESS_ORDER = ["warehouse", "slitting", "cutting", "gluing"];
 
-  return result;
+    const createdItems = [];
+
+    for (const item of data.items) {
+
+      const orderedProcesses = PROCESS_ORDER.filter(p =>
+        item.production_types.includes(p)
+      );
+
+      let previousProcess = null;
+
+      for (const process of orderedProcesses) {
+
+        let destination = FLOW_MAP[process]?.destination;
+        if (process === "slitting" && !orderedProcesses.includes("warehouse")) {
+          previousProcess = "production";
+        }
+
+        // تعديل المسار إذا كان هناك cutting
+        if (process === "slitting" && orderedProcesses.includes("cutting")) {
+          destination = "cutting";
+        }
+
+        const createdItem = await tx.productionOrderItem.create({
+          data: {
+            production_order_id: order.production_order_id,
+
+            type: process,
+
+            source: previousProcess ? previousProcess : process,
+
+            destination,
+
+            color_id: item.color_id,
+            batch_id: item.batch_id,
+            thickness: item.thickness,
+            type_item: item.type_item,
+
+            width: item.width,
+            length: item.length,
+
+            quantity: item.quantity || 0,
+
+            status: "pending",
+            notes: item.notes || null,
+          },
+        });
+
+        createdItems.push(createdItem);
+
+        previousProcess = process;
+      }
+    }
+
+    logger.info("Production order items created", {
+      production_order_id: order.production_order_id,
+      count: createdItems.length,
+    });
+
+    if (req) {
+      await logCreate(
+        req,
+        "production_order_item",
+        createdItems.map(i => i.production_order_item_id),
+        createdItems,
+        `Production order item-${createdItems.map(i => i.production_order_item_id)}`
+      );
+
+      try {
+        const { notifyProductionOrder } = await import("../utils/notificationHelper.js");
+        await notifyProductionOrder(order, createdItems, userId);
+      } catch (error) {
+        logger.error("Error sending production order notification:", error);
+      }
+    }
+
+    return { order, items: createdItems };
+  });
 };
 
 /**
@@ -266,40 +250,11 @@ export const updateProductionOrder = async (production_order_id, data, userId, u
     throw error;
   }
 
-  // Validate ruler if provided
-  if (data.color_id) {
-    const color = await ColorModel.findById(data.color_id);
-    if (!color) {
-      const error = new Error("اللون غير موجودة");
-      error.statusCode = 404;
-      throw error;
-    }
-  }
-
-  // Validate batch if provided
-  if (data.batch_id) {
-    const batch = await BatchModel.findById(data.batch_id);
-    if (!batch) {
-      const error = new Error("الطبخة غير موجودة");
-      error.statusCode = 404;
-      throw error;
-    }
-  }
-
 
   const updatedOrder = await ProductionOrderModel.updateById(production_order_id, data);
   const response = {
     production_order_id: updatedOrder.production_order_id,
     issued_by: updatedOrder.user,
-    type_item: updatedOrder.type_item,
-    width: updatedOrder.width,
-    length: updatedOrder.length,
-    thickness: updatedOrder.thickness,
-    material_name: updatedOrder.color.ruler.material.material_name,
-    ruler_type: updatedOrder.color.ruler.ruler_name,
-    color_code: updatedOrder.color.color_code,
-    color_name: updatedOrder.color.color_name,
-    batch_number: updatedOrder.batch.batch_number,
     status: updatedOrder.status,
     notes: updatedOrder.notes,
     created_at: updatedOrder.created_at,
@@ -390,79 +345,27 @@ export const getProductionOrderItemById = async (production_order_item_id, userR
  */
 export const createProductionOrderItem = async (
   userId,
+  production_order_id,
   data,
   req = null
 ) => {
-  return await prisma.$transaction(async (tx) => {
-
-    const order = await tx.productionOrder.create({
-      data: {
-        issued_by: userId,
-        type_item: data.type_item,
-        color_id: data.color_id,
-        batch_id: data.batch_id,
-        thickness: data.thickness,
-        status: 'preparing',
-        notes: data.notes || null,
-      },
-    });
-
-    const FLOW_MAP = {
-      warehouse: { source: 'warehouse', destination: 'slitting' },
-      slitting: { source: 'slitting', destination: 'production' },
-      cutting: { source: 'cutting', destination: 'gluing' },
-      gluing: { source: 'gluing', destination: 'production' },
-    };
-
-    const createdItems = [];
-
-    for (const item of data.items) {
-      let currentSource = 'production';
-      if (item.production_types.includes('cutting')) {
-        FLOW_MAP.slitting.destination = 'cutting';
-      }
-
-      for (const type of item.production_types) {
-        const flow = FLOW_MAP[type];
-        if (!flow) continue;
-
-        const createdItem = await tx.ProductionOrderItem.create({
-          data: {
-            production_order_id: order.production_order_id,
-            type,
-            source: type === 'warehouse' ? 'warehouse' : currentSource,
-            destination: flow.destination,
-            width: item.width,
-            length: item.length,
-            status: 'pending',
-            quantity: item.quantity,
-            notes: item.notes,
-          },
-        });
-
-        createdItems.push(createdItem);
-        currentSource = type;
-      }
-    }
-
-    logger.info("Production order items created", {
-      production_order_id: order.production_order_id,
-      count: createdItems.length,
-    });
-    // تسجيل النشاط
-    if (req) {
-      await logCreate(req, "production_order_item", createdItems.map(item => item.production_order_item_id), createdItems, `Production order item-${createdItems.map(item => item.production_order_item_id)}`);
-
-      // إرسال إشعارات مخصصة حسب نوع العنصر
-      try {
-        const { notifyProductionOrder } = await import("../utils/notificationHelper.js");
-        await notifyProductionOrder(order, createdItems, userId);
-      } catch (error) {
-        logger.error("Error sending production order notification:", error);
-      }
-    }
-    return { order, items: createdItems };
+  // Check if order exists
+  const existingOrder = await ProductionOrderModel.findById(production_order_id);
+  if (!existingOrder) {
+    const error = new Error("طلب الإنتاج غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
+  const createdItem = await ProductionOrderItemModel.create(data);
+  logger.info("Production order item created", {
+    production_order_item_id: createdItem.production_order_item_id,
+    user_id: userId,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logCreate(req, "production_order_item", createdItem.production_order_item_id, createdItem, `Production order item-${createdItem.production_order_item_id}`);
+  }
+  return createdItem;
 };
 
 export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole, req = null) => {

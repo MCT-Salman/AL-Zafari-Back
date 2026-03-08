@@ -268,7 +268,7 @@ export const createInvoice = async (data, userId, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logCreate(req, "invoice", invoice.invoice_id, invoice, invoice.invoice_number);
+    await logCreate(req, "invoice", invoice.invoice_id, invoice, `Invoice-${ invoice.invoice_number}`);
   }
 
   return invoice;
@@ -344,7 +344,7 @@ export const updateInvoice = async (invoice_id, data, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "invoice", invoice_id, existingInvoice, updatedInvoice, updatedInvoice.invoice_number);
+    await logUpdate(req, "invoice", invoice_id, existingInvoice, updatedInvoice,  `Invoice-${ updatedInvoice.invoice_number}`);
   }
 
   return updatedInvoice;
@@ -385,7 +385,7 @@ export const deleteInvoice = async (invoice_id, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logDelete(req, "invoice", invoice_id, invoice, invoice.invoice_number);
+    await logDelete(req, "invoice", invoice_id, invoice, `Invoice-${ invoice.invoice_number }`);
   }
 
   return { message: "تم حذف الفاتورة بنجاح" };
@@ -446,7 +446,7 @@ export const addPayment = async (invoice_id, payment_amount , req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "invoice", invoice_id, invoice, updatedInvoice, updatedInvoice.invoice_number);
+    await logUpdate(req, "invoice", invoice_id, invoice, updatedInvoice, `Invoice-${ updatedInvoice.invoice_number}`);
   }
 
   return updatedInvoice;

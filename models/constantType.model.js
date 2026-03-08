@@ -26,7 +26,6 @@ export const findById = async (constant_type_id) => {
  * جلب جميع الأنواع الثابتة مع pagination
  */
 export const findAll = async ({ where = {} }) => {
-  console.log(where);
   return prisma.constantType.findMany({
     where,
     include: {

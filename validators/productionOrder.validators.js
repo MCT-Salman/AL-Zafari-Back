@@ -46,25 +46,6 @@ export const getProductionOrdersQueryRules = [
  * قواعد التحقق من إنشاء أمر إنتاج جديد
  */
 export const createProductionOrderRules = [
-  body('type_item')
-  .exists({ checkFalsy: true })
-    .withMessage('نوع العنصر مطلوب')
-    .isIn(["Presser", "Machine"])
-    .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
-  body('thickness')
-    .exists({ checkFalsy: true })
-    .withMessage('السماكة الثابتة مطلوبة')
-    .isDecimal()
-    .withMessage('السماكة الثابتة يجب أن تكون رقماً عشرياً'),
-  body('color_id')
-    .exists({ checkFalsy: true })
-    .withMessage('معرف اللون مطلوب')
-    .isInt({ min: 1 })
-    .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
-  body('batch_id')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
   body('status')
     .optional()
     .isIn(PRODUCTION_STATUSES)
@@ -75,11 +56,30 @@ export const createProductionOrderRules = [
     .withMessage('الملاحظات يجب أن تكون نصاً')
     .isLength({ max: 500 })
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
-    body('items')
+  body('items')
     .exists({ checkFalsy: true })
     .withMessage('عناصر الإنتاج مطلوبة')
     .isArray({ min: 1 })
     .withMessage('يجب تحديد عنصر إنتاج واحد على الأقل'),
+  body('items.*.type_item')
+    .exists({ checkFalsy: true })
+    .withMessage('نوع العنصر مطلوب')
+    .isIn(["Presser", "Machine"])
+    .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
+  body('items.*.color_id')
+    .exists({ checkFalsy: true })
+    .withMessage('معرف اللون مطلوب')
+    .isInt({ min: 1 })
+    .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.batch_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.thickness')
+    .exists({ checkFalsy: true })
+    .withMessage('السماكة الثابتة مطلوبة')
+    .isDecimal()
+    .withMessage('السماكة الثابتة يجب أن تكون رقماً عشريام'),
   body('items.*.width')
     .exists({ checkFalsy: true })
     .withMessage('العرض الثابت مطلوب')
@@ -115,26 +115,52 @@ export const createProductionOrderRules = [
 
 ];
 
-/**
- * قواعد التحقق من تحديث أمر إنتاج
- */
-export const updateProductionOrderRules = [
+export const createProductionOrderItemRules = [
   body('type_item')
-    .optional()
+    .exists({ checkFalsy: true })
+    .withMessage('نوع العنصر مطلوب')
     .isIn(["Presser", "Machine"])
     .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
-  body('thickness')
-    .optional()
-    .isDecimal()
-    .withMessage('السماكة الثابتة يجب أن تكون رقماً عشرياً'),
   body('color_id')
-    .optional()
+    .exists({ checkFalsy: true })
+    .withMessage('معرف اللون مطلوب')
     .isInt({ min: 1 })
     .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
   body('batch_id')
     .optional()
     .isInt({ min: 1 })
     .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('thickness')
+    .exists({ checkFalsy: true })
+    .withMessage('السماكة الثابتة مطلوبة')
+    .isDecimal()
+    .withMessage('السماكة الثابتة يجب أن تكون رقماً عشريام'),
+  body('width')
+    .exists({ checkFalsy: true })
+    .withMessage('العرض الثابت مطلوب')
+    .isDecimal()
+    .withMessage('العرض الثابت يجب أن يكون رقماً عشريام'),
+  body('length')
+    .exists({ checkFalsy: true })
+    .withMessage('الطول مطلوب')
+    .isDecimal()
+    .withMessage('الطول يجب أن يكون رقماً عشريام'),
+  body('quantity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('الكمية يجب أن تكون رقماً صحيحاً موجباً'),
+  body('notes')
+    .optional()
+    .isString()
+    .withMessage('الملاحظات يجب أن تكون نصام')
+    .isLength({ max: 500 })
+    .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
+];
+
+/**
+ * قواعد التحقق من تحديث أمر إنتاج
+ */
+export const updateProductionOrderRules = [
   body('status')
     .optional()
     .isIn(PRODUCTION_STATUSES)
@@ -145,10 +171,26 @@ export const updateProductionOrderRules = [
     .withMessage('الملاحظات يجب أن تكون نصاً')
     .isLength({ max: 500 })
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
-    body('items')
+  body('items')
     .optional()
     .isArray()
     .withMessage('عناصر الإنتاج يجب أن تكون مصفوفة'),
+  body('items.*.type_item')
+    .optional()
+    .isIn(["Presser", "Machine"])
+    .withMessage('نوع العنصر يجب أن يكون كوي أو مكنة'),
+  body('items.*.color_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.batch_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.thickness')
+    .optional()
+    .isDecimal()
+    .withMessage('السماكة الثابتة يجب أن تكون رقماً عشريام'),
   body('items.*.width')
     .optional()
     .isDecimal()

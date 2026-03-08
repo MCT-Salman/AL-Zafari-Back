@@ -13,6 +13,8 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { count } from "../models/notification.model.js";
+const { notifyNewOrder } = await import("../utils/notificationHelper.js");
+
 import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
 /**
@@ -336,11 +338,10 @@ export const createOrder = async (data, userId, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logCreate(req, "order", orderResponse.order_id, orderResponse, orderResponse.order_id);
+    await logCreate(req, "order", orderResponse.order_id, orderResponse, `Order-${orderResponse.order_id}`);
 
     // إرسال إشعار لمستخدم المبيعات والمدراء
     try {
-      const { notifyNewOrder } = await import("../utils/notificationHelper.js");
       await notifyNewOrder(orderResponse, userId);
     } catch (error) {
       logger.error("Error sending order notification:", error);
@@ -519,7 +520,7 @@ export const updateOrder = async (order_id, data, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "order", order_id, existingOrder, updatedOrder, updatedOrder.order_id);
+    await logUpdate(req, "order", order_id, existingOrder, updatedOrder, `Order-${updatedOrder.order_id}`);
   }
 
   return updatedOrder;
@@ -556,7 +557,7 @@ export const deleteOrder = async (order_id, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logDelete(req, "order", order_id, order, order.order_number);
+    await logDelete(req, "order", order_id, order, `Order-${order.order_number}`);
   }
 
   return { message: "تم حذف الطلب بنجاح" };
@@ -1121,6 +1122,10 @@ export const updateOrderStatus = async (order_id, status) => {
   };
 
   logger.info("Order status updated", { order_id, status });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "order", order_id, order, updatedOrder, `Order-${updatedOrder.order_id}`);
+  }
   return orderResponse;
 };
 

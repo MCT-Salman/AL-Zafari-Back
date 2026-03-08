@@ -56,7 +56,6 @@ export const deleteById = async (constant_value_id) => {
 };
 
 export const findByType = async (type) => {
-  console.log(type);
   return prisma.constantValue.findMany({
     where: { type },
   });

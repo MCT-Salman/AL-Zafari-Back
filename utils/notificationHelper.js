@@ -27,7 +27,7 @@ export const notifyNewOrder = async (order, createdBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["admin", "warehouse_manager"],
+      ["cashier", "sales"],
       {
         title: "طلب جديد",
         body: `تم إنشاء طلب جديد رقم ${order.order_number}`,
@@ -53,7 +53,7 @@ export const notifyOrderUpdate = async (order, updatedBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["admin", "warehouse_manager"],
+      ["cashier", "sales"],
       {
         title: "تحديث طلب",
         body: `تم تحديث الطلب رقم ${order.order_number}`,
@@ -78,7 +78,7 @@ export const notifyOrderUpdate = async (order, updatedBy) => {
 export const notifyOrderDelete = async (orderNumber, deletedBy) => {
   try {
     await sendNotificationByRole(
-      ["admin"],
+      ["cashier", "sales"],
       {
         title: "حذف طلب",
         body: `تم حذف الطلب رقم ${orderNumber}`,
@@ -120,7 +120,7 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
 
     // إشعار للمدراء
     await sendNotificationByRole(
-      ["admin", "warehouse_manager"],
+      ["cashier", "sales" , "accountant"],
       {
         title: "فاتورة جديدة",
         body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_number}`,
@@ -145,7 +145,7 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
 export const notifyInvoicePayment = async (invoice, paymentAmount, paidBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "warehouse_manager"],
+      ["cashier", "sales", "accountant"],
       {
         title: "دفعة فاتورة",
         body: `تم دفع ${paymentAmount} دينار للفاتورة رقم ${invoice.invoice_number}`,
@@ -171,7 +171,7 @@ export const notifyInvoicePayment = async (invoice, paymentAmount, paidBy) => {
 export const notifyNewCustomer = async (customer, createdBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "sales"],
+      ["admin"],
       {
         title: "عميل جديد",
         body: `تم إضافة عميل جديد: ${customer.customer_name}`,
@@ -196,7 +196,7 @@ export const notifyNewCustomer = async (customer, createdBy) => {
 export const notifyNewProduction = async (production, createdBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "warehouse_manager", "production_manager"],
+      ["production_manager"],
       {
         title: "عملية إنتاج جديدة",
         body: `تم إنشاء عملية إنتاج جديدة رقم ${production.process_id}`,
@@ -220,7 +220,7 @@ export const notifyNewProduction = async (production, createdBy) => {
 export const notifyWarehouseMovement = async (movement, createdBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "warehouse_manager"],
+      ["Warehouse_Keeper"],
       {
         title: "حركة مخزن",
         body: `تم تسجيل حركة مخزن جديدة`,
@@ -241,11 +241,11 @@ export const notifyWarehouseMovement = async (movement, createdBy) => {
 
 /**
  * إرسال إشعار عملية تشريح جديدة
- */
+ */  
 export const notifyNewSlite = async (slite, createdBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "warehouse_manager", "production_manager"],
+      ["Dissection_Technician"],
       {
         title: "عملية تشريح جديدة",
         body: `تم إنشاء عملية تشريح جديدة`,
@@ -269,7 +269,7 @@ export const notifyNewSlite = async (slite, createdBy) => {
 export const notifySalesOrder = async (salesOrder, createdBy) => {
   try {
     await sendNotificationByRole(
-      ["admin", "production_manager"],
+      [ "production_manager"],
       {
         title: "طلب مبيعات جديد",
         body: `تم إنشاء طلب مبيعات جديد رقم ${salesOrder.sales_order_id}`,
@@ -295,7 +295,7 @@ export const notifyProductionOrder = async (productionOrder, items, createdBy) =
   try {
     // إشعار عام للمدراء
     await sendNotificationByRole(
-      ["admin", "production_manager"],
+      ["production_manager"],
       {
         title: "طلب إنتاج جديد",
         body: `تم إنشاء طلب إنتاج جديد رقم ${productionOrder.production_order_id}`,
@@ -387,7 +387,7 @@ export const notifyProductionOrder = async (productionOrder, items, createdBy) =
       // إرسال إشعار لمسؤول المخزن
       if (typeGroups.warehouse.length > 0) {
         await sendNotificationByRole(
-          ["warehouse_manager"],
+          ["Warehouse_Keeper" , "Warehouse_Products"],
           {
             title: "طلب مخزن جديد",
             body: `لديك ${typeGroups.warehouse.length} عنصر مخزن في طلب الإنتاج رقم ${productionOrder.production_order_id}`,

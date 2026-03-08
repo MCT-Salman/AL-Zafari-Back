@@ -345,13 +345,13 @@ model Color {
   imageUrl   String?
   notes      String?
 
-  ruler              Ruler               @relation(fields: [ruler_id], references: [ruler_id])
-  prices             PriceColor[]
-  orderItems         OrderItem[]
-  warehouseMovements WarehouseMovement[]
-  salesOrderItems    SalesOrderItem[]
-  productionOrders   ProductionOrder[]
-  invoiceItems       InvoiceItem[]
+  ruler                Ruler                 @relation(fields: [ruler_id], references: [ruler_id])
+  prices               PriceColor[]
+  orderItems           OrderItem[]
+  warehouseMovements   WarehouseMovement[]
+  salesOrderItems      SalesOrderItem[]
+  invoiceItems         InvoiceItem[]
+  productionOrderItems ProductionOrderItem[]
 
   @@map("Color")
 }
@@ -393,11 +393,11 @@ model Batch {
 
   material Material? @relation(fields: [material_id], references: [material_id])
 
-  order_items      OrderItem[]
-  movements        WarehouseMovement[]
-  salesOrderItems  SalesOrderItem[]
-  productionOrders ProductionOrder[]
-  invoiceItems     InvoiceItem[]
+  order_items          OrderItem[]
+  movements            WarehouseMovement[]
+  salesOrderItems      SalesOrderItem[]
+  invoiceItems         InvoiceItem[]
+  productionOrderItems ProductionOrderItem[]
 
   @@map("Batch")
 }
@@ -527,16 +527,10 @@ model SalesOrderItem {
 model ProductionOrder {
   production_order_id Int              @id @default(autoincrement())
   issued_by           Int
-  color_id            Int
-  batch_id            Int?
-  type_item           TypeItem
-  thickness           Decimal          @db.Decimal(10, 2)
   created_at          DateTime         @default(now())
   notes               String?
   status              ProductionStatus
 
-  color Color                 @relation(fields: [color_id], references: [color_id])
-  batch Batch?                @relation(fields: [batch_id], references: [batch_id])
   user  Users                 @relation(fields: [issued_by], references: [id])
   items ProductionOrderItem[]
 
@@ -549,6 +543,10 @@ model ProductionOrder {
 model ProductionOrderItem {
   production_order_item_id Int                  @id @default(autoincrement())
   production_order_id      Int
+  color_id                 Int
+  batch_id                 Int?
+  type_item                TypeItem?
+  thickness                Decimal              @db.Decimal(10, 2)
   width                    Decimal              @db.Decimal(10, 2)
   length                   Decimal              @db.Decimal(10, 2)
   type                     ProductionType
@@ -559,6 +557,8 @@ model ProductionOrderItem {
   created_at               DateTime             @default(now())
   notes                    String?
 
+  color           Color            @relation(fields: [color_id], references: [color_id])
+  batch           Batch?           @relation(fields: [batch_id], references: [batch_id])
   productionOrder ProductionOrder? @relation(fields: [production_order_id], references: [production_order_id])
 
   processes          ProductionProcess[]

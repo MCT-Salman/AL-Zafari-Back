@@ -33,17 +33,20 @@ export const findById = async (production_order_id) => {
           full_name: true,
         },
       },
-      color: {
-        select: {
-          color_id: true,
-          color_code: true,
-          color_name: true,
-          ruler: { select: { ruler_id: true, ruler_name: true , material: { select: { material_id: true, material_name: true } } } },
-          imageUrl: true,
+      items: {
+        include: {
+          color: {
+            select: {
+              color_id: true,
+              color_code: true,
+              color_name: true,
+              ruler: { select: { ruler_id: true, ruler_name: true, material: { select: { material_id: true, material_name: true } } } },
+              imageUrl: true,
+            },
+          },
+          batch: true,
         },
       },
-      batch: true,
-      items: true,
     },
   });
 };
@@ -59,17 +62,20 @@ export const findByIdWithItems = async (production_order_id) => {
           full_name: true,
         },
       },
-      color: {
-        select: {
-          color_id: true,
-          color_code: true,
-          color_name: true,
-          ruler: { select: { ruler_id: true, ruler_name: true , material: { select: { material_id: true, material_name: true } } } },
-          imageUrl: true,
+      items: {
+        include: {
+          color: {
+            select: {
+              color_id: true,
+              color_code: true,
+              color_name: true,
+              ruler: { select: { ruler_id: true, ruler_name: true, material: { select: { material_id: true, material_name: true } } } },
+              imageUrl: true,
+            },
+          },
+          batch: true,
         },
       },
-      batch: true,
-      items: true,
     },
   });
 };
@@ -87,17 +93,20 @@ export const findAll = async ({ where = {} }) => {
           full_name: true,
         },
       },
-      color: {
-        select: {
-          color_id: true,
-          color_code: true,
-          color_name: true,
-          ruler: { select: { ruler_id: true, ruler_name: true , material: { select: { material_id: true, material_name: true } } } },
-          imageUrl: true,
+      items: {
+        include: {
+          color: {
+            select: {
+              color_id: true,
+              color_code: true,
+              color_name: true,
+              ruler: { select: { ruler_id: true, ruler_name: true, material: { select: { material_id: true, material_name: true } } } },
+              imageUrl: true,
+            },
+          },
+          batch: true,
         },
       },
-      batch: true,
-      items: true,
     },
     orderBy: { created_at: "desc" },
   });
@@ -125,17 +134,20 @@ export const updateById = async (production_order_id, data) => {
           full_name: true,
         },
       },
-      color: {
-        select: {
-          color_id: true,
-          color_code: true,
-          color_name: true,
-          ruler: { select: { ruler_id: true, ruler_name: true , material: { select: { material_id: true, material_name: true } } } },
-          imageUrl: true,
+      items: {
+        include: {
+          color: {
+            select: {
+              color_id: true,
+              color_code: true,
+              color_name: true,
+              ruler: { select: { ruler_id: true, ruler_name: true, material: { select: { material_id: true, material_name: true } } } },
+              imageUrl: true,
+            },
+          },
+          batch: true,
         },
       },
-      batch: true,
-      items: true,
     },
   });
 };
