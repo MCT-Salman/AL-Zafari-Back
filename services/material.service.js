@@ -49,7 +49,7 @@ export const getMaterialById = async (material_id) => {
 /**
  * إنشاء مادة جديدة
  */
-export const createMaterial = async (data , req = null) => {
+export const createMaterial = async (data, req = null) => {
   // Check if material_name already exists
   const existingMaterial = await MaterialModel.findByName(data.material_name);
   if (existingMaterial) {
@@ -72,7 +72,7 @@ export const createMaterial = async (data , req = null) => {
  */
 export const updateMaterial = async (material_id, data, req = null) => {
   // Check if exists
-  await getMaterialById(material_id);
+  const existingMaterial = await getMaterialById(material_id);
   const newMaterialName = data.material_name ?? existingMaterial.material_name;
   const materialWithSameName = await MaterialModel.findByName(newMaterialName);
   if (materialWithSameName && materialWithSameName.material_id !== material_id) {
@@ -96,7 +96,7 @@ export const updateMaterial = async (material_id, data, req = null) => {
  */
 export const deleteMaterial = async (material_id, req = null) => {
   // Check if exists
-  await getMaterialById(material_id);
+  const existingMaterial = await getMaterialById(material_id);
 
   await MaterialModel.deleteById(material_id);
 

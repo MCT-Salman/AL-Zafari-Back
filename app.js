@@ -99,9 +99,9 @@ app.use((req, res, next) => {
   next();
 });*/
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -113,7 +113,7 @@ app.use(compression());
 app.use(morgan('dev'));
 
 // CSRF Protection - معطل للـ API، يمكن تفعيله للـ web forms فقط
-const csrfProtection = csrf({ 
+const csrfProtection = csrf({
   cookie: true,
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 });
@@ -122,26 +122,26 @@ const csrfProtection = csrf({
 // أو استثناء API routes
 app.use((req, res, next) => {
   if (req.path.startsWith('/auth') ||
-      req.path.startsWith('/user') ||
-      req.path.startsWith('/constant-type') ||
-      req.path.startsWith('/constant-value') ||
-      req.path.startsWith('/material') ||
-      req.path.startsWith('/color') ||
-      req.path.startsWith('/price-color') ||
-      req.path.startsWith('/ruler') ||
-      req.path.startsWith('/batch') ||
-      req.path.startsWith('/customer') ||
-      req.path.startsWith('/order') ||
-      req.path.startsWith('/invoice') ||
-      req.path.startsWith('/sales-order') ||
-      req.path.startsWith('/production-order') ||
-      req.path.startsWith('/production-process') ||
-      req.path.startsWith('/slite') ||
-      req.path.startsWith('/warehouse-movement') ||
-      req.path.startsWith('/setting') ||
-      req.path.startsWith('/activity-logs') ||
-      req.path.startsWith('/audit-logs') ||
-      req.path.startsWith('/login-attempts')) {
+    req.path.startsWith('/user') ||
+    req.path.startsWith('/constant-type') ||
+    req.path.startsWith('/constant-value') ||
+    req.path.startsWith('/material') ||
+    req.path.startsWith('/color') ||
+    req.path.startsWith('/price-color') ||
+    req.path.startsWith('/ruler') ||
+    req.path.startsWith('/batch') ||
+    req.path.startsWith('/customer') ||
+    req.path.startsWith('/order') ||
+    req.path.startsWith('/invoice') ||
+    req.path.startsWith('/sales-order') ||
+    req.path.startsWith('/production-order') ||
+    req.path.startsWith('/production-process') ||
+    req.path.startsWith('/slite') ||
+    req.path.startsWith('/warehouse-movement') ||
+    req.path.startsWith('/setting') ||
+    req.path.startsWith('/activity-logs') ||
+    req.path.startsWith('/audit-logs') ||
+    req.path.startsWith('/login-attempts')) {
     return next();
   }
   csrfProtection(req, res, next);
