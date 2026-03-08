@@ -66,7 +66,7 @@ export const createConstantType = async (data, req = null) => {
  */
 export const updateConstantType = async (constant_type_id, data, req = null) => {
   // Check if exists
-  await getConstantTypeById(constant_type_id);
+  const existingConstantType = await getConstantTypeById(constant_type_id);
 
   const updatedConstantType = await ConstantTypeModel.updateById(constant_type_id, data);
 
@@ -83,7 +83,7 @@ export const updateConstantType = async (constant_type_id, data, req = null) => 
  */
 export const deleteConstantType = async (constant_type_id, req = null) => {
   // Check if exists
-  await getConstantTypeById(constant_type_id);
+  const existingConstantType = await getConstantTypeById(constant_type_id);
 
   await ConstantTypeModel.deleteById(constant_type_id);
 

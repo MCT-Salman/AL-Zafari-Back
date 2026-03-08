@@ -147,7 +147,7 @@ export const updateColor = async (color_id, data , req = null) => {
  */
 export const deleteColor = async (color_id , req = null) => {
   // Check if exists
-  await getColorById(color_id);
+  const existingColor = await getColorById(color_id);
 
   await ColorModel.deleteById(color_id);
 

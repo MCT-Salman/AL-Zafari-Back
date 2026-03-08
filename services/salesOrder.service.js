@@ -408,6 +408,10 @@ export const updateSalesOrderItemStatus = async (Sales_order_item_id, status) =>
     Sales_order_item_id,
     type: existingItem.type,
   });
+  // تسجيل النشاط
+  if (req) {
+    await logUpdate(req, "sales_order_item", Sales_order_item_id, existingItem, updatedItem, `Sales order item-${Sales_order_item_id}`);
+  }
 
   return updatedItem;
 };

@@ -189,7 +189,7 @@ export const updateConstantValue = async (constant_value_id, data , req = null) 
  */
 export const deleteConstantValue = async (constant_value_id , req = null) => {
   // Check if exists
-  await getConstantValueById(constant_value_id);
+  const existingConstantValue = await getConstantValueById(constant_value_id);
 
   await ConstantValueModel.deleteById(constant_value_id);
 

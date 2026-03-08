@@ -85,7 +85,7 @@ export const createSetting = async (data, req = null) => {
  */
 export const updateSetting = async (id, data, userId, req = null) => {
   // Check if exists
-  await getSettingById(id);
+  const existingSetting = await getSettingById(id);
 
   // If updating key, check if it's unique
   if (data.key) {
@@ -112,7 +112,7 @@ export const updateSetting = async (id, data, userId, req = null) => {
  */
 export const updateSettingByKey = async (key, data, userId, req = null) => {
   // Check if exists
-  await getSettingByKey(key);
+  const existingSetting = await getSettingByKey(key);
 
   const updatedSetting = await SettingModel.updateByKey(key, data, userId);
 
@@ -129,7 +129,7 @@ export const updateSettingByKey = async (key, data, userId, req = null) => {
  */
 export const deleteSetting = async (id, req = null) => {
   // Check if exists
-  await getSettingById(id);
+  const existingSetting = await getSettingById(id);
 
   await SettingModel.deleteById(id);
 
@@ -150,7 +150,7 @@ export const upsertSetting = async (key, data, req = null) => {
   logger.info("Setting upserted", { key });
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "setting", setting.id, existingSetting, setting, `Setting-${setting.key}`);
+    await logUpdate(req, "setting", setting.id, setting, `Setting-${setting.key}`);
   }
   return setting;
 };
@@ -236,7 +236,8 @@ export const updateDiscount = async (id, data, req = null) => {
 };
 
 export const deleteDiscount = async (id, req = null) => {
-  await DiscountModel.deleteById(id);
+  const existingDiscount = await DiscountModel.findById(id);
+  const deleted = await DiscountModel.deleteById(id);
   logger.info("Discount deleted", { discount_id: id });
   // تسجيل النشاط
   if (req) {

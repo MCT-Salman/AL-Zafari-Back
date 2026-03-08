@@ -127,7 +127,7 @@ export const updateBatch = async (batch_id, data , req = null) => {
  */
 export const deleteBatch = async (batch_id , req = null) => {
   // Check if exists
-  await getBatchById(batch_id);
+  const existingBatch = await getBatchById(batch_id);
 
   await BatchModel.deleteById(batch_id);
 

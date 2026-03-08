@@ -88,7 +88,7 @@ export const createRuler = async (data , req = null) => {
  */
 export const updateRuler = async (ruler_id, data , req = null) => {
   // Check if exists
-  await getRulerById(ruler_id);
+  const existingRuler = await getRulerById(ruler_id);
   const newRulerName = data.ruler_name ?? existingRuler.ruler_name;
   const newMaterialId = data.material_id
     ? parseInt(data.material_id)
@@ -129,7 +129,7 @@ export const updateRuler = async (ruler_id, data , req = null) => {
  */
 export const deleteRuler = async (ruler_id , req = null) => {
   // Check if exists
-  await getRulerById(ruler_id);
+  const existingRuler = await getRulerById(ruler_id);
 
   await RulerModel.deleteById(ruler_id);
 

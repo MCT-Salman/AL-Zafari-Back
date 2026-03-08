@@ -118,7 +118,7 @@ export const updatePriceColor = async (price_color_id, data, req = null) => {
  */
 export const deletePriceColor = async (price_color_id, req = null) => {
   // Check if exists
-  await getPriceColorById(price_color_id);
+  const existingPriceColor = await getPriceColorById(price_color_id);
 
   await PriceColorModel.deleteById(price_color_id);
 
