@@ -90,8 +90,17 @@ export const findByRulerId = async ( ruler_id) => {
 /**
  * البحث عن لون حسب الكود و معرف المسطرة
  */
-export const findByCodeAndRulerId = async (color_code, ruler_id , color_name) => {
+export const findByCodeAndRulerId = async (color_code, ruler_id) => {
   return prisma.color.findFirst({
-    where: { color_code, ruler_id , color_name},
+    where: { color_code, ruler_id },
+  });
+};
+
+/**
+ * البحث عن لون حسب اسم اللون و معرف المسطرة
+ */
+export const findByNameAndRulerId = async (color_name, ruler_id) => {
+  return prisma.color.findFirst({
+    where: { color_name, ruler_id },
   });
 };

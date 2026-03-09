@@ -29,7 +29,7 @@ router.get("/:id", requireRole(["admin", "sales", "accountant", "cashier"]), val
 // POST, PUT, DELETE routes - admin and sales only
 router.post("/", requireRole(["admin", "sales"]), validate(createCustomerRules), createCustomer);
 router.put("/:id", requireRole(["admin", "sales"]), validate([...customerIdParamRules, ...updateCustomerRules]), updateCustomer);
-router.delete("/:id", requireRole(["admin"]), validate(customerIdParamRules), deleteCustomer);
+router.delete("/:id", requireRole(["admin"], ["sales"]), validate(customerIdParamRules), deleteCustomer);
 
 export default router;
 
