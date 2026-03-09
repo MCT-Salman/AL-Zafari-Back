@@ -1,5 +1,6 @@
 import {
   getAllSlites as getAllSlitesService,
+  getSlitesByProductionOrderItemId as getSlitesByProductionOrderItemIdService,
   getSliteById as getSliteByIdService,
   createSlite as createSliteService,
   updateSlite as updateSliteService,
@@ -22,6 +23,21 @@ export const getAllSlites = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Get slites controller error", { error });
+    next(error);
+  }
+};
+
+export const getSlitesByProductionOrderItemId = async (req, res, next) => {
+  try {
+    const slites = await getSlitesByProductionOrderItemIdService(parseInt(req.params.id));
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب عمليات التشريح بنجاح",
+      data: slites,
+    });
+  } catch (error) {
+    logger.error("Get slites by production order item id controller error", { error });
     next(error);
   }
 };

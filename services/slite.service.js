@@ -23,6 +23,16 @@ export const getAllSlites = async (filters = {}) => {
   return { slites, total };
 };
 
+export const getSlitesByProductionOrderItemId = async (production_order_item_id) => {
+  const slites = await SliteModel.findByProductionOrderItemId(production_order_item_id);
+  if (!slites) {
+    const error = new Error("لا توجد عمليات تشريح لهذا العنصر");
+    error.statusCode = 404;
+    throw error;
+  }
+  return slites;
+};
+
 /**
  * جلب Slite واحد
  */

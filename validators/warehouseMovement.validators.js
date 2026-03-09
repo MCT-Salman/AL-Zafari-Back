@@ -115,3 +115,11 @@ export const updateWarehouseMovementRules = [
     .withMessage("الملاحظات يجب ألا تتجاوز 500 حرف"),
 ];
 
+export const productionOrderItemIdParamRules = [
+  param("id")
+    .exists({ checkFalsy: true })
+    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
+];
+

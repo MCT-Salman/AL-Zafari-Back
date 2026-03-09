@@ -11,6 +11,7 @@ import {
   updateProductionOrderItem as updateProductionOrderItemService,
   deleteProductionOrderItem as deleteProductionOrderItemService,
   getProductionOrderItemsByType as getProductionOrderItemsByTypeService,
+  getAllProductionOrderItemsByType as getAllProductionOrderItemsByTypeService,
 } from "../services/productionOrder.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -335,6 +336,31 @@ export const getProductionOrderItemsByType = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Get production order items by type controller error", {
+      message: error?.message,
+      stack: error?.stack,
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      params: req.params,
+    });
+    return next(error);
+  }
+};
+
+export const getAllProductionOrderItemsByType = async (req, res, next) => {
+  try {
+    const { type } = req.params;
+    const userRole = req.user.role;
+
+    const items = await getAllProductionOrderItemsByTypeService(type, userRole);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب عناصر طلب الإنتاج بنجاح",
+      data: items,
+    });
+  } catch (error) {
+    logger.error("Get all production order items by type controller error", {
       message: error?.message,
       stack: error?.stack,
       url: req.originalUrl,

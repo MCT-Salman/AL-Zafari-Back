@@ -31,6 +31,26 @@ export const createMany = async (data) => {
 };
 
 /**
+ * جلب جميع عناصر أمر إنتاج
+ */
+export const findAll = async ({ where = {} }) => {
+  return prisma.productionOrderItem.findMany({
+    where,
+    include: {
+      productionOrder: {
+        select: {
+          production_order_id: true,
+          status: true,
+        },
+      },
+      processes: true,
+      slites: true,
+      warehouseMovements: true,
+    },
+  });
+};
+
+/**
  * البحث عن عنصر أمر إنتاج حسب المعرف
  */
 export const findById = async (production_order_item_id) => {

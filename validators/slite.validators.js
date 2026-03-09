@@ -79,3 +79,11 @@ export const updateSliteRules = [
   body("destination").optional().isIn(DESTINATIONS),
   body("notes").optional().isString().isLength({ max: 500 }),
 ];
+
+export const productionOrderItemIdParamRules = [
+  param("id")
+    .exists({ checkFalsy: true })
+    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
+];

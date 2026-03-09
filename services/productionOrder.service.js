@@ -486,3 +486,16 @@ export const getProductionOrderItemsByType = async (production_order_id, userRol
 
   return filteredItems;
 };
+
+export const getAllProductionOrderItemsByType = async (type, userRole) => {
+  // Check if user has permission to view this item type
+  if (!canAccessProductionType(userRole, type)) {
+    const error = new Error("ليس لديك صلاحية لعرض هذا النوع من العناصر");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const items = await ProductionOrderItemModel.findAll({ where: { type } });
+  return items;
+};
+  

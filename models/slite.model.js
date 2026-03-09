@@ -10,12 +10,17 @@ export const create = async (data) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
       user: {
@@ -39,20 +44,17 @@ export const findById = async (slite_id) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: {
+              ruler: {
                 include: {
-                  ruler: {
-                    include: {
-                      material: true,
-                    },
-                  },
+                  material: true,
                 },
               },
-              batch: true,
             },
           },
+          batch: true,
         },
       },
       user: {
@@ -76,12 +78,17 @@ export const findAll = async ({ where = {} }) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
       user: {
@@ -104,7 +111,21 @@ export const findByProductionOrderItemId = async (production_order_item_id) => {
   return prisma.slite.findMany({
     where: { production_order_item_id },
     include: {
-      item: true,
+      item: {
+        include: {
+          productionOrder: true,
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -125,7 +146,21 @@ export const findByBarcode = async (barcode) => {
   return prisma.slite.findUnique({
     where: { barcode },
     include: {
-      item: true,
+      item: {
+        include: {
+          productionOrder: true,
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -145,7 +180,21 @@ export const findByDestination = async (destination) => {
   return prisma.slite.findMany({
     where: { destination },
     include: {
-      item: true,
+      item: {
+        include: {
+          productionOrder: true,
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -176,12 +225,17 @@ export const updateById = async (slite_id, data) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
       user: {

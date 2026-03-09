@@ -29,6 +29,16 @@ export const getAllWarehouseMovements = async (filters = {}) => {
   return { movements, total };
 };
 
+export const getWarehouseMovementsByProductionOrderItemId = async (id) => {
+  const movements = await WarehouseMovementModel.findByProductionOrderItemId(id);
+  if (!movements) {
+    const error = new Error("لا توجد حركات مخزن لهذا العنصر");
+    error.statusCode = 404;
+    throw error;
+  }
+  return movements;
+};
+
 /**
  * جلب حركة مخزن واحدة
  */

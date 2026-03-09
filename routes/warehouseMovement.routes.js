@@ -7,6 +7,7 @@ import {
   createWarehouseMovement,
   updateWarehouseMovement,
   deleteWarehouseMovement,
+  getWarehouseMovementsByProductionOrderItemId
 } from "../controllers/warehouseMovement.controller.js";
 
 import {
@@ -14,6 +15,7 @@ import {
   updateWarehouseMovementRules,
   warehouseMovementIdParamRules,
   getWarehouseMovementsQueryRules,
+  productionOrderItemIdParamRules,
 } from "../validators/warehouseMovement.validators.js";
 
 const router = Router();
@@ -22,6 +24,9 @@ router.use(requireAuth);
 
 // GET /warehouse-movements
 router.get("/", validate(getWarehouseMovementsQueryRules), getAllWarehouseMovements);
+
+// GET /warehouse-movements/production-order-item/:id
+router.get("/production-order-item/:id", validate(productionOrderItemIdParamRules), getWarehouseMovementsByProductionOrderItemId);
 
 // GET /warehouse-movements/:id
 router.get("/:id", validate(warehouseMovementIdParamRules), getWarehouseMovementById);

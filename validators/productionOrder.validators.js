@@ -157,6 +157,14 @@ export const createProductionOrderItemRules = [
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف'),
 ];
 
+export const productionOrderTypeParamRules = [
+  param('type')
+    .exists({ checkFalsy: true })
+    .withMessage('نوع الإنتاج مطلوب')
+    .isIn(PRODUCTION_TYPES)
+    .withMessage('نوع الإنتاج غير صالح')
+];
+
 /**
  * قواعد التحقق من تحديث أمر إنتاج
  */

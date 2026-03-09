@@ -1051,7 +1051,7 @@ export const deleteOrderItem = async (order_id, order_item_id, req = null) => {
 /**
  * تعديل حالة طلب
  */
-export const updateOrderStatus = async (order_id, status) => {
+export const updateOrderStatus = async (order_id, status , req = null) => {
   // التحقق من وجود الطلب
   const order = await OrderModel.findById(order_id);
   if (!order) {

@@ -10,24 +10,19 @@ export const create = async (data) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
-      color: {
-        include: {
-          ruler: {
-            include: {
-              material: true,
-            },
-          },
-        },
-      },
-      batch: true,
       user: {
         select: {
           id: true,
@@ -48,32 +43,19 @@ export const findById = async (movement_id) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: {
+              ruler: {
                 include: {
-                  ruler: {
-                    include: {
-                      material: true,
-                    },
-                  },
+                  material: true,
                 },
               },
-              batch: true,
             },
           },
+          batch: true,
         },
       },
-      color: {
-        include: {
-          ruler: {
-            include: {
-              material: true,
-            },
-          },
-        },
-      },
-      batch: true,
       user: {
         select: {
           id: true,
@@ -94,24 +76,19 @@ export const findAll = async ({ where = {} }) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          productionOrder: true,
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
-      color: {
-        include: {
-          ruler: {
-            include: {
-              material: true,
-            },
-          },
-        },
-      },
-      batch: true,
       user: {
         select: {
           id: true,
@@ -131,9 +108,20 @@ export const findByProductionOrderItemId = async (production_order_item_id) => {
   return prisma.warehouseMovement.findMany({
     where: { production_order_item_id },
     include: {
-      item: true,
-      color: true,
-      batch: true,
+      item: {
+        include: {
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -153,17 +141,20 @@ export const findByColorId = async (color_id) => {
   return prisma.warehouseMovement.findMany({
     where: { color_id },
     include: {
-      item: true,
-      color: {
+      item: {
         include: {
-          ruler: {
+          color: {
             include: {
-              material: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
-      batch: true,
       user: {
         select: {
           id: true,
@@ -183,9 +174,20 @@ export const findByBatchId = async (batch_id) => {
   return prisma.warehouseMovement.findMany({
     where: { batch_id },
     include: {
-      item: true,
-      color: true,
-      batch: true,
+      item: {
+        include: {
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -205,9 +207,20 @@ export const findByDestination = async (destination) => {
   return prisma.warehouseMovement.findMany({
     where: { destination },
     include: {
-      item: true,
-      color: true,
-      batch: true,
+      item: {
+        include: {
+          color: {
+            include: {
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
+          batch: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -237,24 +250,18 @@ export const updateById = async (movement_id, data) => {
     include: {
       item: {
         include: {
-          productionOrder: {
+          color: {
             include: {
-              color: true,
-              batch: true,
+              ruler: {
+                include: {
+                  material: true,
+                },
+              },
             },
           },
+          batch: true,
         },
       },
-      color: {
-        include: {
-          ruler: {
-            include: {
-              material: true,
-            },
-          },
-        },
-      },
-      batch: true,
       user: {
         select: {
           id: true,

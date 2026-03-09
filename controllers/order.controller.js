@@ -185,7 +185,7 @@ export const updateOrderStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const order = await updateOrderStatusService(parseInt(id), status);
+    const order = await updateOrderStatusService(parseInt(id), status , req);
 
     res.json({
       success: SUCCESS_REQUEST,

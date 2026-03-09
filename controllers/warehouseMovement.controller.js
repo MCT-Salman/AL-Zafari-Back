@@ -1,5 +1,6 @@
 import {
   getAllWarehouseMovements as getAllWarehouseMovementsService,
+  getWarehouseMovementsByProductionOrderItemId as getWarehouseMovementsByProductionOrderItemIdService,
   getWarehouseMovementById as getWarehouseMovementByIdService,
   createWarehouseMovement as createWarehouseMovementService,
   updateWarehouseMovement as updateWarehouseMovementService,
@@ -22,6 +23,23 @@ export const getAllWarehouseMovements = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Get warehouse movements controller error", { error });
+    next(error);
+  }
+};
+
+export const getWarehouseMovementsByProductionOrderItemId = async (req, res, next) => {
+  try {
+    const movements = await getWarehouseMovementsByProductionOrderItemIdService(
+      parseInt(req.params.id)
+    );
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب حركات المخزن بنجاح",
+      data: movements,
+    });
+  } catch (error) {
+    logger.error("Get warehouse movements by production order item id controller error", { error });
     next(error);
   }
 };
