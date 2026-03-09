@@ -191,7 +191,7 @@ export const createInvoice = async (data, userId, req = null) => {
       data: {
         order_id: data.order_id || null,
         customer_id: data.customer_id,
-        total_amount,
+        total_amount : amountAfterDiscount.toFixed(2),
         paid_amount,
         discount,
         remaining_amount,
@@ -304,7 +304,7 @@ export const updateInvoice = async (invoice_id, data, req = null) => {
       where: { invoice_id },
       data: {
         customer_id: data.customer_id ?? existingInvoice.customer_id,
-        total_amount,
+        total_amount: amountAfterDiscount.toFixed(2),
         discount,
         paid_amount: new_paid_amount,
         remaining_amount: new_remaining_amount,
