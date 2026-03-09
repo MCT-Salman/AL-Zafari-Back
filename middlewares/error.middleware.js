@@ -30,7 +30,7 @@ export const errorHandler = (err, req, res, next) => {
 
   // التفاصيل في التطوير فقط
   if (process.env.NODE_ENV === 'development' && err.stack) {
-    payload.details = err.stack;
+    payload.message = err.stack;
   }
 
   // تسجيل الخطأ عبر Winston

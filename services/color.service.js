@@ -76,7 +76,7 @@ export const createColor = async (data , req = null) => {
   }
 
   // Check if color_code already exists
-  const existingColor = await ColorModel.findByCodeAndRulerId(data.color_code, parseInt(data.ruler_id));
+  const existingColor = await ColorModel.findByCodeAndRulerId(data.color_code, parseInt(data.ruler_id) , data.color_name);
   if (existingColor) {
     deleteFile(data.imageUrl);
     const error = new Error("كود اللون موجود بالفعل ل هذه المسطرة");
@@ -119,7 +119,8 @@ export const updateColor = async (color_id, data , req = null) => {
 
   const colorWithSameCode = await ColorModel.findByCodeAndRulerId(
     newColorCode,
-    newRulerId
+    newRulerId,
+    data.color_name
   );
 
   if (colorWithSameCode && colorWithSameCode.color_id !== color_id) {

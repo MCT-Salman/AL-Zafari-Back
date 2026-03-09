@@ -210,7 +210,7 @@ app.use((error, req, res, _next) => {
     });
   }
 
-  if (error.name === 'ValidationError') return res.status(400).json({ success: false, error: 'بيانات غير صالحة', details: error.message });
+  if (error.name === 'ValidationError') return res.status(400).json({ success: false, error: 'بيانات غير صالحة', message: error.message });
   if (error.name === 'JsonWebTokenError') return res.status(401).json({ success: false, error: 'رمز المصادقة غير صالح' });
   if (error.name === 'TokenExpiredError') return res.status(401).json({ success: false, error: 'انتهت صلاحية رمز المصادقة', code: 'TOKEN_EXPIRED' });
 
@@ -222,7 +222,7 @@ app.use((error, req, res, _next) => {
   if (error.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ success: false, error: 'حجم الملف كبير' });
   if (error.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ success: false, error: 'نوع الملف غير مدعوم' });
 
-  res.status(500).json({ success: false, error: 'خطأ في الخادم', ...(process.env.NODE_ENV === 'development' && { details: error.message }) });
+  res.status(500).json({ success: false, error: 'خطأ في الخادم', ...(process.env.NODE_ENV === 'development' && { message: error.message }) });
 });
 
 // إنشاء HTTP Server لدعم Socket.IO

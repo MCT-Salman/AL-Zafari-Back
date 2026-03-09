@@ -181,14 +181,15 @@ export const getDiscounts = async (filters = {}) => {
 
 export const createDiscount = async (data, req = null) => {
   // Check if material exists
-  const material = await MaterialModel.findById(data.material_id);
+  const material_id = parseInt(data.material_id);
+  const material = await MaterialModel.findById(material_id);
   if (!material) {
     const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
     throw error;
   }
   const quantity = Number(data.quantity);
-  const existingdiscount = await DiscountModel.findByMaterialIdAndQuantity(data.material_id, quantity);
+  const existingdiscount = await DiscountModel.findByMaterialIdAndQuantity(material_id, quantity);
   if (existingdiscount) {
     const error = new Error(" الخصم موجود بالفعل لنفس المادة والكمية");
     error.statusCode = 400;
@@ -206,8 +207,16 @@ export const createDiscount = async (data, req = null) => {
 };
 
 export const updateDiscount = async (id, data, req = null) => {
+  const material_id = parseInt(data.material_id);
+  // Check if discount exists
+  const existingDiscount1 = await DiscountModel.findById(id);
+  if (!existingDiscount1) {
+    const error = new Error("الخصم غير موجود");
+    error.statusCode = 404;
+    throw error;
+  }
   // Check if material exists
-  const material = await MaterialModel.findById(data.material_id);
+  const material = await MaterialModel.findById(material_id);
   if (!material) {
     const error = new Error("المادة غير موجودة");
     error.statusCode = 404;
@@ -216,7 +225,7 @@ export const updateDiscount = async (id, data, req = null) => {
   const quantity = Number(data.quantity);
   const existingDiscount =
     await DiscountModel.findByMaterialIdAndQuantity(
-      data.material_id,
+      material_id,
       quantity
     );
 
@@ -256,6 +265,6 @@ export const getExchangeRateLog = async () => {
 };
 
 export const getDiscountsByMaterialId = async (material_id) => {
-  const discounts = await DiscountModel.findByMaterialId(material_id);
+  const discounts = await DiscountModel.findByMaterialId(parseInt(material_id));
   return discounts;
 };
