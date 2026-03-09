@@ -196,7 +196,8 @@ export const createDiscount = async (data, req = null) => {
     throw error;
   }
 
-
+  data.material_id = material_id;
+  data.quantity = quantity;
   const discount = await DiscountModel.create(data);
   logger.info("Discount created", { discount_id: discount.discount_id });
   // تسجيل النشاط
@@ -234,6 +235,8 @@ export const updateDiscount = async (id, data, req = null) => {
     error.statusCode = 400;
     throw error;
   }
+  data.material_id = material_id;
+  data.quantity = quantity;
 
   const discount = await DiscountModel.updateById(id, data);
   logger.info("Discount updated", { discount_id: id });
