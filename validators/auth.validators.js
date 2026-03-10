@@ -4,7 +4,7 @@ import { getCountryFromPhone } from "../utils/phoneCountry.js";
 export const usernameValidator = body("username")
   .exists({ checkFalsy: true }).withMessage("اسم المستخدم مطلوب")
   .isString().withMessage("اسم المستخدم يجب أن يكون نصام")
-  .isLength({ min: 4 }).withMessage("اسم المستخدم قصير للغاية");
+  .isLength({ min: 4 }).withMessage("اسم المستخدم يجب أن يكون 4 أحرف على الأقل");
 
 export const passwordValidator = body("password")
   .exists({ checkFalsy: true }).withMessage("كلمة المرور مطلوبة")

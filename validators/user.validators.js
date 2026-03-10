@@ -43,7 +43,7 @@ export const updateUserRules = [
   body('username')
     .optional()
     .isString().withMessage('اسم المستخدم يجب أن يكون نصاً')
-    .isLength({ min: 6, max: 50 }).withMessage('اسم المستخدم يجب أن يكون بين 6 و 50 حرف'),
+    .isLength({ min: 4, max: 50 }).withMessage('اسم المستخدم يجب أن يكون 4 أحرف على الأقل'),
   body('phone')
     .optional()
     .isString().withMessage('رقم الهاتف يجب أن يكون نصاً')
