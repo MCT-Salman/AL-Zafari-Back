@@ -77,6 +77,7 @@ export const getPriceMaterial = async (data) => {
 
 
   return {
+    price_per_meter: Number(unitPrice.toFixed(2)),
     unitPrice: Number(unitPriceWithExchange.toFixed(2)),
     quantity,
     length,
