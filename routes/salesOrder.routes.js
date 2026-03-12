@@ -13,6 +13,7 @@ import {
   updateSalesOrderItemStatus,
   updateSalesOrderItem,
   deleteSalesOrderItem,
+  deleteallSalesOrder
 
 } from '../controllers/salesOrder.controller.js';
 
@@ -24,6 +25,7 @@ import {
   SalesOrderItemIdParamRules,
   createSalesOrderItemRules,
   updateSalesOrderItemRules,
+  allSalesOrdersarrayRules
   
 } from '../validators/salesOrder.validators.js';
 
@@ -37,6 +39,7 @@ router.get("/", requireRole(["admin", "production_manager", "sales", "accountant
 router.get("/:id", requireRole(["admin", "production_manager", "sales", "accountant"]), validate(SalesOrderIdParamRules), getSalesOrderById);
 router.post("/", requireRole(["admin", "sales"]), validate(createSalesOrderRules), createSalesOrder);
 router.put("/:id", requireRole(["admin", "sales"]), validate([...SalesOrderIdParamRules, ...updateSalesOrderRules]), updateSalesOrder);
+router.delete("/all", requireRole(["admin", "sales"]), validate(allSalesOrdersarrayRules), deleteallSalesOrder);
 router.delete("/:id", requireRole(["admin", "sales"]), validate(SalesOrderIdParamRules), deleteSalesOrder);
 
 

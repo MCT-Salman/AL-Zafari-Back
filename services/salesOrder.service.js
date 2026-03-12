@@ -464,3 +464,34 @@ export const deleteSalesOrderItem = async (Sales_order_item_id, req = null) => {
   return { message: "تم حذف عنصر طلب الإنتاج بنجاح" };
 };
 
+
+export const deleteallSalesOrder = async (ids, req = null) => {
+  const salesOrders = await SalesOrderModel.findAll({ where: { sales_order_id: { in: ids } } });
+  if (salesOrders.length === 0) {
+    const error = new Error("لا توجد أوامر إنتاج لحذفها");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (const salesOrder of salesOrders) {
+      await tx.salesOrderItem.deleteMany({
+        where: { sales_order_id: salesOrder.sales_order_id }
+      });
+    }
+    await tx.salesOrder.deleteMany({
+      where: { sales_order_id: { in: ids } }
+    });
+  });
+
+  logger.info("Sales orders deleted", { ids });
+
+  // تسجيل النشاط
+  if (req) {
+    for (const salesOrder of salesOrders) {
+      await logDelete(req, "sales_order", salesOrder.sales_order_id, salesOrder, `Sales order-${salesOrder.sales_order_id}`);
+    }
+  }
+
+  return { message: "تم حذف أوامر الإنتاج بنجاح" };
+};

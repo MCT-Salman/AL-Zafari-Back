@@ -1,10 +1,10 @@
 import {
   getAllWarehouseMovements as getAllWarehouseMovementsService,
-  getWarehouseMovementsByProductionOrderItemId as getWarehouseMovementsByProductionOrderItemIdService,
   getWarehouseMovementById as getWarehouseMovementByIdService,
   createWarehouseMovement as createWarehouseMovementService,
   updateWarehouseMovement as updateWarehouseMovementService,
   deleteWarehouseMovement as deleteWarehouseMovementService,
+  deleteallWarehouseMovement as deleteallWarehouseMovementService,
 } from "../services/warehouseMovement.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -23,23 +23,6 @@ export const getAllWarehouseMovements = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Get warehouse movements controller error", { error });
-    next(error);
-  }
-};
-
-export const getWarehouseMovementsByProductionOrderItemId = async (req, res, next) => {
-  try {
-    const movements = await getWarehouseMovementsByProductionOrderItemIdService(
-      parseInt(req.params.id)
-    );
-
-    res.json({
-      success: SUCCESS_REQUEST,
-      message: "تم جلب حركات المخزن بنجاح",
-      data: movements,
-    });
-  } catch (error) {
-    logger.error("Get warehouse movements by production order item id controller error", { error });
     next(error);
   }
 };
@@ -108,6 +91,7 @@ export const updateWarehouseMovement = async (req, res, next) => {
   }
 };
 
+
 /**
  * DELETE /warehouse-movements/:id
  */
@@ -125,6 +109,19 @@ export const deleteWarehouseMovement = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Delete warehouse movement controller error", { error });
+    next(error);
+  }
+};
+
+export const deleteallWarehouseMovement = async (req, res, next) => {
+  try {
+    const result = await deleteallWarehouseMovementService(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallWarehouseMovement controller", { error: error.message });
     next(error);
   }
 };

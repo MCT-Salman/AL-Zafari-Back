@@ -8,21 +8,16 @@ export const create = async (data) => {
   return prisma.warehouseMovement.create({
     data,
     include: {
-      item: {
+      color: {
         include: {
-          productionOrder: true,
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -41,21 +36,16 @@ export const findById = async (movement_id) => {
   return prisma.warehouseMovement.findUnique({
     where: { movement_id },
     include: {
-      item: {
+      color: {
         include: {
-          productionOrder: true,
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -74,54 +64,16 @@ export const findAll = async ({ where = {} }) => {
   return prisma.warehouseMovement.findMany({
     where,
     include: {
-      item: {
+      color: {
         include: {
-          productionOrder: true,
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
-      user: {
-        select: {
-          id: true,
-          username: true,
-          full_name: true,
-        },
-      },
-    },
-    orderBy: { created_at: "desc" },
-  });
-};
-
-/**
- * البحث عن حركات مخزن حسب production_order_item_id
- */
-export const findByProductionOrderItemId = async (production_order_item_id) => {
-  return prisma.warehouseMovement.findMany({
-    where: { production_order_item_id },
-    include: {
-      item: {
-        include: {
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -141,20 +93,16 @@ export const findByColorId = async (color_id) => {
   return prisma.warehouseMovement.findMany({
     where: { color_id },
     include: {
-      item: {
+      color: {
         include: {
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -174,20 +122,16 @@ export const findByBatchId = async (batch_id) => {
   return prisma.warehouseMovement.findMany({
     where: { batch_id },
     include: {
-      item: {
+      color: {
         include: {
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -207,20 +151,16 @@ export const findByDestination = async (destination) => {
   return prisma.warehouseMovement.findMany({
     where: { destination },
     include: {
-      item: {
+      color: {
         include: {
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -248,20 +188,16 @@ export const updateById = async (movement_id, data) => {
     where: { movement_id },
     data,
     include: {
-      item: {
+      color: {
         include: {
-          color: {
+          ruler: {
             include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
+              material: true,
             },
           },
-          batch: true,
         },
       },
+      batch: true,
       user: {
         select: {
           id: true,
@@ -279,14 +215,5 @@ export const updateById = async (movement_id, data) => {
 export const deleteById = async (movement_id) => {
   return prisma.warehouseMovement.delete({
     where: { movement_id },
-  });
-};
-
-/**
- * حذف جميع حركات المخزن لعنصر طلب إنتاج معين
- */
-export const deleteByProductionOrderItemId = async (production_order_item_id) => {
-  return prisma.warehouseMovement.deleteMany({
-    where: { production_order_item_id },
   });
 };

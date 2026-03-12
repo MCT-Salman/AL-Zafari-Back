@@ -26,44 +26,49 @@ export const createProductionProcess = async (data, userId, userRole, req = null
         error.statusCode = 403;
         throw error;
     }
-    const existingItem = await prisma.productionOrderItem.findUnique({
-        where: { production_order_item_id: data.production_order_item_id },
+
+    // التحقق من اللون
+    const color = await prisma.color.findUnique({
+        where: { color_id: data.color_id },
     });
-    if (!existingItem) {
-        const error = new Error("عنصر طلب الإنتاج غير موجود");
+    if (!color) {
+        const error = new Error("اللون غير موجود");
         error.statusCode = 404;
         throw error;
     }
-    if (existingItem.status !== "pending") {
-        const error = new Error("لا يمكن إنشاء عملية إنتاج لعنصر طلب إنتاج مكتمل أو ملغى");
-        error.statusCode = 400;
+
+    // التحقق من الطبخة
+    const batch = await prisma.batch.findUnique({
+        where: { batch_id: data.batch_id },
+    });
+    if (!batch) {
+        const error = new Error("الطبخة غير موجودة");
+        error.statusCode = 404;
         throw error;
     }
 
-    if (existingItem.type !== "cutting" && existingItem.type !== "gluing") {
-        const error = new Error("لا يمكن إنشاء عملية إنتاج لعنصر طلب إنتاج من هذا النوع");
+    // التحقق من نوع العملية
+    if (!["cutting", "gluing"].includes(data.type)) {
+        const error = new Error("نوع العملية غير صحيح (قص أو تغرية فقط)");
         error.statusCode = 400;
         throw error;
     }
-
-    // التأكد من عدم تكرار الباركود
-    const existingBarcode = await ProductionProcessModel.findByBarcode(data.barcode);
-
-    if (existingBarcode) {
-        const error = new Error("الباركود مستخدم مسبقاً");
-        error.statusCode = 400;
-        throw error;
+    if (data.type === "gluing" ) {
+        data.waste = data.input_length - Number(data.output_length);
     }
+
 
     const process = await ProductionProcessModel.create({
-        production_order_item_id: data.production_order_item_id,
+        color_id: data.color_id,
+        batch_id: data.batch_id,
+        type_item: data.type_item || null,
         input_length: data.input_length,
         output_length: data.output_length,
         input_width: data.input_width,
-        waste: data.waste,
-        barcode: data.barcode,
-        type: existingItem.type,
-        destination: data.destination,
+        waste: data.waste || null,
+        type: data.type,
+        source: data.source || null,
+        destination: data.destination || null,
         user_id: userId,
         notes: data.notes || null,
     });
@@ -141,11 +146,20 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
 
     const where = {};
 
-    if (filters.production_order_item_id) {
-        where.production_order_item_id = Number(filters.production_order_item_id);
+    if (filters.color_id) {
+        where.color_id = Number(filters.color_id);
+    }
+    if (filters.batch_id) {
+        where.batch_id = Number(filters.batch_id);
     }
     if (filters.type) {
         where.type = filters.type;
+    }
+    if (filters.source) {
+        where.source = filters.source;
+    }
+    if (filters.type_item) {
+        where.type_item = filters.type_item;
     }
 
     const [processes, total] = await Promise.all([
@@ -182,4 +196,30 @@ export const deleteProductionProcess = async (process_id, userRole, req = null) 
         await logDelete(req, "production_process", process_id, existing, `Production process-${process_id}`);
     }
     return { message: "تم حذف عملية الإنتاج بنجاح" };
+};
+
+export const deleteallProductionProcess = async (ids, req = null) => {
+    const processes = await ProductionProcessModel.findAll({ where: { process_id: { in: ids } } });
+    if (processes.length === 0) {
+        const error = new Error("لا توجد عمليات إنتاج لحذفها");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.productionProcess.deleteMany({
+            where: { process_id: { in: ids } }
+        });
+    });
+
+    logger.info("Production processes deleted", { ids });
+
+    // تسجيل النشاط
+    if (req) {
+        for (const process of processes) {
+            await logDelete(req, "production_process", process.process_id, process, `Production process-${process.process_id}`);
+        }
+    }
+
+    return { message: "تم حذف عمليات الإنتاج بنجاح" };
 };

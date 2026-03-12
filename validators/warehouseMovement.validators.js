@@ -39,11 +39,6 @@ export const getWarehouseMovementsQueryRules = [
  * إنشاء حركة مخزن جديدة
  */
 export const createWarehouseMovementRules = [
-  body("production_order_item_id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
-    .isInt({ min: 1 })
-    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
   body("color_id")
     .exists({ checkFalsy: true })
     .withMessage("معرف اللون مطلوب")
@@ -54,8 +49,7 @@ export const createWarehouseMovementRules = [
     .isInt({ min: 1 })
     .withMessage("معرف الدفعة يجب أن يكون رقماً صحيحاً"),
   body("quantity")
-    .exists({ checkFalsy: true })
-    .withMessage("الكمية مطلوبة")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("الكمية يجب أن تكون رقماً صحيحاً موجباً"),
   body("length")
@@ -115,11 +109,17 @@ export const updateWarehouseMovementRules = [
     .withMessage("الملاحظات يجب ألا تتجاوز 500 حرف"),
 ];
 
-export const productionOrderItemIdParamRules = [
-  param("id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
-    .isInt({ min: 1 })
-    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
+export const allWarehouseMovementsarrayRules = [
+  body("ids")
+    .notEmpty()
+    .withMessage("معرفات حركة المخزن مطلوبة")
+    .isArray()
+    .withMessage("معرفات حركة المخزن يجب أن تكون مصفوفة")
+    .custom((value) => {
+      if (value.length === 0) {
+        throw new Error("معرفات حركة المخزن يجب أن تحتوي على عنصر واحد على الأقل");
+      }
+      return true;
+    }),
 ];
 

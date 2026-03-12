@@ -12,6 +12,7 @@ import {
   updateOrderItem,
   deleteOrderItem,
   updateOrderStatus,
+  deleteallOrder
 } from "../controllers/order.controller.js";
 
 import {
@@ -23,6 +24,7 @@ import {
   updateOrderItemRules,
   orderItemIdParamRules,
   updateOrderStatusRules,
+  allOrdersarrayRules
 } from "../validators/order.validators.js";
 
 const router = Router();
@@ -37,6 +39,7 @@ router.get("/:id", requireRole(["admin", "sales", "accountant", "cashier"]), val
 // POST, PUT, DELETE routes - admin, sales, and accountant
 router.post("/", requireRole(["admin", "sales", "cashier"]), validate(createOrderRules), createOrder);
 router.put("/:id", requireRole(["admin", "sales", "cashier"]), validate([...orderIdParamRules, ...updateOrderRules]), updateOrder);
+router.delete("/all", requireRole(["admin", "sales"]), validate(allOrdersarrayRules), deleteallOrder);
 router.delete("/:id", requireRole(["admin", "sales"]), validate(orderIdParamRules), deleteOrder);
 
 // Order items management routes

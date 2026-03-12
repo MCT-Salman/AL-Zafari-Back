@@ -163,12 +163,6 @@ export const createOrder = async (data, userId, req = null) => {
       error.statusCode = 404;
       throw error;
     }
-
-    if (customer.balance > 0) {
-      const error = new Error("لا يمكن إنشاء طلب لعميل قبل تسديد الذمة");
-      error.statusCode = 400;
-      throw error;
-    }
   }
   // تحقق من وجود عناصر في الطلب
   if (!data.items || data.items.length === 0) {
@@ -1181,4 +1175,35 @@ export const calculateDiscount = async (totalQuantity, totalAmount) => {
   }
 
   return null;
+};
+
+export const deleteallOrder = async (ids, req = null) => {
+  const orders = await OrderModel.findAll({ where: { order_id: { in: ids } } });
+  if (orders.length === 0) {
+    const error = new Error("لا توجد طلبات لحذفها");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (const order of orders) {
+      await tx.orderItem.deleteMany({
+        where: { order_id: order.order_id }
+      });
+    }
+    await tx.order.deleteMany({
+      where: { order_id: { in: ids } }
+    });
+  });
+
+  logger.info("Orders deleted", { ids });
+
+  // تسجيل النشاط
+  if (req) {
+    for (const order of orders) {
+      await logDelete(req, "order", order.order_id, order, `Order-${order.order_number}`);
+    }
+  }
+
+  return { message: "تم حذف الطلبات بنجاح" };
 };

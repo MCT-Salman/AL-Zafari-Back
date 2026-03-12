@@ -1,6 +1,8 @@
 import { body, param, query } from "express-validator";
 
-const DESTINATIONS = ["slitting", "cutting", "production"];
+const DESTINATIONS = ["slitting", "cutting", "gluing", "production"];
+const SOURCES = ["warehouse", "slitting", "cutting", "production"];
+const TYPE_ITEMS = ["Presser", "Machine"];
 
 /**
  * معرف Slite
@@ -17,44 +19,74 @@ export const sliteIdParamRules = [
  * Query للحصول على عمليات Slite
  */
 export const getSlitesQueryRules = [
-  query("production_order_item_id")
+  query("color_id")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  query("batch_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
+  query("destination")
+    .optional()
+    .isIn(DESTINATIONS)
+    .withMessage("الوجهة غير صحيحة"),
+  query("source")
+    .optional()
+    .isIn(SOURCES)
+    .withMessage("المصدر غير صحيح"),
+  query("type_item")
+    .optional()
+    .isIn(TYPE_ITEMS)
+    .withMessage("نوع العنصر غير صحيح"),
 ];
 
 /**
  * إنشاء Slite جديد
  */
 export const createSliteRules = [
-  body("production_order_item_id")
+  body("color_id")
     .exists({ checkFalsy: true })
-    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
-    .isInt({ min: 1 }),
+    .withMessage("معرف اللون مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  body("batch_id")
+    .exists({ checkFalsy: true })
+    .withMessage("معرف الطبخة مطلوب")
+    .isInt({ min: 1 })
+    .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
+  body("type_item")
+    .optional()
+    .isIn(TYPE_ITEMS)
+    .withMessage("نوع العنصر غير صحيح"),
   body("input_length")
-    .exists({ checkFalsy: true })
-    .withMessage("الطول الداخل مطلوب")
-    .isDecimal(),
+    .optional()
+    .isDecimal()
+    .withMessage("طول الإدخال يجب أن يكون رقماً عشريام"),
   body("output_length")
     .exists({ checkFalsy: true })
     .withMessage("الطول الخارج مطلوب")
-    .isDecimal(),
+    .isDecimal()
+    .withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
   body("input_width")
     .exists({ checkFalsy: true })
     .withMessage("العرض الداخل مطلوب")
-    .isDecimal(),
+    .isDecimal()
+    .withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
   body("output_length_22")
     .exists({ checkFalsy: true })
     .withMessage("الطول الخارج 22 مطلوب")
-    .isDecimal(),
+    .isDecimal()
+    .withMessage("الطول الخارج 22 يجب أن يكون رقماً عشريام"),
   body("output_length_44")
     .exists({ checkFalsy: true })
     .withMessage("الطول الخارج 44 مطلوب")
-    .isDecimal(),
-  body("barcode")
-    .exists({ checkFalsy: true })
-    .withMessage("الباركود مطلوب")
-    .isString(),
+    .isDecimal()
+    .withMessage("الطول الخارج 44 يجب أن يكون رقماً عشريام"),
+  body("source")
+    .optional()
+    .isIn(SOURCES)
+    .withMessage("المصدر غير صحيح"),
   body("destination")
     .optional()
     .isIn(DESTINATIONS)
@@ -70,20 +102,35 @@ export const createSliteRules = [
  * تحديث Slite
  */
 export const updateSliteRules = [
-  body("input_length").optional().isDecimal(),
-  body("output_length").optional().isDecimal(),
-  body("input_width").optional().isDecimal(),
-  body("output_length_22").optional().isDecimal(),
-  body("output_length_44").optional().isDecimal(),
-  body("barcode").optional().isString(),
-  body("destination").optional().isIn(DESTINATIONS),
-  body("notes").optional().isString().isLength({ max: 500 }),
+  body("color_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف اللون يجب أن يكون رقماً صحيحاً"),
+  body("batch_id")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
+  body("input_length").optional().isDecimal().withMessage("طول الإدخال يجب أن يكون رقماً عشريام"),
+  body("output_length").optional().isDecimal().withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
+  body("input_width").optional().isDecimal().withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
+  body("type_item").optional().isIn(TYPE_ITEMS).withMessage("نوع العنصر غير صحيح"),
+  body("output_length_22").optional().isDecimal().withMessage("الطول الخارج 22 يجب أن يكون رقماً عشريام"),
+  body("output_length_44").optional().isDecimal().withMessage("الطول الخارج 44 يجب أن يكون رقماً عشريام"),
+  body("source").optional().isIn(SOURCES).withMessage("المصدر غير صحيح"),
+  body("destination").optional().isIn(DESTINATIONS).withMessage("الوجهة غير صالحة"),
+  body("notes").optional().isString().withMessage("الملاحظات يجب أن تكون نصام").isLength({ max: 500 }),
 ];
 
-export const productionOrderItemIdParamRules = [
-  param("id")
-    .exists({ checkFalsy: true })
-    .withMessage("معرف عنصر أمر الإنتاج مطلوب")
-    .isInt({ min: 1 })
-    .withMessage("معرف عنصر أمر الإنتاج يجب أن يكون رقماً صحيحاً"),
+export const allSlitesarrayRules = [
+  body("ids")
+    .notEmpty()
+    .withMessage("معرفات عملية Slite مطلوبة")
+    .isArray()
+    .withMessage("معرفات عملية Slite يجب أن تكون مصفوفة")
+    .custom((value) => {
+      if (value.length === 0) {
+        throw new Error("معرفات عملية Slite يجب أن تحتوي على عنصر واحد على الأقل");
+      }
+      return true;
+    }),
 ];

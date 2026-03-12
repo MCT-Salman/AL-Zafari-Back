@@ -138,3 +138,17 @@ export const updateSalesOrderItemRules = [
     .isLength({ max: 500 })
     .withMessage('الملاحظات يجب ألا تتجاوز 500 حرف')
 ];
+
+export const allSalesOrdersarrayRules = [
+  body("ids")
+    .notEmpty()
+    .withMessage("معرفات أمر الإنتاج مطلوبة")
+    .isArray()
+    .withMessage("معرفات أمر الإنتاج يجب أن تكون مصفوفة")
+    .custom((value) => {
+      if (value.length === 0) {
+        throw new Error("معرفات أمر الإنتاج يجب أن تحتوي على عنصر واحد على الأقل");
+      }
+      return true;
+    }),
+];  

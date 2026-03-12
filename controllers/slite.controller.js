@@ -1,10 +1,10 @@
 import {
   getAllSlites as getAllSlitesService,
-  getSlitesByProductionOrderItemId as getSlitesByProductionOrderItemIdService,
   getSliteById as getSliteByIdService,
   createSlite as createSliteService,
   updateSlite as updateSliteService,
   deleteSlite as deleteSliteService,
+  deleteallSlite as deleteallSliteService,
 } from "../services/slite.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -27,20 +27,6 @@ export const getAllSlites = async (req, res, next) => {
   }
 };
 
-export const getSlitesByProductionOrderItemId = async (req, res, next) => {
-  try {
-    const slites = await getSlitesByProductionOrderItemIdService(parseInt(req.params.id));
-
-    res.json({
-      success: SUCCESS_REQUEST,
-      message: "تم جلب عمليات التشريح بنجاح",
-      data: slites,
-    });
-  } catch (error) {
-    logger.error("Get slites by production order item id controller error", { error });
-    next(error);
-  }
-};
 
 /**
  * GET /slites/:id
@@ -110,6 +96,19 @@ export const deleteSlite = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Delete slite controller error", { error });
+    next(error);
+  }
+};
+
+export const deleteallSlite = async (req, res, next) => {
+  try {
+    const result = await deleteallSliteService(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallSlite controller", { error: error.message });
     next(error);
   }
 };

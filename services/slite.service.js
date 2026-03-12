@@ -8,11 +8,20 @@ import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
  */
 export const getAllSlites = async (filters = {}) => {
   const where = {};
-  if (filters.production_order_item_id) {
-    where.production_order_item_id = parseInt(filters.production_order_item_id);
+  if (filters.color_id) {
+    where.color_id = parseInt(filters.color_id);
+  }
+  if (filters.batch_id) {
+    where.batch_id = parseInt(filters.batch_id);
   }
   if (filters.destination) {
     where.destination = filters.destination;
+  }
+  if (filters.source) {
+    where.source = filters.source;
+  }
+  if (filters.type_item) {
+    where.type_item = filters.type_item;
   }
 
   const [slites, total] = await Promise.all([
@@ -21,16 +30,6 @@ export const getAllSlites = async (filters = {}) => {
   ]);
 
   return { slites, total };
-};
-
-export const getSlitesByProductionOrderItemId = async (production_order_item_id) => {
-  const slites = await SliteModel.findByProductionOrderItemId(production_order_item_id);
-  if (!slites) {
-    const error = new Error("لا توجد عمليات تشريح لهذا العنصر");
-    error.statusCode = 404;
-    throw error;
-  }
-  return slites;
 };
 
 /**
@@ -50,28 +49,39 @@ export const getSliteById = async (id) => {
  * إنشاء Slite جديد
  */
 export const createSlite = async (data, userId , req = null) => {
-  // التحقق من وجود عنصر طلب الإنتاج
-  const existingItem = await prisma.productionOrderItem.findUnique({
-    where: { production_order_item_id: data.production_order_item_id },
+  // التحقق من وجود اللون
+  const color = await prisma.color.findUnique({
+    where: { color_id: data.color_id },
   });
-
-  if (!existingItem) {
-    const error = new Error("عنصر طلب الإنتاج غير موجود");
+  if (!color) {
+    const error = new Error("اللون غير موجود");
     error.statusCode = 404;
     throw error;
   }
 
-  // التأكد من عدم تكرار الباركود
-  const existingBarcode = await SliteModel.findByBarcode(data.barcode);
-  if (existingBarcode) {
-    const error = new Error("الباركود مستخدم مسبقاً");
-    error.statusCode = 400;
+  // التحقق من وجود الطبخة
+  const batch = await prisma.batch.findUnique({
+    where: { batch_id: data.batch_id },
+  });
+  if (!batch) {
+    const error = new Error("الطبخة غير موجودة");
+    error.statusCode = 404;
     throw error;
   }
 
   const slite = await SliteModel.create({
-    ...data,
+    color_id: data.color_id,
+    batch_id: data.batch_id,
+    type_item: data.type_item || null,
+    input_length: data.input_length,
+    output_length: data.output_length,
+    input_width: data.input_width,
+    output_length_22: data.output_length_22,
+    output_length_44: data.output_length_44,
+    source: data.source || null,
+    destination: data.destination || null,
     user_id: userId,
+    notes: data.notes || null,
   });
 
   logger.info("Slite created", { slite_id: slite.slite_id, user_id: userId });
@@ -121,4 +131,30 @@ export const deleteSlite = async (id , req = null) => {
     await logDelete(req, "slite", id, existing, `Slite-${id}`);
   }
   return { message: "تم حذف عملية التقطيع بنجاح" };
+};
+
+export const deleteallSlite = async (ids, req = null) => {
+  const slites = await SliteModel.findAll({ where: { slite_id: { in: ids } } });
+  if (slites.length === 0) {
+    const error = new Error("لا توجد عمليات تقطيع لحذفها");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.slite.deleteMany({
+      where: { slite_id: { in: ids } }
+    });
+  });
+
+  logger.info("Slites deleted", { ids });
+
+  // تسجيل النشاط
+  if (req) {
+    for (const slite of slites) {
+      await logDelete(req, "slite", slite.slite_id, slite, `Slite-${slite.slite_id}`);
+    }
+  }
+
+  return { message: "تم حذف عمليات التقطيع بنجاح" };
 };

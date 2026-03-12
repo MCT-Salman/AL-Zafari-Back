@@ -9,6 +9,7 @@ import {
   updateOrderItem as updateOrderItemService,
   deleteOrderItem as deleteOrderItemService,
   updateOrderStatus as updateOrderStatusService,
+  deleteallOrder as deleteallOrderService,
 } from "../services/order.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -197,6 +198,19 @@ export const updateOrderStatus = async (req, res, next) => {
       message: error?.message,
     });
     return next(error);
+  }
+};
+
+export const deleteallOrder = async (req, res, next) => {
+  try {
+    const result = await deleteallOrderService(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallOrder controller", { error: error.message });
+    next(error);
   }
 };
 

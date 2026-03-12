@@ -8,16 +8,6 @@ export const create = async (data) => {
   return prisma.productionProcess.create({
     data,
     include: {
-      item: {
-        include: {
-          productionOrder: {
-            include: {
-              color: true,
-              batch: true,
-            },
-          },
-        },
-      },
       user: {
         select: {
           id: true,
@@ -25,6 +15,16 @@ export const create = async (data) => {
           full_name: true,
         },
       },
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -36,24 +36,6 @@ export const findById = async (process_id) => {
   return prisma.productionProcess.findUnique({
     where: { process_id },
     include: {
-      item: {
-        include: {
-          productionOrder: {
-            include: {
-              color: {
-                include: {
-                  ruler: {
-                    include: {
-                      material: true,
-                    },
-                  },
-                },
-              },
-              batch: true,
-            },
-          },
-        },
-      },
       user: {
         select: {
           id: true,
@@ -61,6 +43,16 @@ export const findById = async (process_id) => {
           full_name: true,
         },
       },
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -72,36 +64,35 @@ export const findAll = async ({ where = {} }) => {
   return prisma.productionProcess.findMany({
     where,
     include: {
-      item: {
+      user: {
+        select: {
+          id: true,
+          username: true,
+          full_name: true,
+        },
+      },
+      color: {
         include: {
-          productionOrder: {
+          ruler: {
             include: {
-              color: true,
-              batch: true,
+              material: true,
             },
           },
         },
       },
-      user: {
-        select: {
-          id: true,
-          username: true,
-          full_name: true,
-        },
-      },
+      batch: true,
     },
     orderBy: { created_at: "desc" },
   });
 };
 
 /**
- * البحث عن عمليات إنتاج حسب production_order_item_id
+ * البحث عن عمليات إنتاج حسب color_id
  */
-export const findByProductionOrderItemId = async (production_order_item_id) => {
+export const findByColorId = async (color_id) => {
   return prisma.productionProcess.findMany({
-    where: { production_order_item_id },
+    where: { color_id },
     include: {
-      item: true,
       user: {
         select: {
           id: true,
@@ -109,19 +100,28 @@ export const findByProductionOrderItemId = async (production_order_item_id) => {
           full_name: true,
         },
       },
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
     orderBy: { created_at: "desc" },
   });
 };
 
 /**
- * البحث عن عملية إنتاج حسب الباركود
+ * البحث عن عمليات إنتاج حسب batch_id
  */
-export const findByBarcode = async (barcode) => {
-  return prisma.productionProcess.findUnique({
-    where: { barcode },
+export const findByBatchId = async (batch_id) => {
+  return prisma.productionProcess.findMany({
+    where: { batch_id },
     include: {
-      item: true,
       user: {
         select: {
           id: true,
@@ -129,7 +129,18 @@ export const findByBarcode = async (barcode) => {
           full_name: true,
         },
       },
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
+    orderBy: { created_at: "desc" },
   });
 };
 
@@ -148,16 +159,6 @@ export const updateById = async (process_id, data) => {
     where: { process_id },
     data,
     include: {
-      item: {
-        include: {
-          productionOrder: {
-            include: {
-              color: true,
-              batch: true,
-            },
-          },
-        },
-      },
       user: {
         select: {
           id: true,
@@ -165,6 +166,16 @@ export const updateById = async (process_id, data) => {
           full_name: true,
         },
       },
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -175,14 +186,5 @@ export const updateById = async (process_id, data) => {
 export const deleteById = async (process_id) => {
   return prisma.productionProcess.delete({
     where: { process_id },
-  });
-};
-
-/**
- * حذف جميع عمليات الإنتاج لعنصر طلب إنتاج معين
- */
-export const deleteByProductionOrderItemId = async (production_order_item_id) => {
-  return prisma.productionProcess.deleteMany({
-    where: { production_order_item_id },
   });
 };

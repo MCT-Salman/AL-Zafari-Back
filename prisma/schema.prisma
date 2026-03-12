@@ -352,6 +352,7 @@ model Color {
   salesOrderItems      SalesOrderItem[]
   invoiceItems         InvoiceItem[]
   productionOrderItems ProductionOrderItem[]
+  productionProcesses  ProductionProcess[]
 
   @@map("Color")
 }
@@ -398,6 +399,7 @@ model Batch {
   salesOrderItems      SalesOrderItem[]
   invoiceItems         InvoiceItem[]
   productionOrderItems ProductionOrderItem[]
+  productionProcesses  ProductionProcess[]
 
   @@map("Batch")
 }
@@ -441,25 +443,24 @@ model OrderItem {
   color Color  @relation(fields: [color_id], references: [color_id])
   batch Batch? @relation(fields: [batch_id], references: [batch_id])
 
-  processes ProductionProcess[]
-
   @@map("OrderItem")
 }
 
 model Invoice {
-  invoice_id       Int      @id @default(autoincrement())
-  order_id         Int?
-  customer_id      Int
-  discount         Decimal  @db.Decimal(20, 2)
-  total_amount     Decimal  @db.Decimal(20, 2)
-  paid_amount      Decimal  @db.Decimal(20, 2)
-  remaining_amount Decimal  @db.Decimal(20, 2)
-  issued_by        Int
-  issued_at        DateTime @default(now())
-  notes            String?
+  invoice_id          Int      @id @default(autoincrement())
+  order_id            Int?
+  customer_id         Int?
+  discount            Decimal  @db.Decimal(20, 2)
+  total_amount_doller Decimal? @db.Decimal(20, 2)
+  total_amount        Decimal  @db.Decimal(20, 2)
+  paid_amount         Decimal  @db.Decimal(20, 2)
+  remaining_amount    Decimal  @db.Decimal(20, 2)
+  issued_by           Int
+  issued_at           DateTime @default(now())
+  notes               String?
 
   order        Order?        @relation(fields: [order_id], references: [order_id])
-  customer     Customer      @relation(fields: [customer_id], references: [customer_id])
+  customer     Customer?     @relation(fields: [customer_id], references: [customer_id])
   user         Users         @relation(fields: [issued_by], references: [id])
   invoiceItems InvoiceItem[]
 
@@ -467,18 +468,19 @@ model Invoice {
 }
 
 model InvoiceItem {
-  invoice_item_id Int       @id @default(autoincrement())
-  invoice_id      Int
-  type_item       TypeItem?
-  color_id        Int
-  width           Decimal?  @db.Decimal(10, 2)
-  length          Decimal?  @db.Decimal(10, 2)
-  thickness       Decimal?  @db.Decimal(10, 2)
-  batch_id        Int?
-  quantity        Int
-  unit_price      Decimal?  @db.Decimal(20, 2)
-  subtotal        Decimal   @db.Decimal(20, 2)
-  notes           String?
+  invoice_item_id   Int       @id @default(autoincrement())
+  invoice_id        Int
+  type_item         TypeItem?
+  color_id          Int
+  width             Decimal?  @db.Decimal(10, 2)
+  length            Decimal?  @db.Decimal(10, 2)
+  thickness         Decimal?  @db.Decimal(10, 2)
+  batch_id          Int?
+  quantity          Int
+  unit_price_doller Decimal?  @db.Decimal(20, 2)
+  unit_price        Decimal?  @db.Decimal(20, 2)
+  subtotal          Decimal   @db.Decimal(20, 2)
+  notes             String?
 
   invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
   color   Color   @relation(fields: [color_id], references: [color_id])
@@ -561,10 +563,6 @@ model ProductionOrderItem {
   batch           Batch?           @relation(fields: [batch_id], references: [batch_id])
   productionOrder ProductionOrder? @relation(fields: [production_order_id], references: [production_order_id])
 
-  processes          ProductionProcess[]
-  slites             Slite[]
-  warehouseMovements WarehouseMovement[]
-
   @@map("ProductionOrderItem")
 }
 
@@ -574,44 +572,46 @@ enum ProcessType {
 }
 
 model ProductionProcess {
-  process_id               Int                  @id @default(autoincrement())
-  production_order_item_id Int
-  input_length             Decimal              @db.Decimal(10, 2)
-  output_length            Decimal              @db.Decimal(10, 2)
-  input_width              Decimal              @db.Decimal(10, 2)
-  waste                    Decimal              @db.Decimal(10, 2)
-  barcode                  String               @unique
-  type                     ProcessType
-  destination              MovementDestination?
-  user_id                  Int
-  created_at               DateTime             @default(now())
-  notes                    String?
+  process_id    Int                  @id @default(autoincrement())
+  input_width   Decimal              @db.Decimal(10, 2)
+  color_id      Int
+  batch_id      Int
+  type_item     TypeItem?
+  input_length  Decimal              @db.Decimal(10, 2)
+  output_length String
+  waste         Decimal?             @db.Decimal(10, 2)
+  type          ProcessType
+  source        ProcessSource?
+  destination   MovementDestination?
+  user_id       Int
+  created_at    DateTime             @default(now())
+  notes         String?
 
-  item                   ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])
-  user                   Users               @relation(fields: [user_id], references: [id])
-  orderItem              OrderItem?          @relation(fields: [orderItemOrder_item_id], references: [order_item_id])
-  orderItemOrder_item_id Int?
+  user  Users @relation(fields: [user_id], references: [id])
+  color Color @relation(fields: [color_id], references: [color_id])
+  batch Batch @relation(fields: [batch_id], references: [batch_id])
 
   @@index([created_at])
   @@map("ProductionProcess")
 }
 
 model Slite {
-  slite_id                 Int                  @id @default(autoincrement())
-  production_order_item_id Int
-  input_length             Decimal              @db.Decimal(10, 2)
-  output_length            Decimal              @db.Decimal(10, 2)
-  input_width              Decimal              @db.Decimal(10, 2)
-  output_length_22         Decimal              @db.Decimal(10, 2)
-  output_length_44         Decimal              @db.Decimal(10, 2)
-  barcode                  String               @unique
-  user_id                  Int
-  destination              MovementDestination?
-  created_at               DateTime             @default(now())
-  notes                    String?
+  slite_id         Int                  @id @default(autoincrement())
+  input_width      Decimal              @db.Decimal(10, 2)
+  color_id         Int
+  batch_id         Int
+  type_item        TypeItem?
+  input_length     Decimal?             @db.Decimal(10, 2)
+  output_length    Decimal              @db.Decimal(10, 2)
+  output_length_22 Decimal              @db.Decimal(10, 2)
+  output_length_44 Decimal              @db.Decimal(10, 2)
+  user_id          Int
+  source           ProcessSource?
+  destination      MovementDestination?
+  created_at       DateTime             @default(now())
+  notes            String?
 
-  item ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])
-  user Users               @relation(fields: [user_id], references: [id])
+  user Users @relation(fields: [user_id], references: [id])
 
   increases Increase[]
 
@@ -631,23 +631,21 @@ model Increase {
 }
 
 model WarehouseMovement {
-  movement_id              Int                  @id @default(autoincrement())
-  production_order_item_id Int
-  color_id                 Int
-  batch_id                 Int
-  quantity                 Int
-  length                   Decimal              @db.Decimal(10, 2)
-  width                    Decimal              @db.Decimal(10, 2)
-  thickness                Decimal              @db.Decimal(10, 2)
-  destination              MovementDestination?
-  user_id                  Int
-  created_at               DateTime             @default(now())
-  notes                    String?
+  movement_id Int                  @id @default(autoincrement())
+  color_id    Int
+  batch_id    Int
+  quantity    Int?
+  length      Decimal              @db.Decimal(10, 2)
+  width       Decimal              @db.Decimal(10, 2)
+  thickness   Decimal?             @db.Decimal(10, 2)
+  destination MovementDestination?
+  user_id     Int
+  created_at  DateTime             @default(now())
+  notes       String?
 
-  item  ProductionOrderItem @relation(fields: [production_order_item_id], references: [production_order_item_id])
-  color Color               @relation(fields: [color_id], references: [color_id])
-  batch Batch               @relation(fields: [batch_id], references: [batch_id])
-  user  Users               @relation(fields: [user_id], references: [id])
+  color Color @relation(fields: [color_id], references: [color_id])
+  batch Batch @relation(fields: [batch_id], references: [batch_id])
+  user  Users @relation(fields: [user_id], references: [id])
 
   @@index([created_at])
   @@map("WarehouseMovement")

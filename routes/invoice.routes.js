@@ -8,6 +8,7 @@ import {
   updateInvoice,
   deleteInvoice,
   addPayment,
+  deleteallInvoice
 }  from "../controllers/invoice.controller.js";
 import {
   getPriceMaterialRules,
@@ -18,6 +19,7 @@ import {
   addPaymentRules,
   customerIdParamRules,
   orderIdParamRules,
+  allInvoicesarrayRules
 } from "../validators/invoice.validators.js";
 import { requireAuth } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/role.middleware.js";
@@ -35,6 +37,7 @@ router.get("/:id", requireRole(["admin", "accountant", "sales", "cashier"]), val
 router.get("/customer/:id", requireRole(["admin", "accountant", "sales", "cashier"]), validate(customerIdParamRules), getInvoicesByCustomerId);
 router.post("/", requireRole(["admin", "sales", "accountant"]), validate(createInvoiceRules), createInvoice);
 router.put("/:id", requireRole(["admin", "sales", "accountant"]), validate([...invoiceIdParamRules, ...updateInvoiceRules ]),  updateInvoice);
+router.delete("/all", requireRole(["admin", "sales", "accountant"]), validate(allInvoicesarrayRules), deleteallInvoice);
 router.delete("/:id", requireRole(["admin", "sales", "accountant"]), validate(invoiceIdParamRules), deleteInvoice);
 router.post("/:id/payment", requireRole(["admin", "sales", "accountant"]), validate([...invoiceIdParamRules, ...addPaymentRules ]), addPayment);
 

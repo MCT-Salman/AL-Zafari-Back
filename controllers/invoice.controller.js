@@ -144,3 +144,15 @@ export const addPayment = async (req, res, next) => {
   }
 };
 
+export const deleteallInvoice = async (req, res, next) => {
+  try {
+    const result = await InvoiceService.deleteallInvoice(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallInvoice controller", { error: error.message });
+    next(error);
+  }
+};

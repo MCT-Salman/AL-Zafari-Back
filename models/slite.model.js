@@ -8,21 +8,6 @@ export const create = async (data) => {
   return prisma.slite.create({
     data,
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -42,21 +27,6 @@ export const findById = async (slite_id) => {
   return prisma.slite.findUnique({
     where: { slite_id },
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -76,21 +46,6 @@ export const findAll = async ({ where = {} }) => {
   return prisma.slite.findMany({
     where,
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -105,27 +60,12 @@ export const findAll = async ({ where = {} }) => {
 };
 
 /**
- * البحث عن عمليات تشريح حسب production_order_item_id
+ * البحث عن عمليات تشريح حسب color_id
  */
-export const findByProductionOrderItemId = async (production_order_item_id) => {
+export const findByColorId = async (color_id) => {
   return prisma.slite.findMany({
-    where: { production_order_item_id },
+    where: { color_id },
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -140,27 +80,12 @@ export const findByProductionOrderItemId = async (production_order_item_id) => {
 };
 
 /**
- * البحث عن عملية تشريح حسب الباركود
+ * البحث عن عمليات تشريح حسب batch_id
  */
-export const findByBarcode = async (barcode) => {
-  return prisma.slite.findUnique({
-    where: { barcode },
+export const findByBatchId = async (batch_id) => {
+  return prisma.slite.findMany({
+    where: { batch_id },
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -170,6 +95,7 @@ export const findByBarcode = async (barcode) => {
       },
       increases: true,
     },
+    orderBy: { created_at: "desc" },
   });
 };
 
@@ -180,21 +106,6 @@ export const findByDestination = async (destination) => {
   return prisma.slite.findMany({
     where: { destination },
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -223,21 +134,6 @@ export const updateById = async (slite_id, data) => {
     where: { slite_id },
     data,
     include: {
-      item: {
-        include: {
-          productionOrder: true,
-          color: {
-            include: {
-              ruler: {
-                include: {
-                  material: true,
-                },
-              },
-            },
-          },
-          batch: true,
-        },
-      },
       user: {
         select: {
           id: true,
@@ -256,14 +152,5 @@ export const updateById = async (slite_id, data) => {
 export const deleteById = async (slite_id) => {
   return prisma.slite.delete({
     where: { slite_id },
-  });
-};
-
-/**
- * حذف جميع عمليات التشريح لعنصر طلب إنتاج معين
- */
-export const deleteByProductionOrderItemId = async (production_order_item_id) => {
-  return prisma.slite.deleteMany({
-    where: { production_order_item_id },
   });
 };

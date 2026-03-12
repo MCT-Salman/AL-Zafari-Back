@@ -10,6 +10,7 @@ import {
   updateSalesOrderItemStatus as updateSalesOrderItemStatusService,
   updateSalesOrderItem as updateSalesOrderItemService,
   deleteSalesOrderItem as deleteSalesOrderItemService,
+  deleteallSalesOrder as deleteallSalesOrderService,
 } from "../services/salesOrder.service.js";
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
 import logger from "../utils/logger.js";
@@ -309,3 +310,15 @@ export const deleteSalesOrderItem = async (req, res, next) => {
   }
 };
 
+export const deleteallSalesOrder = async (req, res, next) => {
+  try {
+    const result = await deleteallSalesOrderService(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallSalesOrder controller", { error: error.message });
+    next(error);
+  }
+};

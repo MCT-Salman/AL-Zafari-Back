@@ -164,19 +164,15 @@ export const getInvoicesByCustomerId = async (customer_id) => {
  */
 export const createInvoice = async (data, userId, req = null) => {
 
-  const customer = await CustomerModel.findById(data.customer_id);
-  if (!customer) {
-    const error = new Error("العميل غير موجود");
-    error.statusCode = 404;
-    throw error;
+  if (data.customer_id) {
+    const customer = await CustomerModel.findById(data.customer_id);
+    if (!customer) {
+      const error = new Error("العميل غير موجود");
+      error.statusCode = 404;
+      throw error;
+    }
   }
-
-  if (customer.balance > 0) {
-    const error = new Error("لا يمكن إنشاء فاتورة لعميل قبل تسديد الذمة");
-    error.statusCode = 400;
-    throw error;
-  }
-
+  const total_amount_doller = Number(data.total_amount_doller) || 0; 
   const total_amount = Number(data.total_amount);
   const paid_amount = Number(data.paid_amount) || 0;
   const discount = Number(data.discount) || 0;
@@ -192,7 +188,8 @@ export const createInvoice = async (data, userId, req = null) => {
       data: {
         order_id: data.order_id || null,
         customer_id: data.customer_id,
-        total_amount : amountAfterDiscount.toFixed(2),
+        total_amount_doller,
+        total_amount: amountAfterDiscount.toFixed(2),
         paid_amount,
         discount,
         remaining_amount,
@@ -216,6 +213,7 @@ export const createInvoice = async (data, userId, req = null) => {
       thickness: item.thickness,
       width: item.width || 0,
       length: item.length || 0,
+      unit_price_doller: item.unit_price_doller || 0,
       unit_price: item.unit_price || 0,
       quantity: item.quantity,
       subtotal: item.subtotal,
@@ -269,7 +267,7 @@ export const createInvoice = async (data, userId, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logCreate(req, "invoice", invoice.invoice_id, invoice, `Invoice-${ invoice.invoice_number}`);
+    await logCreate(req, "invoice", invoice.invoice_id, invoice, `Invoice-${invoice.invoice_number}`);
   }
 
   return invoice;
@@ -284,6 +282,14 @@ export const updateInvoice = async (invoice_id, data, req = null) => {
     const error = new Error("الفاتورة غير موجودة");
     error.statusCode = 404;
     throw error;
+  }
+  if (data.customer_id) {
+    const customer = await CustomerModel.findById(data.customer_id);
+    if (!customer) {
+      const error = new Error("العميل غير موجود");
+      error.statusCode = 404;
+      throw error;
+    }
   }
   const total_amount = Number(data.total_amount ?? existingInvoice.total_amount);
   const new_paid_amount = Number(data.paid_amount ?? existingInvoice.paid_amount);
@@ -305,6 +311,7 @@ export const updateInvoice = async (invoice_id, data, req = null) => {
       where: { invoice_id },
       data: {
         customer_id: data.customer_id ?? existingInvoice.customer_id,
+        total_amount_doller: data.total_amount_doller ?? existingInvoice.total_amount_doller,
         total_amount: amountAfterDiscount.toFixed(2),
         discount,
         paid_amount: new_paid_amount,
@@ -345,7 +352,7 @@ export const updateInvoice = async (invoice_id, data, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "invoice", invoice_id, existingInvoice, updatedInvoice,  `Invoice-${ updatedInvoice.invoice_number}`);
+    await logUpdate(req, "invoice", invoice_id, existingInvoice, updatedInvoice, `Invoice-${updatedInvoice.invoice_number}`);
   }
 
   return updatedInvoice;
@@ -386,7 +393,7 @@ export const deleteInvoice = async (invoice_id, req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logDelete(req, "invoice", invoice_id, invoice, `Invoice-${ invoice.invoice_number }`);
+    await logDelete(req, "invoice", invoice_id, invoice, `Invoice-${invoice.invoice_number}`);
   }
 
   return { message: "تم حذف الفاتورة بنجاح" };
@@ -395,7 +402,7 @@ export const deleteInvoice = async (invoice_id, req = null) => {
 /**
  * إضافة دفعة للفاتورة
  */
-export const addPayment = async (invoice_id, payment_amount , req = null) => {
+export const addPayment = async (invoice_id, payment_amount, req = null) => {
   const invoice = await getInvoiceById(invoice_id);
   if (!invoice) throw new Error("الفاتورة غير موجودة");
 
@@ -447,9 +454,40 @@ export const addPayment = async (invoice_id, payment_amount , req = null) => {
 
   // تسجيل النشاط
   if (req) {
-    await logUpdate(req, "invoice", invoice_id, invoice, updatedInvoice, `Invoice-${ updatedInvoice.invoice_number}`);
+    await logUpdate(req, "invoice", invoice_id, invoice, updatedInvoice, `Invoice-${updatedInvoice.invoice_number}`);
   }
 
   return updatedInvoice;
 };
 
+
+export const deleteallInvoice = async (ids, req = null) => {
+  const invoices = await InvoiceModel.findAll({ where: { invoice_id: { in: ids } } });
+  if (invoices.length === 0) {
+    const error = new Error("لا توجد فواتير لحذفها");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    for (const invoice of invoices) {
+      await tx.invoiceItem.deleteMany({
+        where: { invoice_id: invoice.invoice_id }
+      });
+    }
+    await tx.invoice.deleteMany({
+      where: { invoice_id: { in: ids } }
+    });
+  });
+
+  logger.info("Invoices deleted", { ids });
+
+  // تسجيل النشاط
+  if (req) {
+    for (const invoice of invoices) {
+      await logDelete(req, "invoice", invoice.invoice_id, invoice, `Invoice-${invoice.invoice_number}`);
+    }
+  }
+
+  return { message: "تم حذف الفواتير بنجاح" };
+};

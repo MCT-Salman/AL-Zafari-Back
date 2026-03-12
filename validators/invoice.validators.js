@@ -10,8 +10,7 @@ export const createInvoiceRules = [
     .isInt({ min: 1 })
     .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
   body("customer_id")
-    .notEmpty()
-    .withMessage("معرف العميل مطلوب")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("معرف العميل يجب أن يكون رقماً صحيحاً"),
   body("paid_amount")
@@ -163,6 +162,20 @@ export const orderIdParamRules = [
     .withMessage("معرف الطلب مطلوب")
     .isInt({ min: 1 })
     .withMessage("معرف الطلب يجب أن يكون رقماً صحيحاً"),
+];
+
+export const allInvoicesarrayRules = [
+  body("ids")
+    .notEmpty()
+    .withMessage("معرفات الفواتير مطلوبة")
+    .isArray()
+    .withMessage("معرفات الفواتير يجب أن تكون مصفوفة")
+    .custom((value) => {
+      if (value.length === 0) {
+        throw new Error("معرفات الفواتير يجب أن تحتوي على عنصر واحد على الأقل");
+      }
+      return true;
+    }),
 ];
 
 export const getPriceMaterialRules = [

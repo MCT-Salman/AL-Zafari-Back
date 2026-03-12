@@ -105,6 +105,20 @@ export const updateOrderRules = [
     .withMessage("عناصر الطلب يجب أن تكون مصفوفة"),
 ];
 
+export const allOrdersarrayRules = [
+  body("ids")
+    .notEmpty()
+    .withMessage("معرفات الطلب مطلوبة")
+    .isArray()
+    .withMessage("معرفات الطلب يجب أن تكون مصفوفة")
+    .custom((value) => {
+      if (value.length === 0) {
+        throw new Error("معرفات الطلب يجب أن تحتوي على عنصر واحد على الأقل");
+      }
+      return true;
+    }),
+];
+
 /**
  * Validation rules for order ID parameter
  */

@@ -7,10 +7,7 @@ import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
  */
 export const getAllWarehouseMovements = async (filters = {}) => {
   const where = {};
-  
-  if (filters.production_order_item_id) {
-    where.production_order_item_id = parseInt(filters.production_order_item_id);
-  }
+
   if (filters.color_id) {
     where.color_id = parseInt(filters.color_id);
   }
@@ -20,7 +17,7 @@ export const getAllWarehouseMovements = async (filters = {}) => {
   if (filters.destination) {
     where.destination = filters.destination;
   }
- 
+
   const [movements, total] = await Promise.all([
     WarehouseMovementModel.findAll({ where }),
     WarehouseMovementModel.count(where),
@@ -29,15 +26,6 @@ export const getAllWarehouseMovements = async (filters = {}) => {
   return { movements, total };
 };
 
-export const getWarehouseMovementsByProductionOrderItemId = async (id) => {
-  const movements = await WarehouseMovementModel.findByProductionOrderItemId(id);
-  if (!movements) {
-    const error = new Error("لا توجد حركات مخزن لهذا العنصر");
-    error.statusCode = 404;
-    throw error;
-  }
-  return movements;
-};
 
 /**
  * جلب حركة مخزن واحدة
@@ -56,22 +44,11 @@ export const getWarehouseMovementById = async (id) => {
  * إنشاء حركة مخزن جديدة
  */
 export const createWarehouseMovement = async (data, userId , req = null) => {
-  // التحقق من وجود عنصر طلب الإنتاج
-  const existingItem = await prisma.productionOrderItem.findUnique({
-    where: { production_order_item_id: data.production_order_item_id },
-  });
-  
-  if (!existingItem) {
-    const error = new Error("عنصر طلب الإنتاج غير موجود");
-    error.statusCode = 404;
-    throw error;
-  }
-
   // التحقق من وجود اللون
   const existingColor = await prisma.color.findUnique({
     where: { color_id: data.color_id },
   });
-  
+
   if (!existingColor) {
     const error = new Error("اللون غير موجود");
     error.statusCode = 404;
@@ -82,7 +59,7 @@ export const createWarehouseMovement = async (data, userId , req = null) => {
   const existingBatch = await prisma.batch.findUnique({
     where: { batch_id: data.batch_id },
   });
-  
+
   if (!existingBatch) {
     const error = new Error("الدفعة غير موجودة");
     error.statusCode = 404;
@@ -90,19 +67,26 @@ export const createWarehouseMovement = async (data, userId , req = null) => {
   }
 
   const movement = await WarehouseMovementModel.create({
-    ...data,
+    color_id: data.color_id,
+    batch_id: data.batch_id,
+    quantity: data.quantity || null,
+    length: data.length,
+    width: data.width,
+    thickness: data.thickness || null,
+    destination: data.destination || null,
     user_id: userId,
+    notes: data.notes || null,
   });
-  
-  logger.info("Warehouse movement created", { 
-    movement_id: movement.movement_id, 
-    user_id: userId 
+
+  logger.info("Warehouse movement created", {
+    movement_id: movement.movement_id,
+    user_id: userId
   });
   // تسجيل النشاط
   if (req) {
     await logCreate(req, "warehouse_movement", movement.movement_id, movement, `Movement-${movement.movement_id}`);
   }
-  
+
   return movement;
 };
 
@@ -147,3 +131,28 @@ export const deleteWarehouseMovement = async (id , req = null) => {
   return { message: "تم حذف حركة المخزن بنجاح" };
 };
 
+export const deleteallWarehouseMovement = async (ids, req = null) => {
+  const movements = await WarehouseMovementModel.findAll({ where: { movement_id: { in: ids } } });
+  if (movements.length === 0) {
+    const error = new Error("لا توجد حركات مخزن لحذفها");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.warehouseMovement.deleteMany({
+      where: { movement_id: { in: ids } }
+    });
+  });
+
+  logger.info("Warehouse movements deleted", { ids });
+
+  // تسجيل النشاط
+  if (req) {
+    for (const movement of movements) {
+      await logDelete(req, "warehouse_movement", movement.movement_id, movement, `Movement-${movement.movement_id}`);
+    }
+  }
+
+  return { message: "تم حذف حركات المخزن بنجاح" };
+};

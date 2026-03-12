@@ -4,6 +4,7 @@ import {
   getProductionProcessById,
   getAllProductionProcesses,
   deleteProductionProcess,
+  deleteallProductionProcess as deleteallProductionProcessService,
 } from "../services/productionProcess.service.js";
 
 import { SUCCESS_REQUEST } from "../validators/messagesResponse.js";
@@ -26,6 +27,26 @@ export const getProcesses = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * GET /production-process/type/:type
+ */
+export const getProcessesByType = async (req, res, next) => {
+  try {
+    const { type } = req.params;
+    const data = await getAllProductionProcesses({ type }, req.user.role);
+
+    res.json({
+      success: SUCCESS_REQUEST,
+      message: "تم جلب عمليات الإنتاج بنجاح",
+      data,
+    });
+  } catch (error) {
+    logger.error("Get production processes by type controller error", { error });
+    next(error);
+  }
+}
+
 
 /**
  * GET /production-process/:id
@@ -112,6 +133,19 @@ export const deleteProcess = async (req, res, next) => {
     });
   } catch (error) {
     logger.error("Delete production process controller error", { error });
+    next(error);
+  }
+};
+
+export const deleteallProductionProcess = async (req, res, next) => {
+  try {
+    const result = await deleteallProductionProcessService(req.body.ids, req);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    logger.error("Error in deleteallProductionProcess controller", { error: error.message });
     next(error);
   }
 };
