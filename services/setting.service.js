@@ -86,7 +86,6 @@ export const createSetting = async (data, req = null) => {
 export const updateSetting = async (id, data, userId, req = null) => {
   // Check if exists
   const existingSetting = await getSettingById(id);
-
   // If updating key, check if it's unique
   if (data.key) {
     const settingWithSameKey = await SettingModel.findByKey(data.key);

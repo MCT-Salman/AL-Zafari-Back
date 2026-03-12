@@ -14,9 +14,16 @@ export const create = async (data) => {
           status: true,
         },
       },
-      processes: true,
-      slites: true,
-      warehouseMovements: true,
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -43,9 +50,16 @@ export const findAll = async ({ where = {} }) => {
           status: true,
         },
       },
-      processes: true,
-      slites: true,
-      warehouseMovements: true,
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -63,9 +77,16 @@ export const findById = async (production_order_item_id) => {
           status: true,
         },
       },
-      processes: true,
-      slites: true,
-      warehouseMovements: true,
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -83,9 +104,16 @@ export const findByProductionOrderId = async (production_order_id) => {
           status: true,
         },
       },
-      processes: true,
-      slites: true,
-      warehouseMovements: true,
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
@@ -104,9 +132,16 @@ export const updateById = async (production_order_item_id, data) => {
           status: true,
         },
       },
-      processes: true,
-      slites: true,
-      warehouseMovements: true,
+      color: {
+        include: {
+          ruler: {
+            include: {
+              material: true,
+            },
+          },
+        },
+      },
+      batch: true,
     },
   });
 };
