@@ -88,14 +88,15 @@ export const updateByKey = async (key, data, userId) => {
     const setting = await tx.setting.findUnique({
       where: { key },
     });
+
+    updatedSetting = await tx.setting.update({
+      where: { key },
+      data: {
+        key: data.key,
+        value: data.value,
+      },
+    });
     if (key === "exchange" && data.value) {
-      updatedSetting = await tx.setting.update({
-        where: { key },
-        data: {
-          key: data.key,
-          value: data.value,
-        },
-      });
       const oldRate = setting.value;
       const newRate = data.value;
 
