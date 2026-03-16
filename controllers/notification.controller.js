@@ -7,17 +7,12 @@ import logger from "../utils/logger.js";
  */
 export const getAllNotifications = async (req, res) => {
   try {
-    const { page = 1, limit = 20, type, isRead } = req.query;
+    const { type, isRead } = req.query;
 
-    const filters = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-    };
-
-    if (type) filters.type = type;
-    if (isRead !== undefined) filters.isRead = isRead === "true";
-
-    const result = await NotificationModel.findAll(filters);
+    const where = {};
+    if (type) where.type = type;
+    if (isRead !== undefined) where.isRead = isRead === "true";
+    const result = await NotificationModel.findAll(where);
 
     res.status(200).json({
       success: true,

@@ -141,7 +141,8 @@ app.use((req, res, next) => {
     req.path.startsWith('/setting') ||
     req.path.startsWith('/activity-logs') ||
     req.path.startsWith('/audit-logs') ||
-    req.path.startsWith('/login-attempts')) {
+    req.path.startsWith('/login-attempts') ||
+    req.path.startsWith('/notifications')) {
     return next();
   }
   csrfProtection(req, res, next);

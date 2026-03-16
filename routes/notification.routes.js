@@ -9,10 +9,10 @@ const router = express.Router();
 // جميع المسارات تتطلب مصادقة
 router.use(requireAuth);
 router.get("/", requireRole(["admin"]), notificationController.getAllNotifications);
-router.get("/my", notificationController.getMyNotifications);
-router.get("/unread-count", notificationController.getUnreadCount);
-router.put("/:id/read", notificationController.markAsRead);
-router.put("/mark-all-read", notificationController.markAllAsRead);
+router.get("/my", requireRole(["admin", "cashier", "sales", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), notificationController.getMyNotifications);
+router.get("/unread-count", requireRole(["admin", "cashier", "sales", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), notificationController.getUnreadCount);
+router.put("/:id/read", requireRole(["admin", "cashier", "sales", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), notificationController.markAsRead);
+router.put("/mark-all-read", requireRole(["admin", "cashier", "sales", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), notificationController.markAllAsRead);
 
 export default router;
 

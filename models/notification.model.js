@@ -11,7 +11,7 @@ export const create = (data) => prisma.notification.create({
     user: {
       select: {
         id: true,
-        name: true,
+        full_name: true,
         phone: true,
         fcmToken: true
       }
@@ -36,19 +36,17 @@ export const createMany = (dataArray) => prisma.notification.createMany({
  * @returns {Promise<array>} - Array of notifications
  */
 export const findAll = (where = {}, options = {}) => {
-  const { select, orderBy = { created_at: 'desc' }, skip, take } = options;
+  const { select, orderBy = { created_at: 'desc' } } = options;
   
   return prisma.notification.findMany({ 
     where, 
     orderBy,
-    ...(skip !== undefined && { skip }),
-    ...(take !== undefined && { take }),
     ...(select ? { select } : {
       include: {
         user: {
           select: {
             id: true,
-            name: true,
+            full_name: true,
             phone: true
           }
         }
@@ -70,7 +68,7 @@ export const findById = (id, select) => prisma.notification.findUnique({
       user: {
         select: {
           id: true,
-          name: true,
+          full_name: true,
           phone: true
         }
       }
