@@ -488,6 +488,8 @@ export const getProductionOrderItemsByType = async (production_order_id, userRol
 };
 
 export const getAllProductionOrderItemsByType = async (type, userRole) => {
+
+  console.log("type", type);
   // Check if user has permission to view this item type
   if (!canAccessProductionType(userRole, type)) {
     const error = new Error("ليس لديك صلاحية لعرض هذا النوع من العناصر");
