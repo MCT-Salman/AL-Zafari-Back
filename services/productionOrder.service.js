@@ -368,7 +368,7 @@ export const createProductionOrderItem = async (
   return createdItem;
 };
 
-export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole, req = null) => {
+export const updateProductionOrderItemStatus = async (production_order_item_id, status, userRole, userId, req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -387,7 +387,7 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, { status });
   if (status === "completed") {
 
-    await notifyProductionOrderCompleted(order, createdItems, userId);
+    await notifyProductionOrderCompleted(existingItem, updatedItem, userId);
   }
 
   logger.info("Production order item status updated", {
