@@ -427,3 +427,24 @@ export const notifyProductionOrder = async (productionOrder, items, createdBy) =
   }
 };
 
+
+export const notifyProductionOrderCompleted = async (productionOrder, items, completedBy) => {
+  try {
+    await sendNotificationByRole(
+      ["production_manager"],
+      {
+        title: "طلب إنتاج مكتمل",
+        body: `تم إكمال طلب الإنتاج رقم ${productionOrder.production_order_id}`,
+        type: "PRODUCTION_ORDER_COMPLETED",
+        data: {
+          productionOrderId: productionOrder.production_order_id,
+          completedBy,
+        },
+        link: `/production-orders/${productionOrder.production_order_id}`,
+      },
+      socketIO
+    );
+  } catch (error) {
+    console.error("Error sending production order completed notification:", error);
+  }
+};

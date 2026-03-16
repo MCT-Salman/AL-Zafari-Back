@@ -10,6 +10,7 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
+const { notifyProductionOrder , notifyProductionOrderCompleted } = await import("../utils/notificationHelper.js");
 
 /**
  * Helper function to check user permissions based on production type
@@ -219,7 +220,6 @@ export const createProductionOrder = async (userId, data, req = null) => {
       );
 
       try {
-        const { notifyProductionOrder } = await import("../utils/notificationHelper.js");
         await notifyProductionOrder(order, createdItems, userId);
       } catch (error) {
         logger.error("Error sending production order notification:", error);
@@ -385,6 +385,10 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
   }
 
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, { status });
+  if (status === "completed") {
+
+    await notifyProductionOrderCompleted(order, createdItems, userId);
+  }
 
   logger.info("Production order item status updated", {
     production_order_item_id,
@@ -500,4 +504,3 @@ export const getAllProductionOrderItemsByType = async (type, userRole) => {
   const items = await ProductionOrderItemModel.findAll({ where: { type } });
   return items;
 };
-  
