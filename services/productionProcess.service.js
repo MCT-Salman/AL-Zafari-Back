@@ -73,6 +73,8 @@ export const createProductionProcess = async (data, userId, userRole, req = null
         notes: data.notes || null,
     });
 
+    
+
     logger.info("Production process created", {
         process_id: process.process_id,
         user_id: userId,

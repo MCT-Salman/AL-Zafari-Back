@@ -44,9 +44,11 @@ export const getWarehouseMovementById = async (id) => {
  * إنشاء حركة مخزن جديدة
  */
 export const createWarehouseMovement = async (data, userId , req = null) => {
+  const color_id = parseInt(data.color_id);
+  const batch_id = parseInt(data.batch_id);
   // التحقق من وجود اللون
   const existingColor = await prisma.color.findUnique({
-    where: { color_id: data.color_id },
+    where: { color_id: color_id },
   });
 
   if (!existingColor) {
@@ -67,14 +69,14 @@ export const createWarehouseMovement = async (data, userId , req = null) => {
   }
 
   const movement = await WarehouseMovementModel.create({
-    color_id: data.color_id,
-    batch_id: data.batch_id,
-    quantity: data.quantity || null,
-    length: data.length,
-    width: data.width,
-    thickness: data.thickness || null,
+    color_id: color_id,
+    batch_id: batch_id,
+    quantity: Number(data.quantity) || null,
+    length: Number(data.length),
+    width: Number(data.width),
+    thickness: Number(data.thickness) || null,
     destination: data.destination || null,
-    user_id: userId,
+    user_id: parseInt(userId),
     notes: data.notes || null,
   });
 
@@ -100,7 +102,12 @@ export const updateWarehouseMovement = async (id, data , req = null) => {
     error.statusCode = 404;
     throw error;
   }
-
+  data.color_id = parseInt(data.color_id);
+  data.batch_id = parseInt(data.batch_id);
+  data.length = Number(data.length);
+  data.width = Number(data.width);
+  data.thickness = Number(data.thickness) || null;
+  data.quantity = Number(data.quantity) || null;
   const movement = await WarehouseMovementModel.updateById(id, data);
 
   logger.info("Warehouse movement updated", { movement_id: id });

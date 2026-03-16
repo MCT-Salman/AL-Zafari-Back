@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Socket.IO</title>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .message.sent {
+            background: #e3f2fd;
+            text-align: left;
+        }
+        .message.received {
+            background: #f3e5f5;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>اختبار Socket.IO</h1>
+        
+        <div class="section">
+            <h3>الحالة</h3>
+            <div id="status" class="status info">غير متصل</div>
+            <button id="connectBtn" onclick="connect()">اتصال</button>
+            <button id="disconnectBtn" onclick="disconnect()" disabled>قطع الاتصال</button>
+        </div>
+
+        <div class="section">
+            <h3>معلومات المصادقة</h3>
+            <div class="input-group">
+                <label>Token JWT:</label>
+                <textarea id="token" rows="3" placeholder="أدخل JWT token هنا"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Server URL:</label>
+                <input type="text" id="serverUrl" value="http://localhost:5050" placeholder="Server URL">
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>الرسائل</h3>
+            <div class="messages" id="messages"></div>
+        </div>
+
+        <div class="section">
+            <h3>الإجراءات</h3>
+            <button onclick="getUnreadCount()" disabled>عدد الإشعارات غير المقروءة</button>
+            <button onclick="markAsRead()" disabled>تحديد إشعار كمقروء</button>
+            <button onclick="markAllAsRead()" disabled>تحديد الكل كمقروء</button>
+            <button onclick="sendTestNotification()" disabled>إرسال إشعار اختباري</button>
+        </div>
+
+        <div class="section">
+            <h3>معلومات المستخدم</h3>
+            <div id="userInfo">
+                <p>معرف المستخدم: <span id="userId">-</span></p>
+                <p>اسم المستخدم: <span id="username">-</span></p>
+                <p>دور المستخدم: <span id="userRole">-</span></p>
+                <p>Socket ID: <span id="socketId">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+
+        function addMessage(message, type = 'info') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong><br>${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function updateUserInfo(user) {
+            document.getElementById('userId').textContent = user.userId || '-';
+            document.getElementById('username').textContent = user.username || '-';
+            document.getElementById('userRole').textContent = user.userRole || '-';
+            document.getElementById('socketId').textContent = user.socketId || '-';
+        }
+
+        function enableButtons(enabled) {
+            document.getElementById('connectBtn').disabled = enabled;
+            document.getElementById('disconnectBtn').disabled = !enabled;
+            const actionButtons = document.querySelectorAll('.section button:not(#connectBtn):not(#disconnectBtn)');
+            actionButtons.forEach(btn => btn.disabled = !enabled);
+        }
+
+        function connect() {
+            const token = document.getElementById('token').value.trim();
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+
+            if (!token) {
+                updateStatus('الرجاء إدخال JWT token', 'error');
+                return;
+            }
+
+            try {
+                socket = io(serverUrl, {
+                    auth: {
+                        token: token
+                    },
+                    transports: ['websocket', 'polling']
+                });
+
+                // الاتصال الناجح
+                socket.on('connect', () => {
+                    isConnected = true;
+                    updateStatus('متصل بالخادم', 'success');
+                    enableButtons(true);
+                    addMessage('تم الاتصال بالخادم بنجاح', 'success');
+                });
+
+                // استقبال رسالة الاتصال
+                socket.on('connected', (data) => {
+                    addMessage(`تم الاتصال: ${JSON.stringify(data)}`, 'received');
+                    updateUserInfo(data);
+                });
+
+                // عدد الإشعارات غير المقروءة
+                socket.on('unread:count', (data) => {
+                    addMessage(`عدد الإشعارات غير المقروءة: ${data.count}`, 'received');
+                });
+
+                // تحديد إشعار كمقروء
+                socket.on('notification:read', (data) => {
+                    addMessage(`تم تحديد الإشعار ${data.id} كمقروء`, 'received');
+                });
+
+                // تحديد كل الإشعارات كمقروءة
+                socket.on('all:notifications:read', (data) => {
+                    addMessage('تم تحديد جميع الإشعارات كمقروءة', 'received');
+                });
+
+                // استقبال الإشعارات العامة
+                socket.on('notification', (data) => {
+                    addMessage(`إشعار جديد: ${JSON.stringify(data)}`, 'received');
+                });
+
+                // اخطاء المصادقة
+                socket.on('connect_error', (error) => {
+                    updateStatus(`فشل الاتصال: ${error.message}`, 'error');
+                    addMessage(`خطأ في الاتصال: ${error.message}`, 'error');
+                    enableButtons(false);
+                });
+
+                // قطع الاتصال
+                socket.on('disconnect', (reason) => {
+                    isConnected = false;
+                    updateStatus(`تم قطع الاتصال: ${reason}`, 'info');
+                    addMessage(`تم قطع الاتصال: ${reason}`, 'info');
+                    enableButtons(false);
+                    updateUserInfo({});
+                });
+
+                // أخطاء عامة
+                socket.on('error', (error) => {
+                    addMessage(`خطأ: ${error.message}`, 'error');
+                });
+
+            } catch (error) {
+                updateStatus(`خطأ: ${error.message}`, 'error');
+                addMessage(`خطأ: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                isConnected = false;
+                updateStatus('تم قطع الاتصال', 'info');
+                enableButtons(false);
+                updateUserInfo({});
+            }
+        }
+
+        function getUnreadCount() {
+            if (socket && isConnected) {
+                socket.emit('get:unread:count');
+                addMessage('تم طلب عدد الإشعارات غير المقروءة', 'sent');
+            }
+        }
+
+        function markAsRead() {
+            const notificationId = prompt('أدخل معرف الإشعار:');
+            if (notificationId && socket && isConnected) {
+                socket.emit('mark:read', parseInt(notificationId));
+                addMessage(`تم طلب تحديد الإشعار ${notificationId} كمقروء`, 'sent');
+            }
+        }
+
+        function markAllAsRead() {
+            if (socket && isConnected) {
+                socket.emit('mark:all:read');
+                addMessage('تم طلب تحديد جميع الإشعارات كمقروءة', 'sent');
+            }
+        }
+
+        function sendTestNotification() {
+            // هذه مجرد محاكاة - الإشعارات الفعلية تأتي من الخادم
+            addMessage('ملاحظة: الإشعارات الفعلية يتم إرسالها من الخادم عند حدوث أحداث معينة', 'info');
+        }
+
+        // الحصول على token من localStorage إذا وجد
+        window.onload = function() {
+            const savedToken = localStorage.getItem('jwtToken');
+            if (savedToken) {
+                document.getElementById('token').value = savedToken;
+            }
+        };
+
+        // حفظ token في localStorage
+        document.getElementById('token').addEventListener('change', function() {
+            localStorage.setItem('jwtToken', this.value);
+        });
+    </script>
+</body>
+</html>

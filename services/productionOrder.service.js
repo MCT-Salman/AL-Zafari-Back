@@ -213,7 +213,7 @@ export const createProductionOrder = async (userId, data, req = null) => {
       await logCreate(
         req,
         "production_order_item",
-        createdItems.map(i => i.production_order_item_id),
+        order.production_order_id,
         createdItems,
         `Production order item-${createdItems.map(i => i.production_order_item_id)}`
       );

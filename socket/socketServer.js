@@ -48,8 +48,7 @@ export const initializeSocket = (httpServer) => {
   io.on("connection", (socket) => {
     const userId = socket.userId;
     const userRole = socket.userRole;
-
-    logger.info(`User ${userId} (${socket.username}) connected with socket ${socket.id}`);
+    logger.info(`User ${userId} (${socket.userRole}) connected with socket ${socket.id}`);
 
     // إضافة المستخدم للقائمة
     if (!connectedUsers.has(userId)) {
@@ -87,7 +86,7 @@ export const initializeSocket = (httpServer) => {
     socket.on("mark:read", async (notificationId) => {
       try {
         const { markAsRead } = await import("../models/notification.model.js");
-        await markAsRead(notificationId);
+        await markAsRead(notificationId, userId);
         socket.emit("notification:read", { id: notificationId });
       } catch (error) {
         logger.error("Error marking notification as read:", error);

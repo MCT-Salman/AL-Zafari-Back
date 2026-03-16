@@ -145,10 +145,17 @@ export const count = (where = {}) => prisma.notification.count({ where });
  * @param {number} id - Notification ID
  * @returns {Promise<object>} - Updated notification
  */
-export const markAsRead = (id) => prisma.notification.update({
-  where: { id },
-  data: { isRead: true }
-});
+export const markAsRead = async (notificationId, userId) => {
+  return prisma.notification.updateMany({
+    where: {
+      id: notificationId,
+      userId: userId
+    },
+    data: {
+      isRead: true
+    }
+  });
+};
 
 /**
  * Mark multiple notifications as read
