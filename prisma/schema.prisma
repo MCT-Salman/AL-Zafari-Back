@@ -602,9 +602,9 @@ model Slite {
   batch_id         Int
   type_item        TypeItem?
   input_length     Decimal?             @db.Decimal(10, 2)
-  output_length    Decimal              @db.Decimal(10, 2)
-  output_length_22 Decimal              @db.Decimal(10, 2)
-  output_length_44 Decimal              @db.Decimal(10, 2)
+  output_length    String
+  output_length_22 Decimal?              @db.Decimal(10, 2)
+  output_length_44 Decimal?              @db.Decimal(10, 2)
   user_id          Int
   source           ProcessSource?
   destination      MovementDestination?

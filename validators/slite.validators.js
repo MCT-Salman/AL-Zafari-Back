@@ -66,7 +66,7 @@ export const createSliteRules = [
   body("output_length")
     .exists({ checkFalsy: true })
     .withMessage("الطول الخارج مطلوب")
-    .isDecimal()
+    .isString()
     .withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
   body("input_width")
     .exists({ checkFalsy: true })
@@ -74,13 +74,11 @@ export const createSliteRules = [
     .isDecimal()
     .withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
   body("output_length_22")
-    .exists({ checkFalsy: true })
-    .withMessage("الطول الخارج 22 مطلوب")
+    .optional()
     .isDecimal()
     .withMessage("الطول الخارج 22 يجب أن يكون رقماً عشريام"),
   body("output_length_44")
-    .exists({ checkFalsy: true })
-    .withMessage("الطول الخارج 44 مطلوب")
+    .optional()
     .isDecimal()
     .withMessage("الطول الخارج 44 يجب أن يكون رقماً عشريام"),
   body("source")
@@ -112,7 +110,7 @@ export const updateSliteRules = [
     .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
   body("input_length").optional().isDecimal().withMessage("طول الإدخال يجب أن يكون رقماً عشريام"),
   body("output_length").optional().isDecimal().withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
-  body("input_width").optional().isDecimal().withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
+  body("input_width").optional().isString().withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
   body("type_item").optional().isIn(TYPE_ITEMS).withMessage("نوع العنصر غير صحيح"),
   body("output_length_22").optional().isDecimal().withMessage("الطول الخارج 22 يجب أن يكون رقماً عشريام"),
   body("output_length_44").optional().isDecimal().withMessage("الطول الخارج 44 يجب أن يكون رقماً عشريام"),
