@@ -10,7 +10,7 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
-const { notifyProductionOrder , notifyProductionOrderCompleted } = await import("../utils/notificationHelper.js");
+import { notifyProductionOrder, notifyProductionOrderCompleted } from "../utils/notificationHelper.js";
 
 /**
  * Helper function to check user permissions based on production type
@@ -386,7 +386,6 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
 
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, { status });
   if (status === "completed") {
-
     await notifyProductionOrderCompleted(existingItem, updatedItem, userId);
   }
 
@@ -405,7 +404,7 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
 /**
  * تحديث عنصر طلب إنتاج
  */
-export const updateProductionOrderItem = async (production_order_item_id, data, userRole, req = null) => {
+export const updateProductionOrderItem = async (production_order_item_id, data, userRole, userId, req = null) => {
   // Check if item exists
   const existingItem = await ProductionOrderItemModel.findById(production_order_item_id);
   if (!existingItem) {
@@ -422,7 +421,9 @@ export const updateProductionOrderItem = async (production_order_item_id, data, 
   }
 
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, data);
-
+  if (data.status && data.status === "completed") {
+    await notifyProductionOrderCompleted(existingItem, updatedItem, userId);
+  }
   logger.info("Production order item updated", {
     production_order_item_id,
     type: existingItem.type,

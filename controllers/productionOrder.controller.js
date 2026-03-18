@@ -268,8 +268,9 @@ export const updateProductionOrderItem = async (req, res, next) => {
     const { id } = req.params;
     const data = req.body;
     const userRole = req.user.role;
+    const userId = req.user.id;
 
-    const item = await updateProductionOrderItemService(parseInt(id), data, userRole, req);
+    const item = await updateProductionOrderItemService(parseInt(id), data, userRole, userId, req);
 
     res.json({
       success: SUCCESS_REQUEST,

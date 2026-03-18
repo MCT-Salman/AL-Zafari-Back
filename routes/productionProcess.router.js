@@ -30,7 +30,7 @@ router.use(requireAuth);
 // Routes
 router.get('/', requireRole(["admin", "production_manager", "Cutting_Technician", "Gluing_Technician",]), validate(getProductionProcessesQueryRules), getProcesses);
 router.get('/type/:type', requireRole(["admin", "production_manager", "Cutting_Technician", "Gluing_Technician",]), validate(productionProcessTypeParamRules), getProcessesByType);
-router.get('/:id', requireRole(["admin", "production_manager", "Warehouse_Keeper", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionProcessIdParamRules), getProcessById);
+router.get('/:id', requireRole(["admin", "production_manager", "Cutting_Technician", "Gluing_Technician",]), validate(productionProcessIdParamRules), getProcessById);
 router.post('/', requireRole(["admin", "production_manager" , "Cutting_Technician", "Gluing_Technician"]), validate(createProductionProcessRules), createProcess);
 router.put('/:id', requireRole(["admin", "production_manager" , "Cutting_Technician", "Gluing_Technician"]), validate([...productionProcessIdParamRules, ...updateProductionProcessRules]), updateProcess);
 router.delete('/all', requireRole(["admin", "production_manager"]), validate(allProductionProcessesarrayRules), deleteallProductionProcess);
