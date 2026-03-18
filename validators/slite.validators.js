@@ -67,7 +67,7 @@ export const createSliteRules = [
     .exists({ checkFalsy: true })
     .withMessage("الطول الخارج مطلوب")
     .isString()
-    .withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
+    .withMessage("الطول الخارج يجب أن يكون 22*3 يا 44*1-22*1"),
   body("input_width")
     .exists({ checkFalsy: true })
     .withMessage("العرض الداخل مطلوب")
@@ -109,7 +109,7 @@ export const updateSliteRules = [
     .isInt({ min: 1 })
     .withMessage("معرف الطبخة يجب أن يكون رقماً صحيحاً"),
   body("input_length").optional().isDecimal().withMessage("طول الإدخال يجب أن يكون رقماً عشريام"),
-  body("output_length").optional().isDecimal().withMessage("الطول الخارج يجب أن يكون رقماً عشريام"),
+  body("output_length").optional().isDecimal().withMessage("الطول الخارج يجب أن يكون 22*3 يا 44*1-22*1"),
   body("input_width").optional().isString().withMessage("العرض الداخل يجب أن يكون رقماً عشريام"),
   body("type_item").optional().isIn(TYPE_ITEMS).withMessage("نوع العنصر غير صحيح"),
   body("output_length_22").optional().isDecimal().withMessage("الطول الخارج 22 يجب أن يكون رقماً عشريام"),
