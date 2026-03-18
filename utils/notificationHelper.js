@@ -435,7 +435,7 @@ export const notifyProductionOrderCompleted = async (productionOrder, items, com
       {
         title: "طلب إنتاج مكتمل",
         body: `تم إكمال طلب الإنتاج رقم ${productionOrder.production_order_id}`,
-        type: "PRODUCTION_ORDER_COMPLETED",
+        type: "GENERAL",
         data: {
           productionOrderId: productionOrder.production_order_id,
           completedBy,
