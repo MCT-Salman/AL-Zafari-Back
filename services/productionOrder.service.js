@@ -170,6 +170,10 @@ export const createProductionOrder = async (userId, data, req = null) => {
         }
         else if (process === "slitting") {
           previousProcess = item.source;
+        }else if (process === "cutting" && !orderedProcesses.includes("slitting")) {
+          previousProcess = item.source;
+        }else if (process === "gluing" && !orderedProcesses.includes("cutting")) {
+          previousProcess = item.source;
         }
 
         // تعديل المسار إذا كان هناك cutting
