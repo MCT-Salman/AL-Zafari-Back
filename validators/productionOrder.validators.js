@@ -75,6 +75,14 @@ export const createProductionOrderRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.source')
+    .optional()
+    .isIn(PROCESS_SOURCES)
+    .withMessage('المصدر غير صالح'),
+  body('items.*.destination')
+    .optional()
+    .isIn(MOVEMENT_DESTINATIONS)
+    .withMessage('الوجهة غير صالحة'),
   body('items.*.thickness')
     .exists({ checkFalsy: true })
     .withMessage('السماكة الثابتة مطلوبة')
@@ -130,6 +138,14 @@ export const createProductionOrderItemRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('معرف الطبخة يجب أن يكون رقماً صحيحاً موجباً'),
+  body('source')
+    .optional()
+    .isIn(PROCESS_SOURCES)
+    .withMessage('المصدر غير صالح'),
+  body('destination')
+    .optional()
+    .isIn(MOVEMENT_DESTINATIONS)
+    .withMessage('الوجهة غير صالحة'),
   body('thickness')
     .exists({ checkFalsy: true })
     .withMessage('السماكة الثابتة مطلوبة')
@@ -191,6 +207,14 @@ export const updateProductionOrderRules = [
     .optional()
     .isInt({ min: 1 })
     .withMessage('معرف اللون يجب أن يكون رقماً صحيحاً موجباً'),
+  body('items.*.source')
+    .optional()
+    .isIn(PROCESS_SOURCES)
+    .withMessage('المصدر غير صالح'),
+  body('items.*.destination')
+    .optional()
+    .isIn(MOVEMENT_DESTINATIONS)
+    .withMessage('الوجهة غير صالحة'),
   body('items.*.batch_id')
     .optional()
     .isInt({ min: 1 })

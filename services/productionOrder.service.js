@@ -165,7 +165,10 @@ export const createProductionOrder = async (userId, data, req = null) => {
       for (const process of orderedProcesses) {
 
         let destination = FLOW_MAP[process]?.destination;
-        if (process === "slitting") {
+        if (process === "warehouse") {
+          destination = item.destination;
+        }
+        else if (process === "slitting") {
           previousProcess = item.source;
         }
 
