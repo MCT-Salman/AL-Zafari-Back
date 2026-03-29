@@ -522,16 +522,14 @@ export const notifyProductionOrderItemStatusUpdate = async (item, oldStatus, new
     );
 
     // إرسال إشعار للفنيين المختصين بهذا النوع من المهام
-    console.log("item.type", item.type);
     const targetRoles = roleMapping[item.type];
-    console.log("targetRoles", targetRoles);
     if (targetRoles && targetRoles.length > 0) {
       await sendNotificationByRole(
         targetRoles,
         {
           title: `تحديث حالة مهمة ${taskTypeName}`,
           body: `تم تحديث حالة مهمة ${taskTypeName} الخاصة بك في طلب الإنتاج رقم ${item.production_order_id} إلى: ${statusName}`,
-          type: `PRODUCTION_ORDER_${item.type.toUpperCase()}`,
+          type: `PRODUCTION_ORDER_UPDATE`,
           data: {
             productionOrderId: item.production_order_id,
             productionOrderItemId: item.production_order_item_id,
@@ -561,7 +559,7 @@ export const notifyProductionOrderCompleted = async (productionOrder, items, com
       {
         title: "طلب إنتاج مكتمل",
         body: `تم إكمال طلب الإنتاج رقم ${productionOrder.production_order_id}`,
-        type: "GENERAL",
+        type: "PRODUCTION_ORDER_COMPLETED",
         data: {
           productionOrderId: productionOrder.production_order_id,
           completedBy,
