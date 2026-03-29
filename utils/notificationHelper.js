@@ -522,7 +522,9 @@ export const notifyProductionOrderItemStatusUpdate = async (item, oldStatus, new
     );
 
     // إرسال إشعار للفنيين المختصين بهذا النوع من المهام
+    console.log("item.type", item.type);
     const targetRoles = roleMapping[item.type];
+    console.log("targetRoles", targetRoles);
     if (targetRoles && targetRoles.length > 0) {
       await sendNotificationByRole(
         targetRoles,

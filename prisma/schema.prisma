@@ -149,20 +149,22 @@ model Users {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  orders           Order[]
-  invoices         Invoice[]
-  processes        ProductionProcess[]
-  productions      ProductionOrder[]
-  movements        WarehouseMovement[]
-  slites           Slite[]
-  sessions         Session[]
-  refreshTokens    RefreshToken[]
-  loginAttempts    LoginAttempt[]
-  notification     Notification[]
-  auditLog         AuditLog[]
-  activityLogs     ActivityLog[]
-  exchangeRateLogs ExchangeRateLog[]
-  salesOrders      SalesOrder[]
+  orders                   Order[]
+  invoices                 Invoice[]
+  processes                ProductionProcess[]
+  productions              ProductionOrder[]
+  movements                WarehouseMovement[]
+  slites                   Slite[]
+  sessions                 Session[]
+  refreshTokens            RefreshToken[]
+  loginAttempts            LoginAttempt[]
+  notification             Notification[]
+  auditLog                 AuditLog[]
+  activityLogs             ActivityLog[]
+  exchangeRateLogs         ExchangeRateLog[]
+  salesOrders              SalesOrder[]
+  behaviorAnalytics        UserBehaviorAnalytics?
+  notificationInteractions NotificationInteraction[]
 
   @@map("Users")
 }
@@ -233,12 +235,82 @@ model Notification {
   link       String?
   imageUrl   String?
   sentToFCM  Boolean          @default(false)
+  readAt     DateTime?
+  groupId    Int?
+  group      NotificationGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   created_at DateTime         @default(now())
 
   @@index([userId])
   @@index([created_at])
   @@index([type])
+  @@index([groupId])
   @@map("Notification")
+}
+
+model NotificationGroup {
+  id            Int            @id @default(autoincrement())
+  groupKey      String         // مفتاح فريد للتجميع (مثل: "production_order_123_status_updates")
+  title         String         // عنوان المجموعة
+  body          String         // محتوى المجموعة
+  type          NotificationType
+  count         Int            @default(1) // عدد الإشعارات في المجموعة
+  data          Json?
+  link          String?
+  lastUpdate    DateTime       @default(now()) @updatedAt
+  sentAt        DateTime?      // وقت إرسال الإشعار المجمع
+  expiresAt     DateTime       // وقت انتهاء فترة التجميع
+  created_at    DateTime       @default(now())
+
+  notifications Notification[]
+
+  @@unique([groupKey])
+  @@index([groupKey])
+  @@index([expiresAt])
+  @@index([sentAt])
+  @@map("NotificationGroup")
+}
+
+model UserBehaviorAnalytics {
+  id                   Int      @id @default(autoincrement())
+  userId               Int
+  user                 Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // أنماط الوقت
+  mostActiveHourStart  Int?     // الساعة الأكثر نشاطاً (بداية)
+  mostActiveHourEnd    Int?     // الساعة الأكثر نشاطاً (نهاية)
+  leastActiveHourStart Int?     // الساعة الأقل نشاطاً (بداية)
+  leastActiveHourEnd   Int?     // الساعة الأقل نشاطاً (نهاية)
+  // إحصائيات التفاعل
+  totalNotifications   Int      @default(0) // إجمالي الإشعارات المستلمة
+  readNotifications    Int      @default(0) // الإشعارات المقروءة
+  readRate             Float    @default(0) // معدل القراءة (%)
+  avgResponseTime      Int?     // متوسط وقت الاستجابة (بالدقائق)
+  // تفضيلات القنوات
+  preferredChannel     String   @default("socket") // socket, email, sms
+  // آخر تحديث
+  lastCalculated       DateTime @default(now()) @updatedAt
+  created_at           DateTime @default(now())
+
+  @@unique([userId])
+  @@index([userId])
+  @@map("UserBehaviorAnalytics")
+}
+
+model NotificationInteraction {
+  id             Int      @id @default(autoincrement())
+  notificationId Int
+  userId         Int
+  user           Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action         String   // "read", "clicked", "dismissed", "acted"
+  deviceType     String?  // "desktop", "mobile", "tablet"
+  browser        String?
+  responseTime   Int?     // وقت الاستجابة بالثواني
+  created_at     DateTime @default(now())
+
+  @@index([notificationId])
+  @@index([userId])
+  @@index([action])
+  @@index([created_at])
+  @@map("NotificationInteraction")
 }
 
 model AuditLog {
