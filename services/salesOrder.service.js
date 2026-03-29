@@ -234,6 +234,9 @@ export const updateSalesOrder = async (salesOrderId, data, userId, userRole, req
     }
   }
 
+  // حفظ الحالة القديمة للمقارنة
+  const oldStatus = existingOrder.status;
+
   // ✅ تنفيذ التعديل داخل Transaction
   const result = await prisma.$transaction(async (tx) => {
 
@@ -296,10 +299,23 @@ export const updateSalesOrder = async (salesOrderId, data, userId, userRole, req
   logger.info("Sales order updated", {
     sales_order_id: salesOrderId,
     updated_by: userId,
+    old_status: oldStatus,
+    new_status: result.status,
   });
+
   // تسجيل النشاط
   if (req) {
     await logUpdate(req, "sales_order", salesOrderId, existingOrder, result, `Sales order-${salesOrderId}`);
+
+    // إرسال إشعار للمبيعات إذا تغيرت الحالة
+    if (data.status && data.status !== oldStatus) {
+      try {
+        const { notifySalesOrderStatusUpdate } = await import("../utils/notificationHelper.js");
+        await notifySalesOrderStatusUpdate(result, oldStatus, data.status, userId);
+      } catch (error) {
+        logger.error("Error sending sales order status update notification:", error);
+      }
+    }
   }
 
   return result;

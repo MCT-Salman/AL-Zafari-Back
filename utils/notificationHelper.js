@@ -289,6 +289,44 @@ export const notifySalesOrder = async (salesOrder, createdBy) => {
 };
 
 /**
+ * إرسال إشعار عند تحديث حالة طلب مبيعات (للمبيعات)
+ */
+export const notifySalesOrderStatusUpdate = async (salesOrder, oldStatus, newStatus, updatedBy) => {
+  try {
+    // تحديد رسالة الحالة
+    const statusNames = {
+      pending: "قيد الانتظار",
+      processing: "قيد المعالجة",
+      completed: "مكتمل",
+      canceled: "ملغي",
+    };
+
+    const oldStatusName = statusNames[oldStatus] || oldStatus;
+    const newStatusName = statusNames[newStatus] || newStatus;
+
+    // إرسال إشعار لفريق المبيعات
+    await sendNotificationByRole(
+      ["sales"],
+      {
+        title: "تحديث حالة طلب مبيعات",
+        body: `تم تحديث حالة طلب المبيعات رقم ${salesOrder.sales_order_id} من "${oldStatusName}" إلى "${newStatusName}"`,
+        type: "SALES_ORDER_STATUS_UPDATE",
+        data: {
+          salesOrderId: salesOrder.sales_order_id,
+          oldStatus,
+          newStatus,
+          updatedBy,
+        },
+        link: `/sales-orders/${salesOrder.sales_order_id}`,
+      },
+      socketIO
+    );
+  } catch (error) {
+    console.error("Error sending sales order status update notification:", error);
+  }
+};
+
+/**
  * إرسال إشعار طلب إنتاج جديد مع إشعارات مخصصة حسب نوع العنصر
  */
 export const notifyProductionOrder = async (productionOrder, items, createdBy) => {
@@ -428,6 +466,92 @@ export const notifyProductionOrder = async (productionOrder, items, createdBy) =
 };
 
 
+/**
+ * إرسال إشعار عند تحديث حالة عنصر طلب إنتاج
+ * يرسل إشعار لمدير الإنتاج وللفنيين المختصين بنفس نوع المهمة
+ */
+export const notifyProductionOrderItemStatusUpdate = async (item, oldStatus, newStatus, updatedBy) => {
+  try {
+    // تحديد الأدوار المستهدفة حسب نوع المهمة
+    const roleMapping = {
+      slitting: ["Dissection_Technician"],
+      cutting: ["Cutting_Technician"],
+      gluing: ["Gluing_Technician"],
+      warehouse: ["Warehouse_Keeper", "Warehouse_Products"],
+      orderproduction: ["production_manager"],
+    };
+
+    // تحديد العنوان والنوع حسب نوع المهمة
+    const taskTypeNames = {
+      slitting: "تشريح",
+      cutting: "قص",
+      gluing: "لصق",
+      warehouse: "مخزن",
+      orderproduction: "إنتاج",
+    };
+
+    // تحديد رسالة الحالة
+    const statusNames = {
+      pending: "قيد الانتظار",
+      preparing: "قيد التجهيز",
+      completed: "مكتملة",
+      canceled: "ملغية",
+    };
+
+    const taskTypeName = taskTypeNames[item.type] || item.type;
+    const statusName = statusNames[newStatus] || newStatus;
+
+    // إرسال إشعار لمدير الإنتاج دائماً
+    await sendNotificationByRole(
+      ["production_manager"],
+      {
+        title: `تحديث حالة مهمة ${taskTypeName}`,
+        body: `تم تحديث حالة مهمة ${taskTypeName} في طلب الإنتاج رقم ${item.production_order_id} إلى: ${statusName}`,
+        type: "PRODUCTION_ORDER_UPDATE",
+        data: {
+          productionOrderId: item.production_order_id,
+          productionOrderItemId: item.production_order_item_id,
+          itemType: item.type,
+          oldStatus,
+          newStatus,
+          updatedBy,
+        },
+        link: `/production-orders/${item.production_order_id}`,
+      },
+      socketIO
+    );
+
+    // إرسال إشعار للفنيين المختصين بهذا النوع من المهام
+    const targetRoles = roleMapping[item.type];
+    if (targetRoles && targetRoles.length > 0) {
+      await sendNotificationByRole(
+        targetRoles,
+        {
+          title: `تحديث حالة مهمة ${taskTypeName}`,
+          body: `تم تحديث حالة مهمة ${taskTypeName} الخاصة بك في طلب الإنتاج رقم ${item.production_order_id} إلى: ${statusName}`,
+          type: `PRODUCTION_ORDER_${item.type.toUpperCase()}`,
+          data: {
+            productionOrderId: item.production_order_id,
+            productionOrderItemId: item.production_order_item_id,
+            itemType: item.type,
+            oldStatus,
+            newStatus,
+            updatedBy,
+          },
+          link: `/production-orders/${item.production_order_id}`,
+        },
+        socketIO
+      );
+    }
+  } catch (error) {
+    console.error("Error sending production order item status update notification:", error);
+  }
+};
+
+/**
+ * إرسال إشعار عند إكمال طلب إنتاج بالكامل
+ * (يُستخدم عند تحديث حالة ProductionOrder نفسه وليس العناصر)
+ */
 export const notifyProductionOrderCompleted = async (productionOrder, items, completedBy) => {
   try {
     await sendNotificationByRole(

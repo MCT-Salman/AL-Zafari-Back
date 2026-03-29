@@ -10,7 +10,7 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
-import { notifyProductionOrder, notifyProductionOrderCompleted } from "../utils/notificationHelper.js";
+import { notifyProductionOrder, notifyProductionOrderItemStatusUpdate } from "../utils/notificationHelper.js";
 
 /**
  * Helper function to check user permissions based on production type
@@ -391,15 +391,23 @@ export const updateProductionOrderItemStatus = async (production_order_item_id, 
     throw error;
   }
 
+  const oldStatus = existingItem.status;
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, { status });
-  if (status === "completed") {
-    await notifyProductionOrderCompleted(existingItem, updatedItem, userId);
+
+  // إرسال إشعار لمدير الإنتاج والفنيين المختصين عند تحديث الحالة
+  try {
+    await notifyProductionOrderItemStatusUpdate(existingItem, oldStatus, status, userId);
+  } catch (error) {
+    logger.error("Error sending production order item status update notification:", error);
   }
 
   logger.info("Production order item status updated", {
     production_order_item_id,
     type: existingItem.type,
+    oldStatus,
+    newStatus: status,
   });
+
   // تسجيل النشاط
   if (req) {
     await logUpdate(req, "production_order_item", production_order_item_id, existingItem, updatedItem, `Production order item-${production_order_item_id}`);
@@ -427,14 +435,25 @@ export const updateProductionOrderItem = async (production_order_item_id, data, 
     throw error;
   }
 
+  const oldStatus = existingItem.status;
   const updatedItem = await ProductionOrderItemModel.updateById(production_order_item_id, data);
-  if (data.status && data.status === "completed") {
-    await notifyProductionOrderCompleted(existingItem, updatedItem, userId);
+
+  // إرسال إشعار إذا تم تحديث الحالة
+  if (data.status && data.status !== oldStatus) {
+    try {
+      await notifyProductionOrderItemStatusUpdate(existingItem, oldStatus, data.status, userId);
+    } catch (error) {
+      logger.error("Error sending production order item status update notification:", error);
+    }
   }
+
   logger.info("Production order item updated", {
     production_order_item_id,
     type: existingItem.type,
+    oldStatus,
+    newStatus: data.status,
   });
+
   // تسجيل النشاط
   if (req) {
     await logUpdate(req, "production_order_item", production_order_item_id, existingItem, updatedItem, `Production order item-${production_order_item_id}`);
