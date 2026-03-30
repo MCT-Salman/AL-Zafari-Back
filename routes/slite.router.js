@@ -22,11 +22,11 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/", validate(getSlitesQueryRules), getAllSlites);
-router.get("/:id", validate(sliteIdParamRules), getSliteById);
-router.post("/", validate(createSliteRules), createSlite);
-router.put("/:id", validate([...sliteIdParamRules, ...updateSliteRules]), updateSlite);
-router.delete("/all", validate(allSlitesarrayRules), deleteallSlite);
-router.delete("/:id", validate(sliteIdParamRules), deleteSlite);
+router.get("/", requireRole(["admin", "production_manager", "accountant", "Dissection_Technician"]), validate(getSlitesQueryRules), getAllSlites);
+router.get("/:id", requireRole(["admin", "production_manager", "accountant", "Dissection_Technician"]), validate(sliteIdParamRules), getSliteById);
+router.post("/", requireRole(["admin", "production_manager", "Dissection_Technician"]), validate(createSliteRules), createSlite);
+router.put("/:id", requireRole(["admin", "production_manager", "Dissection_Technician"]), validate([...sliteIdParamRules, ...updateSliteRules]), updateSlite);
+router.delete("/all", requireRole(["admin", "production_manager"]), validate(allSlitesarrayRules), deleteallSlite);
+router.delete("/:id", requireRole(["admin", "production_manager", "Dissection_Technician"]), validate(sliteIdParamRules), deleteSlite);
 
 export default router;

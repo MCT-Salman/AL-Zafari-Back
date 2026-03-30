@@ -176,14 +176,8 @@ export const getAllProductionProcesses = async (filters = {}, userRole) => {
  * حذف عملية إنتاج
  */
 export const deleteProductionProcess = async (process_id, userRole, req = null) => {
-    if (!["admin", "production_manager"].includes(userRole)) {
-        const error = new Error("ليس لديك صلاحية للحذف");
-        error.statusCode = 403;
-        throw error;
-    }
 
     const existing = await ProductionProcessModel.findById(process_id);
-
     if (!existing) {
         const error = new Error("عملية الإنتاج غير موجودة");
         error.statusCode = 404;

@@ -22,12 +22,12 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/", validate(getWarehouseMovementsQueryRules), getAllWarehouseMovements);
-router.get("/:id", validate(warehouseMovementIdParamRules), getWarehouseMovementById);
-router.post("/", validate(createWarehouseMovementRules), createWarehouseMovement);
-router.put("/:id", validate([...warehouseMovementIdParamRules, ...updateWarehouseMovementRules]), updateWarehouseMovement);
-router.delete("/all", validate(allWarehouseMovementsarrayRules), deleteallWarehouseMovement);
-router.delete("/:id", validate(warehouseMovementIdParamRules), deleteWarehouseMovement);
+router.get("/", requireRole(["admin", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_products"]), validate(getWarehouseMovementsQueryRules), getAllWarehouseMovements);
+router.get("/:id", requireRole(["admin", "production_manager", "accountant", "Warehouse_Keeper", "Warehouse_products"]), validate(warehouseMovementIdParamRules), getWarehouseMovementById);
+router.post("/", requireRole(["admin", "production_manager", "Warehouse_Keeper" , "Warehouse_products"]), validate(createWarehouseMovementRules), createWarehouseMovement);
+router.put("/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper" , "Warehouse_products"]), validate([...warehouseMovementIdParamRules, ...updateWarehouseMovementRules]), updateWarehouseMovement);
+router.delete("/all", requireRole(["admin", "production_manager"]), validate(allWarehouseMovementsarrayRules), deleteallWarehouseMovement);
+router.delete("/:id", requireRole(["admin", "production_manager" , "Warehouse_Keeper" , "Warehouse_products"]), validate(warehouseMovementIdParamRules), deleteWarehouseMovement);
 
 export default router;
 
