@@ -33,8 +33,8 @@ const router = Router();
 router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
-router.get("/", requireRole(["admin", "sales", "accountant", "cashier"]), validate(getOrdersQueryRules), getAllOrders);
-router.get("/:id", requireRole(["admin", "sales", "accountant", "cashier"]), validate(orderIdParamRules), getOrderById);
+router.get("/", requireRole(["admin", "sales", "accountant", "cashier", "Warehouse_Keeper", "Warehouse_Products"]), validate(getOrdersQueryRules), getAllOrders);
+router.get("/:id", requireRole(["admin", "sales", "accountant", "cashier", "Warehouse_Keeper", "Warehouse_Products"]), validate(orderIdParamRules), getOrderById);
 
 // POST, PUT, DELETE routes - admin, sales, and accountant
 router.post("/", requireRole(["admin", "sales", "cashier"]), validate(createOrderRules), createOrder);
@@ -48,7 +48,7 @@ router.put("/:id/items/:itemId", requireRole(["admin", "sales", "cashier"]), val
 router.delete("/:id/items/:itemId", requireRole(["admin", "sales", "cashier"]), validate([...orderIdParamRules, ...orderItemIdParamRules]), deleteOrderItem);
 
 // Order status update route
-router.patch("/:id/status", requireRole(["admin", "sales", "cashier"]), validate([...orderIdParamRules, ...updateOrderStatusRules]), updateOrderStatus);
+router.patch("/:id/status", requireRole(["admin", "sales", "cashier", "Warehouse_Keeper", "Warehouse_Products"]), validate([...orderIdParamRules, ...updateOrderStatusRules]), updateOrderStatus);
 
 export default router;
 

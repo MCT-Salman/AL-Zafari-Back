@@ -27,14 +27,14 @@ export const notifyNewOrder = async (order, createdBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["cashier", "sales"],
+      ["cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
       {
         title: "طلب جديد",
-        body: `تم إنشاء طلب جديد رقم ${order.order_number}`,
+        body: `تم إنشاء طلب جديد رقم ${order.order_id}`,
         type: "ORDER_NEW",
         data: {
           orderId: order.order_id,
-          orderNumber: order.order_number,
+          orderNumber: order.order_id,
           createdBy,
         },
         link: `/orders/${order.order_id}`,
@@ -53,14 +53,14 @@ export const notifyOrderUpdate = async (order, updatedBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["cashier", "sales"],
+      ["cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
       {
         title: "تحديث طلب",
-        body: `تم تحديث الطلب رقم ${order.order_number}`,
+        body: `تم تحديث الطلب رقم ${order.order_id}`,
         type: "ORDER_UPDATE",
         data: {
           orderId: order.order_id,
-          orderNumber: order.order_number,
+          orderNumber: order.order_id,
           updatedBy,
         },
         link: `/orders/${order.order_id}`,
@@ -106,11 +106,11 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
         invoice.customer_id,
         {
           title: "فاتورة جديدة",
-          body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_number}`,
+          body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_id}`,
           type: "INVOICE_NEW",
           data: {
             invoiceId: invoice.invoice_id,
-            invoiceNumber: invoice.invoice_number,
+            invoiceNumber: invoice.invoice_id,
           },
           link: `/invoices/${invoice.invoice_id}`,
         },
@@ -120,14 +120,14 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
 
     // إشعار للمدراء
     await sendNotificationByRole(
-      ["cashier", "sales" , "accountant"],
+      ["cashier", "sales", "accountant"],
       {
         title: "فاتورة جديدة",
-        body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_number}`,
+        body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_id}`,
         type: "INVOICE_NEW",
         data: {
           invoiceId: invoice.invoice_id,
-          invoiceNumber: invoice.invoice_number,
+          invoiceNumber: invoice.invoice_id,
           createdBy,
         },
         link: `/invoices/${invoice.invoice_id}`,
@@ -148,11 +148,11 @@ export const notifyInvoicePayment = async (invoice, paymentAmount, paidBy) => {
       ["cashier", "sales", "accountant"],
       {
         title: "دفعة فاتورة",
-        body: `تم دفع ${paymentAmount} دينار للفاتورة رقم ${invoice.invoice_number}`,
+        body: `تم دفع ${paymentAmount} دينار للفاتورة رقم ${invoice.invoice_id}`,
         type: "INVOICE_PAYMENT",
         data: {
           invoiceId: invoice.invoice_id,
-          invoiceNumber: invoice.invoice_number,
+          invoiceNumber: invoice.invoice_id,
           paymentAmount,
           paidBy,
         },
@@ -241,7 +241,7 @@ export const notifyWarehouseMovement = async (movement, createdBy) => {
 
 /**
  * إرسال إشعار عملية تشريح جديدة
- */  
+ */
 export const notifyNewSlite = async (slite, createdBy) => {
   try {
     await sendNotificationByRole(
@@ -269,7 +269,7 @@ export const notifyNewSlite = async (slite, createdBy) => {
 export const notifySalesOrder = async (salesOrder, createdBy) => {
   try {
     await sendNotificationByRole(
-      [ "production_manager"],
+      ["production_manager"],
       {
         title: "طلب مبيعات جديد",
         body: `تم إنشاء طلب مبيعات جديد رقم ${salesOrder.sales_order_id}`,
@@ -425,7 +425,7 @@ export const notifyProductionOrder = async (productionOrder, items, createdBy) =
       // إرسال إشعار لمسؤول المخزن
       if (typeGroups.warehouse.length > 0) {
         await sendNotificationByRole(
-          ["Warehouse_Keeper" , "Warehouse_Products"],
+          ["Warehouse_Keeper", "Warehouse_Products"],
           {
             title: "طلب مخزن جديد",
             body: `لديك ${typeGroups.warehouse.length} عنصر مخزن في طلب الإنتاج رقم ${productionOrder.production_order_id}`,

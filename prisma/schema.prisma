@@ -95,6 +95,7 @@ enum OrderStatus {
   pending
   preparing
   canceled
+  outofwarehouse
   completed
 }
 

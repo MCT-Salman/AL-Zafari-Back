@@ -271,7 +271,7 @@ export const updateOrderStatusRules = [
   body("status")
     .exists({ checkFalsy: true })
     .withMessage("الحالة مطلوبة")
-    .isIn(["pending", "preparing", "canceled", "completed"])
+    .isIn(["pending", "preparing", "canceled", "outofwarehouse", "completed"])
     .withMessage("الحالة يجب أن تكون pending أو preparing أو canceled أو completed"),
 ];
 

@@ -13,7 +13,7 @@ import {
 import logger from "../utils/logger.js";
 import prisma from "../prisma/client.js";
 import { count } from "../models/notification.model.js";
-const { notifyNewOrder } = await import("../utils/notificationHelper.js");
+const { notifyNewOrder , notifyOrderUpdate } = await import("../utils/notificationHelper.js");
 
 import { logCreate, logUpdate, logDelete } from "../utils/activityLogger.js";
 
@@ -63,7 +63,6 @@ export const getAllOrders = async (filters = {}) => {
         created_at: "desc",
       },
     }),
-    //  هنا التصحيح المهم
     OrderModel.count(where),
   ]);
 
@@ -514,6 +513,7 @@ export const updateOrder = async (order_id, data, req = null) => {
 
   // تسجيل النشاط
   if (req) {
+    await notifyOrderUpdate(updatedOrder, req.user.id);
     await logUpdate(req, "order", order_id, existingOrder, updatedOrder, `Order-${updatedOrder.order_id}`);
   }
 
@@ -1045,12 +1045,18 @@ export const deleteOrderItem = async (order_id, order_item_id, req = null) => {
 /**
  * تعديل حالة طلب
  */
-export const updateOrderStatus = async (order_id, status , req = null) => {
+export const updateOrderStatus = async (order_id, status, req = null) => {
   // التحقق من وجود الطلب
   const order = await OrderModel.findById(order_id);
   if (!order) {
     const error = new Error("الطلب غير موجود");
     error.statusCode = 404;
+    throw error;
+  }
+  const userRole = req.user.role;
+  if (order.status === "outofwarehouse" && (userRole !== "warehouse_keeper" || userRole !== "warehouse_products")) {
+    const error = new Error("ليس لديك صلاحية لتعديل حالة الطلب");
+    error.statusCode = 403;
     throw error;
   }
 

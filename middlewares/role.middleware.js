@@ -2,7 +2,6 @@ import { FAILURE_REQUEST, NO_AUTH } from "../validators/messagesResponse.js";
 import { UNAUTHORIZED_STATUS_CODE, FORBIDDEN_STATUS_CODE  } from "../validators/statusCode.js";
 export const requireRole = (roles = []) => {
   return (req, res, next) => {
-    console.log("roles", req.user.role);
     if (!req.user) {
       return res.status(UNAUTHORIZED_STATUS_CODE).json({ 
         success: FAILURE_REQUEST, 
