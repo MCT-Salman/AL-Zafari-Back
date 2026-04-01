@@ -37,6 +37,7 @@ import activityLogRoutes from './routes/activityLog.routes.js';
 import auditLogRoutes from './routes/auditLog.routes.js';
 import loginAttemptRoutes from './routes/loginAttempt.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import dataExportImportRoutes from "./routes/dataExportImport.routes.js";
 
 config();
 
@@ -142,7 +143,8 @@ app.use((req, res, next) => {
     req.path.startsWith('/activity-logs') ||
     req.path.startsWith('/audit-logs') ||
     req.path.startsWith('/login-attempts') ||
-    req.path.startsWith('/notifications')) {
+    req.path.startsWith('/notifications') ||
+    req.path.startsWith('/data')) {
     return next();
   }
   csrfProtection(req, res, next);
@@ -180,6 +182,7 @@ app.use('/activity-logs', activityLogRoutes);
 app.use('/audit-logs', auditLogRoutes);
 app.use('/login-attempts', loginAttemptRoutes);
 app.use('/notifications', notificationRoutes);
+app.use("/data", dataExportImportRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
