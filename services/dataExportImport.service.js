@@ -301,6 +301,96 @@ export const saveExportToFile = async (exportData, filename) => {
   }
 };
 
+/**
+ * استيراد بيانات جدول واحد
+ */
+export const importTable = async (tableName, data, options = {}) => {
+  try {
+    const tableConfig = EXPORTABLE_TABLES[tableName];
+
+    if (!tableConfig) {
+      throw new Error(`الجدول "${tableName}" غير متاح للاستيراد`);
+    }
+
+    const {
+      mode = "create", // create | upsert | replace
+      batchSize = 100,
+      skipDuplicates = true,
+    } = options;
+
+    let imported = 0;
+    let skipped = 0;
+    let errors = [];
+
+    // معالجة البيانات على دفعات
+    for (let i = 0; i < data.length; i += batchSize) {
+      const batch = data.slice(i, i + batchSize);
+
+      try {
+        if (mode === "create") {
+          // إدراج فقط (تخطي المكررات)
+          await prisma[tableConfig.model].createMany({
+            data: batch,
+            skipDuplicates,
+          });
+          imported += batch.length;
+        } else if (mode === "upsert") {
+          // تحديث أو إدراج
+          for (const item of batch) {
+            try {
+              // يجب تحديد unique field للجدول
+              const uniqueField = getUniqueField(tableName);
+              if (!uniqueField || !item[uniqueField]) {
+                throw new Error(`لا يمكن تحديد الحقل الفريد للجدول ${tableName}`);
+              }
+
+              await prisma[tableConfig.model].upsert({
+                where: { [uniqueField]: item[uniqueField] },
+                update: item,
+                create: item,
+              });
+              imported++;
+            } catch (error) {
+              errors.push({
+                item,
+                error: error.message,
+              });
+              skipped++;
+            }
+          }
+        } else if (mode === "replace") {
+          // حذف الكل ثم إدراج (خطير!)
+          if (i === 0) {
+            await prisma[tableConfig.model].deleteMany({});
+          }
+          await prisma[tableConfig.model].createMany({
+            data: batch,
+          });
+          imported += batch.length;
+        }
+      } catch (error) {
+        logger.error(`خطأ في استيراد دفعة من ${tableName}:`, error);
+        errors.push({
+          batch: i / batchSize,
+          error: error.message,
+        });
+      }
+    }
+
+    logger.info(`تم استيراد ${imported} سجل إلى جدول ${tableName}`);
+
+    return {
+      tableName,
+      imported,
+      skipped,
+      total: data.length,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  } catch (error) {
+    logger.error(`خطأ في استيراد جدول ${tableName}:`, error);
+    throw error;
+  }
+};
 
 /**
  * استيراد عدة جداول من ملف
