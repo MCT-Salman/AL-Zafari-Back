@@ -38,6 +38,7 @@ import auditLogRoutes from './routes/auditLog.routes.js';
 import loginAttemptRoutes from './routes/loginAttempt.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import dataExportImportRoutes from "./routes/dataExportImport.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 config();
 
@@ -183,6 +184,7 @@ app.use('/audit-logs', auditLogRoutes);
 app.use('/login-attempts', loginAttemptRoutes);
 app.use('/notifications', notificationRoutes);
 app.use("/data", dataExportImportRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
