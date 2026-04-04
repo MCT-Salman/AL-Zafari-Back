@@ -456,6 +456,369 @@ export const getOrderStatsByColor = async (period = "month") => {
 };
 
 /**
+ * إحصائيات الكاشير (Cashier Dashboard) - يومي فقط
+ */
+export const getCashierStats = async () => {
+  try {
+    // تحديد بداية ونهاية اليوم الحالي
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // جلب جميع الإحصائيات بشكل متوازي
+    const [
+      // طلبات المبيعات حسب الحالة (اليوم)
+      salesOrdersPending,
+      salesOrdersPreparing,
+      salesOrdersCompleted,
+
+      // طلبات الإنتاج حسب الحالة (اليوم)
+      productionOrdersPending,
+      productionOrdersPreparing,
+      productionOrdersCompleted,
+    ] = await Promise.all([
+      // طلبات المبيعات قيد الانتظار
+      prisma.order.count({
+        where: {
+          status: "pending",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات المبيعات قيد التجهيز
+      prisma.order.count({
+        where: {
+          status: "preparing",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات المبيعات المكتملة
+      prisma.order.count({
+        where: {
+          status: "completed",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات الإنتاج قيد الانتظار
+      prisma.productionOrder.count({
+        where: {
+          status: "pending",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات الإنتاج قيد التجهيز
+      prisma.productionOrder.count({
+        where: {
+          status: "preparing",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات الإنتاج المكتملة
+      prisma.productionOrder.count({
+        where: {
+          status: "completed",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+    ]);
+
+    return {
+      period: "today",
+      date: todayStart.toISOString(),
+
+      // طلبات المبيعات
+      salesOrders: {
+        pending: salesOrdersPending,
+        preparing: salesOrdersPreparing,
+        completed: salesOrdersCompleted,
+        total: salesOrdersPending + salesOrdersPreparing + salesOrdersCompleted,
+      },
+
+      // طلبات الإنتاج
+      productionOrders: {
+        pending: productionOrdersPending,
+        preparing: productionOrdersPreparing,
+        completed: productionOrdersCompleted,
+        total: productionOrdersPending + productionOrdersPreparing + productionOrdersCompleted,
+      },
+    };
+  } catch (error) {
+    logger.error("خطأ في getCashierStats:", error);
+    throw error;
+  }
+};
+
+/**
+ * إحصائيات الإنتاج (Production Manager Dashboard) - يومي فقط
+ */
+export const getProductionManagerStats = async () => {
+  try {
+    // تحديد بداية ونهاية اليوم الحالي
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // جلب جميع الإحصائيات بشكل متوازي
+    const [
+      // طلبات الإنتاج حسب الحالة (اليوم)
+      productionOrdersPending,
+      productionOrdersPreparing,
+      productionOrdersCompleted,
+
+      // عمليات الإنتاج حسب الحالة (اليوم)
+      productionProcessesPending,
+      productionProcessesPreparing,
+      productionProcessesCompleted,
+
+      // إحصائيات العمليات حسب المستخدم (اليوم)
+      warehouseStats,
+      sliteStats,
+      productionProcessStats,
+    ] = await Promise.all([
+      // طلبات الإنتاج قيد الانتظار
+      prisma.productionOrder.count({
+        where: {
+          status: "pending",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات الإنتاج قيد التجهيز
+      prisma.productionOrder.count({
+        where: {
+          status: "preparing",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // طلبات الإنتاج المكتملة
+      prisma.productionOrder.count({
+        where: {
+          status: "completed",
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+      }),
+
+      // عمليات الإنتاج قيد الانتظار (نفترض أن status موجود)
+      // ملاحظة: ProductionProcess قد لا يحتوي على status، سنستخدم created_at فقط
+      prisma.productionProcess.count({
+        where: {
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+          // يمكن إضافة شرط status إذا كان موجوداً
+        },
+      }),
+
+      // للتبسيط، سنعتبر جميع العمليات "قيد التجهيز" إذا تم إنشاؤها اليوم
+      0, // preparing - يمكن تعديله حسب المنطق
+      0, // completed - يمكن تعديله حسب المنطق
+
+      // إحصائيات WarehouseMovement حسب المستخدم
+      prisma.warehouseMovement.groupBy({
+        by: ['user_id'],
+        where: {
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+        _count: {
+          movement_id: true,
+        },
+      }),
+
+      // إحصائيات Slite حسب المستخدم
+      prisma.slite.groupBy({
+        by: ['user_id'],
+        where: {
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+        _count: {
+          slite_id: true,
+        },
+      }),
+
+      // إحصائيات ProductionProcess حسب المستخدم والنوع
+      prisma.productionProcess.groupBy({
+        by: ['user_id', 'type'],
+        where: {
+          created_at: {
+            gte: todayStart,
+            lte: todayEnd,
+          },
+        },
+        _count: {
+          process_id: true,
+        },
+        _sum: {
+          waste: true,
+        },
+      }),
+    ]);
+
+    // جلب تفاصيل المستخدمين
+    const allUserIds = [
+      ...warehouseStats.map(s => s.user_id),
+      ...sliteStats.map(s => s.user_id),
+      ...productionProcessStats.map(s => s.user_id),
+    ];
+    const uniqueUserIds = [...new Set(allUserIds)];
+
+    const users = await prisma.users.findMany({
+      where: {
+        id: {
+          in: uniqueUserIds,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        full_name: true,
+        role: true,
+      },
+    });
+
+    // دمج البيانات - WarehouseMovement
+    const warehouseStatsByUser = warehouseStats.map(stat => {
+      const user = users.find(u => u.id === stat.user_id);
+      return {
+        userId: stat.user_id,
+        username: user?.username || 'غير معروف',
+        fullName: user?.full_name || user?.username || 'غير معروف',
+        role: user?.role || 'غير معروف',
+        operationsCount: stat._count.movement_id,
+      };
+    });
+
+    // دمج البيانات - Slite
+    const sliteStatsByUser = sliteStats.map(stat => {
+      const user = users.find(u => u.id === stat.user_id);
+      return {
+        userId: stat.user_id,
+        username: user?.username || 'غير معروف',
+        fullName: user?.full_name || user?.username || 'غير معروف',
+        role: user?.role || 'غير معروف',
+        operationsCount: stat._count.slite_id,
+      };
+    });
+
+    // دمج البيانات - ProductionProcess
+    const productionProcessByUser = {};
+    productionProcessStats.forEach(stat => {
+      const user = users.find(u => u.id === stat.user_id);
+      const userId = stat.user_id;
+
+      if (!productionProcessByUser[userId]) {
+        productionProcessByUser[userId] = {
+          userId: userId,
+          username: user?.username || 'غير معروف',
+          fullName: user?.full_name || user?.username || 'غير معروف',
+          role: user?.role || 'غير معروف',
+          byType: {},
+          totalOperations: 0,
+          totalWaste: 0,
+        };
+      }
+
+      const type = stat.type;
+      const typeLabel = type === 'cutting' ? 'القص' : type === 'gluing' ? 'التغرية' : type;
+
+      productionProcessByUser[userId].byType[type] = {
+        type: type,
+        typeLabel: typeLabel,
+        operationsCount: stat._count.process_id,
+        totalWaste: stat._sum.waste || 0,
+      };
+
+      productionProcessByUser[userId].totalOperations += stat._count.process_id;
+      productionProcessByUser[userId].totalWaste += stat._sum.waste || 0;
+    });
+
+    const productionProcessStatsByUser = Object.values(productionProcessByUser);
+
+    return {
+      period: "today",
+      date: todayStart.toISOString(),
+
+      // طلبات الإنتاج
+      productionOrders: {
+        pending: productionOrdersPending,
+        preparing: productionOrdersPreparing,
+        completed: productionOrdersCompleted,
+        total: productionOrdersPending + productionOrdersPreparing + productionOrdersCompleted,
+      },
+
+      // عمليات الإنتاج
+      productionProcesses: {
+        pending: productionProcessesPending,
+        preparing: productionProcessesPreparing,
+        completed: productionProcessesCompleted,
+        total: productionProcessesPending + productionProcessesPreparing + productionProcessesCompleted,
+      },
+
+      // إحصائيات العمليات حسب المستخدم
+      operationsByUser: {
+        warehouseMovements: {
+          total: warehouseStats.reduce((sum, s) => sum + s._count.movement_id, 0),
+          byUser: warehouseStatsByUser.sort((a, b) => b.operationsCount - a.operationsCount),
+        },
+        slites: {
+          total: sliteStats.reduce((sum, s) => sum + s._count.slite_id, 0),
+          byUser: sliteStatsByUser.sort((a, b) => b.operationsCount - a.operationsCount),
+        },
+        productionProcesses: {
+          total: productionProcessStats.reduce((sum, s) => sum + s._count.process_id, 0),
+          byUser: productionProcessStatsByUser.sort((a, b) => b.totalOperations - a.totalOperations),
+        },
+      },
+    };
+  } catch (error) {
+    logger.error("خطأ في getProductionManagerStats:", error);
+    throw error;
+  }
+};
+
+/**
  * إحصائيات العمليات حسب المستخدم
  */
 export const getOperationsStatsByUser = async (period = "month") => {

@@ -5,6 +5,8 @@ import {
   getOperationsStatsByUser,
   getOrderStatsByColor,
   getSalesStats,
+  getProductionManagerStats,
+  getCashierStats,
 } from "../services/dashboard.service.js";
 import logger from "../utils/logger.js";
 
@@ -64,7 +66,7 @@ export const getManagerStats = async (req, res) => {
  * إحصائيات المبيعات (Sales Dashboard)
  * GET /api/dashboard/sales-stats
  */
-export const getSalesDashboardStats = async (req, res) => {
+export const getSalesDashboardStats = async (_req, res) => {
   try {
     // جلب إحصائيات المبيعات
     const stats = await getSalesStats();
@@ -79,6 +81,52 @@ export const getSalesDashboardStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "حدث خطأ أثناء جلب إحصائيات المبيعات",
+    });
+  }
+};
+
+/**
+ * إحصائيات الإنتاج (Production Manager Dashboard)
+ * GET /api/dashboard/production-stats
+ */
+export const getProductionDashboardStats = async (_req, res) => {
+  try {
+    // جلب إحصائيات الإنتاج
+    const stats = await getProductionManagerStats();
+
+    res.status(200).json({
+      success: true,
+      message: "تم جلب إحصائيات الإنتاج بنجاح",
+      data: stats,
+    });
+  } catch (error) {
+    logger.error("خطأ في جلب إحصائيات الإنتاج:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "حدث خطأ أثناء جلب إحصائيات الإنتاج",
+    });
+  }
+};
+
+/**
+ * إحصائيات الكاشير (Cashier Dashboard)
+ * GET /api/dashboard/cashier-stats
+ */
+export const getCashierDashboardStats = async (_req, res) => {
+  try {
+    // جلب إحصائيات الكاشير
+    const stats = await getCashierStats();
+
+    res.status(200).json({
+      success: true,
+      message: "تم جلب إحصائيات الكاشير بنجاح",
+      data: stats,
+    });
+  } catch (error) {
+    logger.error("خطأ في جلب إحصائيات الكاشير:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "حدث خطأ أثناء جلب إحصائيات الكاشير",
     });
   }
 };
