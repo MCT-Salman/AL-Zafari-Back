@@ -27,7 +27,7 @@ export const notifyNewOrder = async (order, createdBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
+      ["cashier", "branch_cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
       {
         title: "طلب جديد",
         body: `تم إنشاء طلب جديد رقم ${order.order_id}`,
@@ -53,7 +53,7 @@ export const notifyOrderUpdate = async (order, updatedBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
+      ["cashier", "branch_cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
       {
         title: "تحديث طلب",
         body: `تم تحديث الطلب رقم ${order.order_id}`,
@@ -78,7 +78,7 @@ export const notifyOrderUpdate = async (order, updatedBy) => {
 export const notifyOrderDelete = async (orderNumber, deletedBy) => {
   try {
     await sendNotificationByRole(
-      ["cashier", "sales"],
+      ["cashier", "branch_cashier", "sales"],
       {
         title: "حذف طلب",
         body: `تم حذف الطلب رقم ${orderNumber}`,
@@ -120,7 +120,7 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
 
     // إشعار للمدراء
     await sendNotificationByRole(
-      ["cashier", "sales", "accountant"],
+      ["cashier", "branch_cashier", "sales", "accountant"],
       {
         title: "فاتورة جديدة",
         body: `تم إنشاء فاتورة جديدة رقم ${invoice.invoice_id}`,
@@ -145,7 +145,7 @@ export const notifyNewInvoice = async (invoice, createdBy) => {
 export const notifyInvoicePayment = async (invoice, paymentAmount, paidBy) => {
   try {
     await sendNotificationByRole(
-      ["cashier", "sales", "accountant"],
+      ["cashier", "branch_cashier", "sales", "accountant"],
       {
         title: "دفعة فاتورة",
         body: `تم دفع ${paymentAmount} دينار للفاتورة رقم ${invoice.invoice_id}`,

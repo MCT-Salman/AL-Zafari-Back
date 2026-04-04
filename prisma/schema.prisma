@@ -17,6 +17,7 @@ enum UserRole {
   admin
   accountant
   cashier
+  branch_cashier
   sales
   production_manager
   Warehouse_Keeper

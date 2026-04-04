@@ -132,7 +132,7 @@ export const initializeSocket = (httpServer) => {
         const otherUsers = await UserModel.findAll({
           where: {
             role: {
-              in: ["admin", "cashier", "sales", "production_manager"]
+              in: ["admin", "cashier", "branch_cashier", "sales", "production_manager"]
             },
             id: {
               not: userId // لا إشعار للمرسل نفسه
@@ -176,6 +176,7 @@ export const initializeSocket = (httpServer) => {
         const roleNotifications = {
           "admin": "طلب جديد يحتاج موافقتك",
           "cashier": "طلب جديد للدفع",
+          "branch_cashier": "طلب جديد للدفع",
           "sales": "طلب جديد للبيع",
           "production_manager": "طلب جديد للإنتاج"
         };

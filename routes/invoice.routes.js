@@ -31,15 +31,15 @@ const router = express.Router();
 router.use(requireAuth);
 
 // GET routes - accessible by all authenticated users
-router.post("/price-material", requireRole(["admin", "accountant", "sales", "cashier"]),validate(getPriceMaterialRules), getPriceMaterial);
-router.get("/", requireRole(["admin", "accountant", "sales", "cashier"]),validate( getInvoicesQueryRules), getAllInvoices);
-router.get("/:id", requireRole(["admin", "accountant", "sales", "cashier"]), validate(invoiceIdParamRules), getInvoiceById);
-router.get("/customer/:id", requireRole(["admin", "accountant", "sales", "cashier"]), validate(customerIdParamRules), getInvoicesByCustomerId);
-router.post("/", requireRole(["admin", "sales", "accountant"]), validate(createInvoiceRules), createInvoice);
-router.put("/:id", requireRole(["admin", "sales", "accountant"]), validate([...invoiceIdParamRules, ...updateInvoiceRules ]),  updateInvoice);
-router.delete("/all", requireRole(["admin", "sales", "accountant"]), validate(allInvoicesarrayRules), deleteallInvoice);
-router.delete("/:id", requireRole(["admin", "sales", "accountant"]), validate(invoiceIdParamRules), deleteInvoice);
-router.post("/:id/payment", requireRole(["admin", "sales", "accountant"]), validate([...invoiceIdParamRules, ...addPaymentRules ]), addPayment);
+router.post("/price-material", requireRole(["admin", "accountant", "sales", "cashier", "branch_cashier"]),validate(getPriceMaterialRules), getPriceMaterial);
+router.get("/", requireRole(["admin", "accountant", "sales", "cashier", "branch_cashier"]),validate( getInvoicesQueryRules), getAllInvoices);
+router.get("/:id", requireRole(["admin", "accountant", "sales", "cashier", "branch_cashier"]), validate(invoiceIdParamRules), getInvoiceById);
+router.get("/customer/:id", requireRole(["admin", "accountant", "sales", "cashier", "branch_cashier"]), validate(customerIdParamRules), getInvoicesByCustomerId);
+router.post("/", requireRole(["admin", "cashier", "branch_cashier", "accountant"]), validate(createInvoiceRules), createInvoice);
+router.put("/:id", requireRole(["admin", "cashier", "branch_cashier", "accountant"]), validate([...invoiceIdParamRules, ...updateInvoiceRules ]),  updateInvoice);
+router.delete("/all", requireRole(["admin", "cashier", "branch_cashier", "accountant"]), validate(allInvoicesarrayRules), deleteallInvoice);
+router.delete("/:id", requireRole(["admin", "cashier", "branch_cashier", "accountant"]), validate(invoiceIdParamRules), deleteInvoice);
+router.post("/:id/payment", requireRole(["admin", "cashier", "branch_cashier", "accountant"]), validate([...invoiceIdParamRules, ...addPaymentRules ]), addPayment);
 
 export default router;
 

@@ -254,3 +254,11 @@ export const updateProductionOrderRules = [
     .isIn(PRODUCTION_TYPES)
     .withMessage('نوع الإنتاج غير صالح')
 ];
+
+export const updatestatusProductionOrderRules = [
+  body('status')
+    .exists()
+    .withMessage('حالة العملية مطلوبة')
+    .isIn(PRODUCTION_STATUSES)
+    .withMessage('حالة الإنتاج غير صالحة')
+]

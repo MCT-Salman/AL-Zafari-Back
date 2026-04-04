@@ -26,8 +26,9 @@ import {
   getProductionOrdersQueryRules,
   productionOrderItemIdParamRules,
   createProductionOrderItemRules,
-  productionOrderTypeParamRules
-  
+  productionOrderTypeParamRules,
+  updatestatusProductionOrderRules
+
 } from '../validators/productionOrder.validators.js';
 
 const router = Router();
@@ -46,13 +47,13 @@ router.delete("/:id", requireRole(["admin", "production_manager"]), validate(pro
 /**
  * Production Order Item Routes
  */
-router.get("/", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician" , "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
+router.get("/", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician", "accountant"]), validate(getProductionOrdersQueryRules), getAllProductionOrders);
 router.get("/:id/items", requireRole(["admin", "production_manager", "Warehouse_Keeper", "warehouse_products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), validate(productionOrderIdParamRules), getProductionOrderItemsByType);
 router.get("/type/:type", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), validate(productionOrderTypeParamRules), getAllProductionOrderItemsByType);
 router.post("/", requireRole(["admin", "production_manager"]), validate(createProductionOrderRules), createProductionOrder);
 router.get("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_Products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician",]), validate(productionOrderItemIdParamRules), getProductionOrderItemById);
 router.post("/:id/items", requireRole(["admin", "production_manager"]), validate([...productionOrderIdParamRules, ...createProductionOrderItemRules]), createProductionOrderItem);
-router.patch("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), validate(productionOrderItemIdParamRules), updateProductionOrderItemStatus);
+router.patch("/item/:id", requireRole(["admin", "production_manager", "Warehouse_Keeper", "Warehouse_products", "Dissection_Technician", "Cutting_Technician", "Gluing_Technician"]), validate([...productionOrderItemIdParamRules, ...updatestatusProductionOrderRules]), updateProductionOrderItemStatus);
 router.put("/item/:id", requireRole(["admin", "production_manager"]), validate([...productionOrderItemIdParamRules, ...updateProductionOrderRules]), updateProductionOrderItem);
 router.delete("/item/:id", requireRole(["admin", "production_manager"]), validate(productionOrderItemIdParamRules), deleteProductionOrderItem);
 
