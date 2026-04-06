@@ -27,7 +27,7 @@ export const notifyNewOrder = async (order, createdBy) => {
   try {
     // إشعار للمدراء ومدراء المخازن
     await sendNotificationByRole(
-      ["cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
+      ["cashier", "branch_cashier", "sales", "Warehouse_Keeper", "Warehouse_Products"],
       {
         title: "طلب جديد",
         body: `تم إنشاء طلب جديد رقم ${order.order_id}`,
