@@ -66,7 +66,7 @@ export const getManagerStats = async (req, res) => {
  * إحصائيات المبيعات (Sales Dashboard)
  * GET /api/dashboard/sales-stats
  */
-export const getSalesDashboardStats = async (_req, res) => {
+export const getCashierDashboardStats = async (_req, res) => {
   try {
     // جلب إحصائيات المبيعات
     const stats = await getSalesStats();
@@ -112,7 +112,7 @@ export const getProductionDashboardStats = async (_req, res) => {
  * إحصائيات الكاشير (Cashier Dashboard)
  * GET /api/dashboard/cashier-stats
  */
-export const getCashierDashboardStats = async (_req, res) => {
+export const getSalesDashboardStats = async (_req, res) => {
   try {
     // جلب إحصائيات الكاشير
     const stats = await getCashierStats();
