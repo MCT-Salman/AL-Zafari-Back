@@ -13,11 +13,11 @@ router.use(requireAuth);
 
 router.get("/stats", requireRole(["admin", "accountant"]), dashboardController.getManagerStats);
 
-router.get("/sales-stats", requireRole(["admin", "cashier", "branch_cashier"]), dashboardController.getSalesDashboardStats);
+router.get("/sales-stats", requireRole(["admin", "sales"]), dashboardController.getSalesDashboardStats);
 
 router.get("/production-stats", requireRole(["admin", "production_manager"]), dashboardController.getProductionDashboardStats);
 
-router.get("/cashier-stats", requireRole(["admin", "sales"]), dashboardController.getCashierDashboardStats);
+router.get("/cashier-stats", requireRole(["admin","cashier", "branch_cashier"]), dashboardController.getCashierDashboardStats);
 
 export default router;
 
