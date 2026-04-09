@@ -3,7 +3,8 @@ import {
   getOverviewStats,
   getProductionOutputs,
   getOperationsStatsByUser,
-  getOrderStatsByColor,
+  getOrderStatsByColorByMaterial,
+  getOrderStatsByMaterial,
   getSalesStats,
   getProductionManagerStats,
   getCashierStats,
@@ -23,7 +24,7 @@ export const getManagerStats = async (req, res) => {
       getOverviewStats(period),
       getProductionOutputs(period),
       getOperationsStatsByUser(period),
-      getOrderStatsByColor(period),
+      getOrderStatsByColorByMaterial(period),
     ]);
 
     res.status(200).json({
@@ -62,6 +63,34 @@ export const getManagerStats = async (req, res) => {
   }
 };
 
+export const getColorByMaterial = async (req, res) => {
+  try {
+    const { period = "month" } = req.query;
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "يجب إرسال material id",
+      });
+    }
+
+    const result = await getOrderStatsByMaterial(Number(id), period);
+
+    res.status(200).json({
+      success: true,
+      message: "تم جلب إحصائيات المادة بنجاح",
+      data: result, // 👈 أفضل بدون nesting زيادة
+    });
+
+  } catch (error) {
+    logger.error("خطأ في جلب إحصائيات المادة:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "حدث خطأ أثناء جلب الإحصائيات",
+    });
+  }
+};
 /**
  * إحصائيات المبيعات (Sales Dashboard)
  * GET /api/dashboard/sales-stats

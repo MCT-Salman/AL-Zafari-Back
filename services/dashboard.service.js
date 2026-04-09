@@ -331,11 +331,11 @@ export const getSalesStats = async () => {
 /**
  * إحصائيات الطلبات حسب اللون
  */
-export const getOrderStatsByColor = async (period = "month") => {
+export const getOrderStatsByColorByMaterial = async (period = "month") => {
   try {
     const { startDate, endDate } = getDateRange(period);
 
-    // جلب جميع عناصر الطلبات في الفترة المحددة
+    // جلب بيانات الطلبات مع الربط بالمادة
     const orderItems = await prisma.orderItem.findMany({
       where: {
         order: {
@@ -350,6 +350,16 @@ export const getOrderStatsByColor = async (period = "month") => {
           select: {
             color_id: true,
             color_name: true,
+            ruler: {
+              select: {
+                material: {
+                  select: {
+                    material_id: true,
+                    material_name: true,
+                  },
+                },
+              },
+            },
           },
         },
         order: {
@@ -361,33 +371,212 @@ export const getOrderStatsByColor = async (period = "month") => {
       },
     });
 
-    // تجميع البيانات حسب اللون
+    const materialStats = {};
+    let totalQuantity = 0;
+    let totalAmount = 0;
+
+    // 🔥 التجميع حسب المادة ثم اللون
+    orderItems.forEach(item => {
+      const material = item.color?.ruler?.material;
+
+      const materialId = material?.material_id || "unknown";
+      const materialName = material?.material_name || "غير محدد";
+
+      const colorId = item.color_id;
+      const colorName = item.color?.color_name || "غير محدد";
+
+      const quantity = item.quantity || 0;
+      const subtotal = parseFloat(item.subtotal || 0);
+
+      // إنشاء المادة إذا غير موجودة
+      if (!materialStats[materialId]) {
+        materialStats[materialId] = {
+          materialId,
+          materialName,
+          totalQuantity: 0,
+          totalAmount: 0,
+          colors: {},
+        };
+      }
+
+      // إنشاء اللون داخل المادة
+      if (!materialStats[materialId].colors[colorId]) {
+        materialStats[materialId].colors[colorId] = {
+          colorId,
+          colorName,
+          totalQuantity: 0,
+          totalAmount: 0,
+          ordersCount: 0,
+          orderIds: new Set(),
+          byStatus: {
+            pending: { quantity: 0, amount: 0 },
+            preparing: { quantity: 0, amount: 0 },
+            completed: { quantity: 0, amount: 0 },
+            cancelled: { quantity: 0, amount: 0 },
+          },
+        };
+      }
+
+      // تحديث القيم
+      materialStats[materialId].colors[colorId].totalQuantity += quantity;
+      materialStats[materialId].colors[colorId].totalAmount += subtotal;
+      materialStats[materialId].colors[colorId].orderIds.add(item.order_id);
+
+      const status = item.order.status;
+      if (materialStats[materialId].colors[colorId].byStatus[status]) {
+        materialStats[materialId].colors[colorId].byStatus[status].quantity += quantity;
+        materialStats[materialId].colors[colorId].byStatus[status].amount += subtotal;
+      }
+
+      materialStats[materialId].totalQuantity += quantity;
+      materialStats[materialId].totalAmount += subtotal;
+
+      totalQuantity += quantity;
+      totalAmount += subtotal;
+    });
+
+    // 🎯 تحويل النتائج
+    const result = Object.values(materialStats).map(material => {
+      const colorsArray = Object.values(material.colors).map(color => ({
+        colorId: color.colorId,
+        colorName: color.colorName,
+        totalQuantity: color.totalQuantity,
+        totalAmount: color.totalAmount,
+        ordersCount: color.orderIds.size,
+        byStatus: {
+          pending: {
+            ...color.byStatus.pending,
+            count: color.byStatus.pending.quantity > 0 ? 1 : 0,
+          },
+          preparing: {
+            ...color.byStatus.preparing,
+            count: color.byStatus.preparing.quantity > 0 ? 1 : 0,
+          },
+          completed: {
+            ...color.byStatus.completed,
+            count: color.byStatus.completed.quantity > 0 ? 1 : 0,
+          },
+          cancelled: {
+            ...color.byStatus.cancelled,
+            count: color.byStatus.cancelled.quantity > 0 ? 1 : 0,
+          },
+        },
+      }));
+
+      // ترتيب الألوان داخل المادة
+      colorsArray.sort((a, b) => b.totalQuantity - a.totalQuantity);
+
+      return {
+        materialId: material.materialId,
+        materialName: material.materialName,
+        totalQuantity: material.totalQuantity,
+        totalAmount: material.totalAmount,
+        totalColors: colorsArray.length,
+        colors: colorsArray,
+        topColors: colorsArray.slice(0, 5),
+      };
+    });
+
+    // ترتيب المواد حسب الأكثر مبيعاً
+    result.sort((a, b) => b.totalQuantity - a.totalQuantity);
+
+    return {
+      period,
+      dateRange: { startDate, endDate },
+      summary: {
+        totalMaterials: result.length,
+        totalQuantity,
+        totalAmount,
+        totalOrders:
+          orderItems.length > 0
+            ? new Set(orderItems.map(i => i.order_id)).size
+            : 0,
+      },
+      byMaterial: result,
+    };
+
+  } catch (error) {
+    logger.error("خطأ في getOrderStatsByColorByMaterial:", error);
+    throw error;
+  }
+};
+
+
+export const getOrderStatsByMaterial = async (
+  materialId,
+  period = "month"
+) => {
+  try {
+    if (!materialId) {
+      throw new Error("يجب تحديد المادة (materialId)");
+    }
+
+    const { startDate, endDate } = getDateRange(period);
+
+    const orderItems = await prisma.orderItem.findMany({
+      where: {
+        order: {
+          created_at: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        color: {
+          ruler: {
+            material_id: materialId,
+          },
+        },
+      },
+      include: {
+        color: {
+          select: {
+            color_id: true,
+            color_name: true,
+            ruler: {
+              select: {
+                material: {
+                  select: {
+                    material_name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        order: {
+          select: {
+            status: true,
+            created_at: true,
+          },
+        },
+      },
+    });
+
     const colorStats = {};
     let totalQuantity = 0;
     let totalAmount = 0;
 
     orderItems.forEach(item => {
       const colorId = item.color_id;
-      const colorName = item.color?.color_name || 'غير محدد';
+      const colorName = item.color?.color_name || "غير محدد";
 
       if (!colorStats[colorId]) {
         colorStats[colorId] = {
-          colorId: colorId,
-          colorName: colorName,
+          colorId,
+          colorName,
           totalQuantity: 0,
           totalAmount: 0,
           ordersCount: 0,
           orderIds: new Set(),
           byStatus: {
-            pending: { count: 0, quantity: 0, amount: 0 },
-            preparing: { count: 0, quantity: 0, amount: 0 },
-            completed: { count: 0, quantity: 0, amount: 0 },
-            cancelled: { count: 0, quantity: 0, amount: 0 },
+            pending: { quantity: 0, amount: 0 },
+            preparing: { quantity: 0, amount: 0 },
+            completed: { quantity: 0, amount: 0 },
+            cancelled: { quantity: 0, amount: 0 },
           },
         };
       }
 
-      // إضافة الكمية والمبلغ
       const quantity = item.quantity || 0;
       const subtotal = parseFloat(item.subtotal || 0);
 
@@ -395,7 +584,6 @@ export const getOrderStatsByColor = async (period = "month") => {
       colorStats[colorId].totalAmount += subtotal;
       colorStats[colorId].orderIds.add(item.order_id);
 
-      // التجميع حسب الحالة
       const status = item.order.status;
       if (colorStats[colorId].byStatus[status]) {
         colorStats[colorId].byStatus[status].quantity += quantity;
@@ -406,51 +594,54 @@ export const getOrderStatsByColor = async (period = "month") => {
       totalAmount += subtotal;
     });
 
-    // تحويل إلى مصفوفة وإضافة عدد الطلبات
-    const colorStatsArray = Object.values(colorStats).map(stat => ({
-      colorId: stat.colorId,
-      colorName: stat.colorName,
-      totalQuantity: stat.totalQuantity,
-      totalAmount: stat.totalAmount,
-      ordersCount: stat.orderIds.size,
+    const colorsArray = Object.values(colorStats).map(color => ({
+      colorId: color.colorId,
+      colorName: color.colorName,
+      totalQuantity: color.totalQuantity,
+      totalAmount: color.totalAmount,
+      ordersCount: color.orderIds.size,
       byStatus: {
         pending: {
-          ...stat.byStatus.pending,
-          count: stat.byStatus.pending.quantity > 0 ? 1 : 0,
+          ...color.byStatus.pending,
+          count: color.byStatus.pending.quantity > 0 ? 1 : 0,
         },
         preparing: {
-          ...stat.byStatus.preparing,
-          count: stat.byStatus.preparing.quantity > 0 ? 1 : 0,
+          ...color.byStatus.preparing,
+          count: color.byStatus.preparing.quantity > 0 ? 1 : 0,
         },
         completed: {
-          ...stat.byStatus.completed,
-          count: stat.byStatus.completed.quantity > 0 ? 1 : 0,
+          ...color.byStatus.completed,
+          count: color.byStatus.completed.quantity > 0 ? 1 : 0,
         },
         cancelled: {
-          ...stat.byStatus.cancelled,
-          count: stat.byStatus.cancelled.quantity > 0 ? 1 : 0,
+          ...color.byStatus.cancelled,
+          count: color.byStatus.cancelled.quantity > 0 ? 1 : 0,
         },
       },
     }));
 
-    // ترتيب حسب الكمية (الأكثر طلباً)
-    colorStatsArray.sort((a, b) => b.totalQuantity - a.totalQuantity);
+    colorsArray.sort((a, b) => b.totalQuantity - a.totalQuantity);
 
     return {
+      materialId,
+      materialName:
+        orderItems[0]?.color?.ruler?.material?.material_name || "غير معروف",
       period,
       dateRange: { startDate, endDate },
       summary: {
-        totalColors: colorStatsArray.length,
-        totalQuantity: totalQuantity,
-        totalAmount: totalAmount,
-        totalOrders: orderItems.length > 0 ? new Set(orderItems.map(i => i.order_id)).size : 0,
+        totalColors: colorsArray.length,
+        totalQuantity,
+        totalAmount,
+        totalOrders:
+          orderItems.length > 0
+            ? new Set(orderItems.map(i => i.order_id)).size
+            : 0,
       },
-      byColor: colorStatsArray,
-      // أفضل 5 ألوان
-      topColors: colorStatsArray.slice(0, 5),
+      byColor: colorsArray,
+      topColors: colorsArray.slice(0, 5),
     };
   } catch (error) {
-    logger.error("خطأ في getOrderStatsByColor:", error);
+    logger.error("خطأ في getOrderStatsByMaterial:", error);
     throw error;
   }
 };
