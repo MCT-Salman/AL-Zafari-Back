@@ -1054,7 +1054,8 @@ export const updateOrderStatus = async (order_id, status, req = null) => {
     throw error;
   }
   const userRole = req.user.role;
-  if (order.status === "outofwarehouse" && (userRole !== "warehouse_keeper" || userRole !== "warehouse_products")) {
+  const allowedRoles = ["warehouse_keeper", "warehouse_products"];
+  if (order.status === "outofwarehouse" &&  !allowedRoles.includes(userRole)) {
     const error = new Error("ليس لديك صلاحية لتعديل حالة الطلب");
     error.statusCode = 403;
     throw error;
