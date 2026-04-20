@@ -38,7 +38,7 @@ router.use(requireAuth);
 router.get("/", requireRole(["admin", "production_manager", "cashier", "sales", "accountant"]), validate(getSalesOrdersQueryRules), getAllSalesOrders);
 router.get("/:id", requireRole(["admin", "production_manager", "cashier", "sales", "accountant"]), validate(SalesOrderIdParamRules), getSalesOrderById);
 router.post("/", requireRole(["admin", "cashier", "sales"]), validate(createSalesOrderRules), createSalesOrder);
-router.put("/:id", requireRole(["admin", "cashier", "sales"]), validate([...SalesOrderIdParamRules, ...updateSalesOrderRules]), updateSalesOrder);
+router.put("/:id", requireRole(["admin", "cashier", "sales", "production_manager"]), validate([...SalesOrderIdParamRules, ...updateSalesOrderRules]), updateSalesOrder);
 router.delete("/all", requireRole(["admin", "cashier", "sales"]), validate(allSalesOrdersarrayRules), deleteallSalesOrder);
 router.delete("/:id", requireRole(["admin", "cashier", "sales"]), validate(SalesOrderIdParamRules), deleteSalesOrder);
 
